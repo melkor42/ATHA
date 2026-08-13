@@ -1,0 +1,69 @@
+{
+  "persona": {
+    "interests": ["sectors", "metadata", "graph structure"],
+    "tone": "analytical",
+    "accent_color": "primary",
+    "expertise_level": "expert",
+    "perspective": "infrastructure"
+  },
+  "experience": {
+    "theme": "ledger",
+    "layout": "grid",
+    "sections": [
+      {
+        "component": "TextBlock",
+        "title": "Methodology",
+        "text": "Match score = cosine similarity over 384-dim profile embeddings, intersected with shared-topic edges. Connections per sector below are counted, not estimated."
+      },
+      { "component": "EnterpriseCard", "entity_ids": ["ent-nordwind"] },
+      { "component": "EnterpriseCard", "entity_ids": ["ent-helvetia"] },
+      { "component": "SignalCard", "entity_ids": ["stu-anna"] },
+      {
+        "component": "TextBlock",
+        "title": "Connections per sector",
+        "text": "Industrial AI 34 · Finance 27 · Health 19 · Energy 12. Source: graph traversal, 2026-08-12. Filterable list available on request."
+      },
+      {
+        "component": "EventBanner",
+        "entity_ids": ["evt-signal001"],
+        "title": "SIGNAL 001",
+        "text": "Enterprise cohort session. Agenda, data access, and contact list follow on request."
+      }
+    ],
+    "entities": {
+      "ent-nordwind": {
+        "type": "enterprise",
+        "name": "Nordwind Technologies AG",
+        "sector": "Industrial AI",
+        "size": "1,200 FTE",
+        "hq": "Munich",
+        "contact": "R. Vestergaard (Head of People)",
+        "topics": ["cybersecurity", "data science"]
+      },
+      "ent-helvetia": {
+        "type": "enterprise",
+        "name": "Helvetia Analytics",
+        "sector": "Insurance",
+        "size": "340 FTE",
+        "hq": "Zurich",
+        "contact": "N. Brun (Talent Lead)",
+        "topics": ["data quality", "network analysis"]
+      },
+      "stu-anna": {
+        "type": "person",
+        "name": "Anna Keller",
+        "school": "WBS · MSc Management",
+        "score": 92,
+        "topics": ["cybersecurity", "data science"],
+        "contact": "Contact"
+      },
+      "evt-signal001": {
+        "type": "event",
+        "name": "SIGNAL 001",
+        "date": "Q4 2026",
+        "location": "Warwick Business School",
+        "highlights": ["Enterprise cohort session"]
+      }
+    }
+  }
+}

@@ -1,0 +1,250 @@
+/* SIGNAL brand tokens — from prototypes/brand-theater.html (ticket 06) */
+:root {
+  --bg: #0B0A09;
+  --surface: #131110;
+  --surface2: #1A1715;
+  --text: #F1EDE6;
+  --muted: #9C948A;
+  --subtle: #6A635B;
+  --border: rgba(241, 237, 230, 0.09);
+  --border-mid: rgba(241, 237, 230, 0.16);
+  --rust: #CF7053;
+  --violet: #9A7FC8;
+  /* ColorToken -> brand palette (persona accent) */
+  --primary: #5E92C4;
+  --accent-tok: #BD8794;
+  --success: #8FA96E;
+  --warning: #D8A24C;
+  --accent: var(--accent-tok);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  /* layout vars — overridden per theme */
+  --radius: 18px;
+  --gap: 16px;
+  --pad: 22px;
+  --bg-tint: transparent;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 var(--font-ui);
+  min-height: 100vh;
+}
+#app { max-width: 1080px; margin: 0 auto; padding: 32px; }
+
+/* ---------- brand shell ---------- */
+.shell h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4px; }
+.grad {
+  background: linear-gradient(100deg, var(--warning), var(--rust), var(--violet), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hint { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+.hint a { color: var(--muted); }
+
+/* ---------- pill buttons ---------- */
+.pill {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border-mid);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font: 600 13px var(--font-ui);
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.pill:hover:not(:disabled) { border-color: var(--text); }
+.pill:disabled { opacity: 0.4; cursor: default; }
+.pill.solid { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* ---------- onboarding ---------- */
+.onboarding { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.onboarding textarea {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-mid);
+  border-radius: 18px;
+  padding: 16px 18px;
+  font: 15px/1.6 var(--font-ui);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.3s var(--ease);
+}
+.onboarding textarea:focus { border-color: var(--text); }
+.onboarding textarea::placeholder { color: var(--subtle); }
+.onboarding .pill { align-self: flex-start; }
+
+/* ---------- theater (ticket 06) ---------- */
+.theater {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+  min-height: 26px;
+}
+.step {
+  color: var(--subtle);
+  font: 500 12px var(--font-mono);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.5s var(--ease);
+  white-space: nowrap;
+}
+.step.on { opacity: 1; transform: none; color: var(--muted); }
+.step.on::before { content: "✓ "; color: var(--success); }
+.waiting {
+  color: var(--subtle);
+  font: 500 12px var(--font-mono);
+  margin: 0 0 24px;
+  animation: pulse 2.2s var(--ease) infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ---------- composed page ---------- */
+.wow-page {
+  padding: 26px 22px;
+  border-radius: 22px;
+  background: var(--bg-tint);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.wow-page.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  align-items: start;
+}
+.wow-page.grid .section.wide { grid-column: 1 / -1; }
+.wow-page .again { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px; }
+
+.section { opacity: 0; transform: translateY(14px); transition: all 0.7s var(--ease); }
+.section.on { opacity: 1; transform: none; }
+
+/* ---------- card base ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--pad);
+}
+.card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.k {
+  font: 500 11px var(--font-mono);
+  color: var(--subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.child { margin-top: 14px; }
+.child .card { padding: calc(var(--pad) * 0.7); }
+
+/* ---------- SignalCard ---------- */
+.score { height: 4px; border-radius: 2px; background: var(--surface2); margin: 12px 0 8px; overflow: hidden; }
+.score i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 3px 0;
+}
+.row b { color: var(--text); font-weight: 600; text-align: right; }
+.cta {
+  display: inline-block;
+  margin-top: 14px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  border-radius: 100px;
+  padding: 7px 16px;
+  font: 600 12px var(--font-ui);
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.cta:hover { background: var(--accent); color: var(--bg); }
+
+/* ---------- StudentProfile ---------- */
+.student-profile .role { color: var(--text); font-weight: 600; font-size: 14px; }
+.student-profile .story { margin-top: 6px; }
+
+/* ---------- EnterpriseCard ---------- */
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin-top: 10px; }
+.seeks { margin-top: 10px; }
+
+/* ---------- EventBanner ---------- */
+.banner { border-left: 3px solid var(--accent); }
+.banner .when { color: var(--accent); font: 600 12px var(--font-mono); margin-bottom: 6px; }
+
+/* ---------- THEMES (ticket 07) — four CSS variable sets, selected by schema.theme ---------- */
+
+/* boardroom: dense grid, tight radius, gold accent, numbers-forward */
+.theme-boardroom {
+  --radius: 10px;
+  --gap: 12px;
+  --pad: 18px;
+  --border: var(--border-mid);
+  --bg-tint: radial-gradient(900px 320px at 50% -60px, rgba(216, 162, 76, 0.07), transparent);
+}
+.theme-boardroom .row b,
+.theme-boardroom .num { color: var(--warning); font-family: var(--font-mono); }
+
+/* festival: single column, large radius, mauve-tinted surface, energetic spacing */
+.theme-festival {
+  --radius: 24px;
+  --gap: 22px;
+  --pad: 26px;
+  --surface: #1A1418;
+  --surface2: #241B21;
+  --bg-tint: radial-gradient(900px 380px at 50% -80px, rgba(189, 135, 148, 0.10), transparent);
+}
+.theme-festival .card p { font-size: 15px; line-height: 1.7; }
+.theme-festival .card h3 { font-size: 19px; }
+
+/* garden: spacious single column, green-tinted wash, softest radius, quiet borders */
+.theme-garden {
+  --radius: 26px;
+  --gap: 24px;
+  --pad: 28px;
+  --border: rgba(241, 237, 230, 0.05);
+  --bg-tint: radial-gradient(1000px 420px at 50% -80px, rgba(143, 169, 110, 0.09), transparent);
+}
+.theme-garden .card p { color: #A5A796; }
+.theme-garden .k { color: #7C8471; }
+
+/* ledger: strict grid, hairline borders, blue, mono numerals */
+.theme-ledger {
+  --radius: 6px;
+  --gap: 14px;
+  --pad: 20px;
+  --border: rgba(241, 237, 230, 0.16);
+  --bg-tint: radial-gradient(900px 320px at 50% -60px, rgba(94, 146, 196, 0.08), transparent);
+}
+.theme-ledger .row b,
+.theme-ledger .num { font-family: var(--font-mono); color: var(--primary); }
+.theme-ledger .k { letter-spacing: 0.12em; }
+
+/* ---------- error ---------- */
+.error {
+  border: 1px solid var(--border-mid);
+  border-radius: 18px;
+  padding: 22px;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.error p { color: var(--muted); margin: 0; }
+.error .pill { align-self: flex-start; }
+
+@media (max-width: 720px) {
+  .wow-page.grid { grid-template-columns: 1fr; }
+}

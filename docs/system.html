@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal App – MVP Systemübersicht</title>
+<style>
+  :root{--bg:#0f1115;--card:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#9aa3b2;
+        --blue:#4f8ff7;--green:#3ecf8e;--orange:#f7934f;--purple:#b07df7;}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);
+        font:15px/1.5 system-ui,sans-serif;padding:24px;max-width:1100px;margin:auto}
+  h1{font-size:22px} h2{font-size:17px;margin-top:36px;color:var(--dim);
+        text-transform:uppercase;letter-spacing:.08em}
+  .hint{color:var(--dim);font-size:13px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;
+        padding:12px;margin:6px 0}
+  .box[data-tab],.inner[data-tab],.group[data-tab]{cursor:pointer}
+  .box[data-tab]:hover,.inner[data-tab]:hover{border-color:var(--blue)}
+  .blue{border-color:var(--blue)} .green{border-color:var(--green)}
+  .purple{border-color:var(--purple)} .orangeb{border-color:var(--orange)}
+  .row{display:flex;gap:8px;flex-wrap:wrap} .row>*{flex:1;min-width:200px}
+  .inner{background:#1d222c;border:1px solid var(--line);border-radius:8px;
+        padding:8px;font-size:13px}
+  .group{border:1px dashed var(--green);border-radius:8px;padding:8px;margin-top:8px}
+  .connector{text-align:center;color:var(--dim);padding:6px;font-size:13px}
+  .connector::before{content:"▼ ";color:var(--blue)}
+  .connector.orange::before{content:"▶ ";color:var(--orange)}
+  .layerlabel{color:var(--dim);font-size:12px;letter-spacing:.1em}
+  button{background:#1d222c;color:var(--txt);border:1px solid var(--line);
+        border-radius:8px;padding:8px 14px;cursor:pointer;margin:4px 4px 4px 0}
+  button:hover{border-color:var(--blue)}
+  .tab.active{border-color:var(--green);color:var(--green)}
+  pre{background:#0b0d10;border:1px solid var(--line);border-radius:10px;
+        padding:16px;overflow:auto;font:13px/1.55 ui-monospace,monospace}
+  #steps{list-style:none;padding:0;counter-reset:s}
+  #steps li{padding:8px 12px;margin:4px 0;border:1px solid var(--line);
+        border-radius:8px;color:var(--dim);counter-increment:s}
+  #steps li::before{content:counter(s) ". ";color:var(--dim)}
+  #steps li.active{border-color:var(--blue);color:var(--txt);background:#1a2334}
+  #steps li.done{opacity:.55}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  td,th{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  th{color:var(--dim)}
+</style>
+</head>
+<body>
+<h1>Signal App – MVP Systemübersicht</h1>
+<p class="hint">Klicke auf eine Box, um zum zugehörigen Code zu springen.
+   Blau = Online-Query-Pfad, Orange = Offline-Ingest-Pfad.</p>
+
+<h2>Architektur</h2>
+<span class="layerlabel">FRONTEND</span>
+<div class="box blue" data-tab="UiRenderer.vue"><b>Vue + Vite</b>
+  <div class="row">
+    <div class="inner">Component Registry (Allowlist-Rendering)</div>
+    <div class="inner">UiRenderer (rekursiv, kein v-html)</div>
+  </div>
+</div>
+<div class="connector">REST / JSON — POST /api/experience</div>
+<span class="layerlabel">BACKEND</span>
+<div class="box green"><b>FastAPI Orchestrator</b>
+  <div class="row">
+    <div class="inner">Auth / Session</div>
+    <div class="inner" data-tab="ui_schema.py">Pydantic Validation (Allowlist = Enums)</div>
+  </div>
+  <div class="inner" style="margin-top:8px" data-tab="main.py">verify() — entity_ids gegen Retrieval-Whitelist</div>
+  <div class="group" data-tab="agents.py"><b>PydanticAI Agents (Sequential Pipeline / Handoff)</b>
+    <div class="row">
+      <div class="inner">Agent 1: Persona Modeler</div>
+      <div class="inner">Agent 2: Experience Builder</div>
+    </div>
+  </div>
+</div>
+<div class="connector">OpenAI-compatible API (Chat + Embeddings) &nbsp;|&nbsp; Bolt / Cypher</div>
+<div class="row">
+  <div class="box purple" data-tab="llm.py"><b>OpenRouter</b><br>Chat-Modelle + Embeddings</div>
+  <div class="box purple" data-tab="neo4j.cypher"><b>Neo4j Aura</b><br>Graph + Vector Index</div>
+</div>
+<div class="connector orange">Offline-Ingest: Rohdaten → Transform → Embed → MERGE</div>
+<div class="box orangeb" data-tab="ingest.py"><b>Ingest Pipeline (offline, idempotent)</b></div>
+
+<h2>Pfade als Animation</h2>
+<button onclick="play('online')">▶ Online-Query-Pfad</button>
+<button onclick="play('offline')">▶ Offline-Ingest-Pfad</button>
+<ol id="steps"></ol>
+
+<h2>Code-Dateien</h2>
+<div id="tabs"></div>
+<pre id="codeview"></pre>
+
+<h2>Glossar</h2>
+<table>
+<tr><th>Begriff</th><th>Bedeutung</th></tr>
+<tr><td>Generative UI / Server-Driven UI</td><td>LLM liefert Komponenten-Schema (JSON), Frontend rendert registrierte Komponenten</td></tr>
+<tr><td>Agent Loop / ReAct</td><td>Prompt → Tool-Call → ausführen → zurück in die LLM, bis Ergebnis</td></tr>
+<tr><td>Orchestrator</td><td>FastAPI als Dirigent zwischen Frontend, Agenten, DB</td></tr>
+<tr><td>Handoff / Sequential Pipeline</td><td>Agent 1 übergibt Persona-Modell an Agent 2</td></tr>
+<tr><td>OpenAI-compatible API</td><td>Gleiches Protokoll bei OpenRouter und Ollama; nur base_url wechselt</td></tr>
+<tr><td>Embedding / Vektorraum</td><td>Bedeutung als Koordinaten; Abstände nur innerhalb EINES Modells sinnvoll</td></tr>
+<tr><td>Hybrid Search / GraphRAG</td><td>Vektorsuche + Graph-Traversal in einem Cypher-Query</td></tr>
+<tr><td>Ingest Pipeline / ETL</td><td>Offline: Rohdaten → Transform → Embed → Load</td></tr>
+<tr><td>Idempotent</td><td>Beliebig oft wiederholbar ohne Duplikate (MERGE)</td></tr>
+<tr><td>Allowlist / Schema Enforcement</td><td>Enums im Pydantic-Schema = einzige erlaubte Komponenten/Farben/Actions</td></tr>
+<tr><td>Graceful Degradation</td><td>Bei Fehler: hart kodierte Default-Experience statt Absturz</td></tr>
+</table>
+
+<script>
+const FILES = {};
+
+FILES["llm.py"] = `# llm.py — Single Source of Truth für Chat + Embeddings
+from openai import AsyncOpenAI
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+EMBED_MODEL     = "openai/text-embedding-3-small"
+EMBED_DIMS      = 1536   # muss exakt zum Vektor-Index passen
+
+embed_client = AsyncOpenAI(base_url=OPENROUTER_BASE, api_key=OPENROUTER_KEY)
+
+async def embed_batch(texts: list[str]) -> list[list[float]]:
+    res = await embed_client.embeddings.create(model=EMBED_MODEL, input=texts)
+    return [d.embedding for d in sorted(res.data, key=lambda d: d.index)]
+
+async def embed_one(text: str) -> list[float]:
+    return (await embed_batch([text]))[0]
+
+cloud_model = OpenAIChatModel(
+    "anthropic/claude-3.5-sonnet",
+    provider=OpenAIProvider(base_url=OPENROUTER_BASE, api_key=OPENROUTER_KEY),
+)
+# Lokale Nahtstelle (später NUR diese Datei ändern):
+# local_model = OpenAIChatModel(
+#     "llama3.1",
+#     provider=OpenAIProvider(base_url="http://localhost:11434/v1", api_key="ollama"),
+# )`;
+
+FILES["ui_schema.py"] = `# ui_schema.py — DER Vertrag zwischen Agent 2 und Vue
+from __future__ import annotations
+from enum import Enum
+from pydantic import BaseModel, Field, field_validator
+
+class ComponentType(str, Enum):          # Enums SIND die Allowlist
+    SIGNAL_CARD = "SignalCard"
+    STUDENT_PROFILE = "StudentProfile"
+    ENTERPRISE_CARD = "EnterpriseCard"
+    NETWORK_GRAPH = "NetworkGraph"
+    EVENT_BANNER = "EventBanner"
+    TEXT_BLOCK = "TextBlock"
+
+class ColorToken(str, Enum):             # Design-Tokens, keine Hex-Codes
+    PRIMARY = "primary"
+    ACCENT = "accent"
+    SUCCESS = "success"
+    WARNING = "warning"
+
+class ActionType(str, Enum):
+    OPEN_CONTACT = "open_contact"
+    SHOW_DETAILS = "show_details"
+    SAVE_SIGNAL = "save_signal"
+
+class Layout(str, Enum):
+    SINGLE = "single_column"
+    GRID = "grid"
+
+class ButtonSpec(BaseModel):
+    label: str = Field(max_length=40)
+    color: ColorToken = ColorToken.PRIMARY
+    action: ActionType
+
+class UINode(BaseModel):
+    component: ComponentType
+    title: str | None = Field(default=None, max_length=80)
+    text: str | None = Field(default=None, max_length=500)
+    button: ButtonSpec | None = None
+    entity_ids: list[str] = Field(default_factory=list, max_length=10)
+    children: list[UINode] | None = None
+
+    @field_validator("title", "text", mode="before")
+    @classmethod
+    def strip_markup(cls, v):
+        if isinstance(v, str):
+            return v.replace("<", "").replace(">", "")
+        return v
+
+class ExperienceSchema(BaseModel):
+    layout: Layout = Layout.SINGLE
+    sections: list[UINode] = Field(min_length=1, max_length=6)`;
+
+FILES["agents.py"] = `# agents.py — Agent-Identitäten (Sequential Pipeline)
+from pydantic_ai import Agent
+from pydantic import BaseModel
+from llm import cloud_model
+from ui_schema import ExperienceSchema
+
+class PersonaModel(BaseModel):
+    interests: list[str]
+    tone: str
+    accent_color: str
+    expertise_level: str
+
+PERSONA_PROMPT = (
+    "Du analysierst die Antworten eines Menschen auf Onboarding-Fragen. "
+    "Extrahiere ein kompaktes Persona-Modell: Interessen, Tonalität, "
+    "Akzentfarbe als Token, Expertise. Keine Texte ausserhalb des Schemas."
+)
+
+UI_PROMPT = (
+    "Du baust eine personalisierte Web-Experience als JSON-Schema. Regeln: "
+    "1) Nur Komponenten, Color-Tokens und Actions aus dem Schema verwenden. "
+    "2) entity_ids ausschliesslich aus dem bereitgestellten Datenpool. "
+    "3) Keine Markup-Zeichen in title/text. "
+    "4) Maximal 6 Sektionen, Layout passend zur Expertise."
+)
+
+persona_agent = Agent(cloud_model, system_prompt=PERSONA_PROMPT,
+                      output_type=PersonaModel)
+ui_agent = Agent(cloud_model, system_prompt=UI_PROMPT,
+                 output_type=ExperienceSchema)`;
+
+FILES["retrieval.py"] = `# retrieval.py — Backend-side Retrieval (Vektor + Graph)
+from llm import embed_one
+from neo4j import AsyncGraphDatabase
+
+driver = AsyncGraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASS))
+
+HYBRID_QUERY = """
+CALL db.index.vector.queryNodes('profile_embeddings', $topK, $vector)
+YIELD node AS profile, score
+MATCH (profile)<-[:HAS_PROFILE]-(student:Student)-[:ATTENDS]->(school:School)
+OPTIONAL MATCH (student)-[:INTERESTED_IN]->(topic:Topic)
+                       <-[:SEEKS_EXPERTISE]-(enterprise:Enterprise)
+RETURN student.id AS student_id,
+       student.name AS name,
+       school.name AS school,
+       score,
+       collect(DISTINCT {enterprise: enterprise.name,
+                         topic: topic.name}) AS matches
+ORDER BY score DESC
+LIMIT $limit
+"""
+
+async def retrieve_context(persona, top_k: int = 5):
+    vector = await embed_one(", ".join(persona.interests) + " " + persona.tone)
+    async with driver.session() as session:
+        result = await session.run(HYBRID_QUERY, vector=vector,
+                                   topK=top_k, limit=5)
+        rows = await result.data()
+    allowed_ids = {r["student_id"] for r in rows}      # Whitelist für verify()
+    context = "\\n".join(
+        f"- {r['name']} ({r['school']}, id={r['student_id']}), "
+        f"Matches: {r['matches']}" for r in rows)
+    return context, allowed_ids`;
+
+FILES["ingest.py"] = `# ingest.py — offline ausführen: python ingest.py
+import asyncio, json
+from llm import embed_batch
+from neo4j import AsyncGraphDatabase
+
+driver = AsyncGraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASS))
+BATCH = 50
+
+def profile_text(s: dict) -> str:
+    return (f"Student: {s['name']}, School: {s['school']}. "
+            f"Interests: {', '.join(s['interests'])}. "
+            f"Bio: {s.get('bio', '')}")
+
+LOAD_QUERY = """
+UNWIND $rows AS row
+MERGE (st:Student {id: row.id})
+SET st.name = row.name
+MERGE (sc:School {name: row.school})
+MERGE (st)-[:ATTENDS]->(sc)
+MERGE (p:Profile {student_id: row.id})
+SET p.text = row.text, p.embedding = row.embedding
+MERGE (st)-[:HAS_PROFILE]->(p)
+"""
+
+async def main():
+    raw = json.load(open("data/students.json"))["students"]
+    for start in range(0, len(raw), BATCH):
+        chunk = raw[start:start + BATCH]
+        texts = [profile_text(s) for s in chunk]
+        vectors = await embed_batch(texts)
+        rows = [{**s, "text": t, "embedding": v}
+                for s, t, v in zip(chunk, texts, vectors)]
+        async with driver.session() as session:
+            await session.run(LOAD_QUERY, rows=rows)
+        print(f"Ingested {min(start + BATCH, len(raw))}/{len(raw)}")
+
+asyncio.run(main())`;
+
+FILES["main.py"] = `# main.py — FastAPI Orchestrator
+from fastapi import FastAPI
+from pydantic import BaseModel
+from agents import persona_agent, ui_agent
+from retrieval import retrieve_context
+from ui_schema import ExperienceSchema, UINode
+
+app = FastAPI()
+
+class UserAnswers(BaseModel):
+    text: str
+
+def walk(nodes):
+    for n in nodes:
+        yield n
+        yield from walk(n.children or [])
+
+def verify(schema: ExperienceSchema, allowed: set[str]) -> ExperienceSchema:
+    for node in walk(schema.sections):
+        node.entity_ids = [i for i in node.entity_ids if i in allowed]
+    return schema
+
+DEFAULT_EXPERIENCE = ExperienceSchema(
+    sections=[UINode(component="TextBlock",
+                     title="Willkommen im Signal-Netzwerk")],
+)
+
+@app.post("/api/experience", response_model=ExperienceSchema)
+async def build_experience(answers: UserAnswers):
+    try:
+        persona = (await persona_agent.run(answers.text)).data
+        context, allowed = await retrieve_context(persona)
+        ui = (await ui_agent.run(
+            f"Persona: {persona.model_dump_json()}\\nDatenpool:\\n{context}"
+        )).data
+        return verify(ui, allowed)
+    except Exception:
+        return DEFAULT_EXPERIENCE   # Graceful Degradation`;
+
+FILES["UiRenderer.vue"] = `<!-- UiRenderer.vue — rekursives Rendering des JSON-Schemas -->
+<script setup>
+import SignalCard from './cards/SignalCard.vue'
+import StudentProfile from './cards/StudentProfile.vue'
+import NetworkGraph from './cards/NetworkGraph.vue'
+const registry = { SignalCard, StudentProfile, NetworkGraph }
+const props = defineProps({ node: Object })
+<\/script>
+
+<template>
+  <component :is="registry[node.component]" v-bind="node">
+    <UiRenderer v-for="(c, i) in node.children ?? []" :key="i" :node="c" />
+  </component>
+</template>`;
+
+FILES["neo4j.cypher"] = `// neo4j.cypher — Setup + zentrale Queries
+
+// 1) Vektor-Index (Dimensionen MÜSSEN EMBED_DIMS entsprechen)
+CREATE VECTOR INDEX profile_embeddings IF NOT EXISTS
+FOR (p:Profile) ON (p.embedding)
+OPTIONS {indexConfig: {
+  \`vector.dimensions\`: 1536,
+  \`vector.similarity_function\`: 'cosine'
+}};
+
+// 2) Hybrid-Query: Vektor + Graph-Traversal in einem Request
+CALL db.index.vector.queryNodes('profile_embeddings', $topK, $vector)
+YIELD node AS profile, score
+MATCH (profile)<-[:HAS_PROFILE]-(student:Student)-[:ATTENDS]->(school:School)
+OPTIONAL MATCH (student)-[:INTERESTED_IN]->(topic:Topic)
+                       <-[:SEEKS_EXPERTISE]-(enterprise:Enterprise)
+RETURN student.id AS student_id, student.name AS name,
+       school.name AS school, score,
+       collect(DISTINCT {enterprise: enterprise.name,
+                         topic: topic.name}) AS matches
+ORDER BY score DESC
+LIMIT $limit;
+
+// 3) Ingest-Write (idempotent durch MERGE, Batch durch UNWIND)
+UNWIND $rows AS row
+MERGE (st:Student {id: row.id})  SET st.name = row.name
+MERGE (sc:School {name: row.school})
+MERGE (st)-[:ATTENDS]->(sc)
+MERGE (p:Profile {student_id: row.id})
+SET p.text = row.text, p.embedding = row.embedding
+MERGE (st)-[:HAS_PROFILE]->(p);`;
+
+// --- Tabs ---
+const tabBar = document.getElementById('tabs');
+const codeEl = document.getElementById('codeview');
+function showTab(name){
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.file === name));
+  codeEl.textContent = FILES[name];
+}
+Object.keys(FILES).forEach(n => {
+  const b = document.createElement('button');
+  b.className = 'tab'; b.dataset.file = n; b.textContent = n;
+  b.onclick = () => showTab(n);
+  tabBar.appendChild(b);
+});
+showTab('llm.py');
+
+// --- Klickbare Diagramm-Boxen ---
+document.querySelectorAll('[data-tab]').forEach(el => {
+  el.addEventListener('click', () => {
+    showTab(el.dataset.tab);
+    codeEl.scrollIntoView({behavior:'smooth'});
+  });
+});
+
+// --- Pfad-Animation ---
+const PATHS = {
+  online: [
+    "Vue: User beantwortet 'Tell me about You'",
+    "FastAPI: POST /api/experience",
+    "Agent 1 (Persona Modeler) via OpenRouter",
+    "Pydantic validiert das PersonaModel",
+    "embed_one(): Persona → Vektor (OpenRouter)",
+    "Neo4j: Hybrid-Query (Vektor + Graph-Traversal)",
+    "context + allowed_ids gehen an Agent 2",
+    "Agent 2 (Experience Builder) → ExperienceSchema",
+    "verify(): entity_ids gegen allowed_ids prüfen",
+    "Vue: UiRenderer rendert via Component Registry"
+  ],
+  offline: [
+    "Rohdaten: data/students.json einlesen",
+    "Transform: profile_text() baut bedeutungsvollen Text",
+    "embed_batch(): Batches à 50 via OpenRouter",
+    "Neo4j: MERGE schreibt Nodes + Relationships + Vektor",
+    "Vektor-Index indexiert die neuen Embeddings",
+    "Daten bereit für den Online-Query-Pfad"
+  ]
+};
+let timer = null;
+function play(name){
+  clearInterval(timer);
+  const list = document.getElementById('steps');
+  list.innerHTML = '';
+  PATHS[name].forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = s;
+    list.appendChild(li);
+  });
+  const items = [...list.children];
+  let i = 0;
+  timer = setInterval(() => {
+    items.forEach((li, j) => {
+      li.classList.toggle('active', j === i);
+      li.classList.toggle('done', j < i);
+    });
+    i++;
+    if (i > items.length) clearInterval(timer);
+  }, 800);
+}
+</script>
+</body>
+</html>

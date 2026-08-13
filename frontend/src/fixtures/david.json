@@ -1,0 +1,74 @@
+{
+  "persona": {
+    "interests": ["mentoring", "wellbeing", "direction"],
+    "tone": "warm",
+    "accent_color": "success",
+    "expertise_level": "advanced",
+    "perspective": "education"
+  },
+  "experience": {
+    "theme": "garden",
+    "layout": "single_column",
+    "sections": [
+      {
+        "component": "TextBlock",
+        "title": "People who found their way",
+        "text": "Two stories from the network, told the way they were lived — slowly, and with care."
+      },
+      { "component": "StudentProfile", "entity_ids": ["per-maya"] },
+      { "component": "StudentProfile", "entity_ids": ["per-samuel"] },
+      { "component": "SignalCard", "entity_ids": ["stu-iris"] },
+      {
+        "component": "EventBanner",
+        "entity_ids": ["evt-circle"],
+        "title": "The quiet circle",
+        "text": "One gentle introduction, no forms shouting at you. The network keeps, and so do its people.",
+        "children": [
+          {
+            "component": "TextBlock",
+            "text": "When you're ready, the door is open. Not before."
+          }
+        ]
+      },
+      { "component": "EnterpriseCard", "entity_ids": ["ent-greengate"] }
+    ],
+    "entities": {
+      "per-maya": {
+        "type": "person",
+        "name": "Maya H.",
+        "role": "WBS alumna, cohort 2024",
+        "story": "Came for one question about direction. Her mentor listened for an hour before saying a word. They still meet monthly."
+      },
+      "per-samuel": {
+        "type": "person",
+        "name": "Samuel O.",
+        "role": "Final-year student",
+        "story": "Was unsure he belonged. A quiet introduction changed the shape of his last year."
+      },
+      "stu-iris": {
+        "type": "person",
+        "name": "Iris Lindqvist",
+        "school": "Warwick · MA Education",
+        "score": 78,
+        "topics": ["mentoring", "wellbeing"],
+        "contact": "Contact"
+      },
+      "evt-circle": {
+        "type": "event",
+        "name": "The quiet circle",
+        "date": "Monthly",
+        "location": "Faculty common room",
+        "highlights": ["One-hour listening sessions", "Lasting mentor pairs"]
+      },
+      "ent-greengate": {
+        "type": "enterprise",
+        "name": "Greengate Learning",
+        "sector": "EdTech",
+        "size": "120 FTE",
+        "hq": "Copenhagen",
+        "contact": "S. Aalto (People & Culture)",
+        "topics": ["mentoring", "education research"]
+      }
+    }
+  }
+}

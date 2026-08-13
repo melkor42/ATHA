@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGNAL — Wow Page prototype (ticket 06, throwaway)</title>
+<style>
+  :root{
+    --bg:#0B0A09; --surface:#131110; --surface2:#1A1715;
+    --text:#F1EDE6; --muted:#9C948A; --subtle:#6A635B;
+    --border:rgba(241,237,230,0.09); --border-mid:rgba(241,237,230,0.16);
+    --gold:#D8A24C; --rust:#CF7053; --violet:#9A7FC8; --blue:#5E92C4; --green:#8FA96E; --mauve:#BD8794;
+    --accent:var(--mauve);
+    --ease:cubic-bezier(0.22,1,0.36,1);
+  }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.6 'Inter',system-ui,sans-serif;padding:32px;max-width:1080px;margin:auto}
+  h1{font-size:26px;font-weight:800;letter-spacing:-0.03em;margin:0 0 4px}
+  .grad{background:linear-gradient(100deg,var(--gold),var(--rust),var(--violet),var(--blue));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hint{color:var(--muted);font-size:13px;margin:0 0 24px}
+  .switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .pill{background:transparent;color:var(--text);border:1px solid var(--border-mid);
+    border-radius:100px;padding:8px 18px;font:600 13px 'Inter',sans-serif;cursor:pointer;transition:all .3s var(--ease)}
+  .pill:hover{border-color:var(--text)}
+  .pill.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+  #theater{display:flex;gap:16px;align-items:flex-start;margin-bottom:28px;min-height:26px}
+  .step{color:var(--subtle);font:500 12px 'JetBrains Mono',monospace;opacity:0;transform:translateY(6px);
+    transition:all .5s var(--ease);white-space:nowrap}
+  .step.on{opacity:1;transform:none;color:var(--muted)}
+  .step.on::before{content:"✓ ";color:var(--green)}
+  #page{display:flex;flex-direction:column;gap:16px}
+  #page.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  #page.grid .span{grid-column:1/-1}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;
+    opacity:0;transform:translateY(14px);transition:all .7s var(--ease)}
+  .card.on{opacity:1;transform:none}
+  .card h3{margin:0 0 6px;font-size:17px;font-weight:700;letter-spacing:-0.02em}
+  .card p{margin:0;color:var(--muted);font-size:14px}
+  .k{font:500 11px 'JetBrains Mono',monospace;color:var(--subtle);text-transform:uppercase;letter-spacing:.08em}
+  .score{height:4px;border-radius:2px;background:var(--surface2);margin:12px 0 8px;overflow:hidden}
+  .score i{display:block;height:100%;background:var(--accent);border-radius:2px}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin:3px 0}
+  .row b{color:var(--text);font-weight:600}
+  .cta{display:inline-block;margin-top:14px;border:1px solid var(--accent);color:var(--accent);
+    border-radius:100px;padding:7px 16px;font:600 12px 'Inter',sans-serif;cursor:pointer}
+  .cta.solid{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .banner{border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:18px;
+    background:var(--surface);padding:20px 22px}
+  .banner .when{color:var(--accent);font:600 12px 'JetBrains Mono',monospace}
+  .meta{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>SIGNAL · <span class="grad">the depth that makes it viable</span></h1>
+<p class="hint">Throwaway prototype — brand shell & step theater (ticket 06). Click a persona; the page composes itself. Not the real pipeline: static schemas, real brand tokens.</p>
+<div class="switch" id="switch"></div>
+<div id="theater"></div>
+<div id="page"></div>
+<script>
+const PAGES = {
+  miriam: { label:"Miriam · enterprise", accent:"var(--gold)", layout:"grid", steps:["persona: direct / expert / enterprise","traversal: SEEKs cybersecurity, data science","compose: ranked signals, zero decoration","grounding: 5/5 ids verified"], sections:[
+    {t:"text",span:1,title:"Your hiring signal",text:"Five Warwick students match your current need in cybersecurity and data science. Ranked by match score. Data, score, contact — nothing else."},
+    {t:"signal",name:"Anna Keller",school:"WBS · MSc Management",score:92,topics:"cybersecurity, data science"},
+    {t:"signal",name:"Ben Osei",school:"Warwick · BSc Computer Science",score:87,topics:"cybersecurity, networks"},
+    {t:"signal",name:"Carla Mendes",school:"WBS · MSc Business Analytics",score:81,topics:"data science, analytics"},
+    {t:"banner",span:1,when:"Q4 2026 · Warwick Business School",title:"SIGNAL 001",text:"First-look access to the cohort that cracks real enterprise challenges."}
+  ]},
+  jonas: { label:"Jonas · talent", accent:"var(--mauve)", layout:"single", steps:["persona: playful / advanced / talent","traversal: events, community, entrepreneurship","compose: energy first, people second","grounding: 6/6 ids verified"], sections:[
+    {t:"banner",when:"Fri · this week",title:"Hackathon Nights",text:"The room you belong in. Ten new friends before the first talk even starts."},
+    {t:"text",title:"The last Signal night, in three moments",text:"A pitch that turned into a co-founder chat at 1am. The whiteboard nobody erased. The enterprise team that stayed two hours past close."},
+    {t:"profile",name:"Lea Brandt",role:"Founder-in-residence, campus venture lab",story:"Connects builders to rooms that matter. Ask her about the entrepreneurship society's open circle."},
+    {t:"profile",name:"Tom Weaver",role:"Organizer, Hackathon Nights",story:"Keeps the energy alive after hours. Knows everyone, forgets no one."},
+    {t:"text",title:"Next up",text:"Signal Social · Oct — and SIGNAL 001 in Q4. Colorful, fast, full of energy. Be there."}
+  ]},
+  david: { label:"David · education", accent:"var(--green)", layout:"single", steps:["persona: warm / advanced / education","traversal: mentoring, wellbeing, community","compose: stories, then one quiet door","grounding: 4/4 ids verified"], sections:[
+    {t:"text",title:"People who found their way",text:"Two stories from the network, told the way they were lived — slowly, and with care."},
+    {t:"profile",name:"Maya H.",role:"WBS alumna, cohort 2024",story:"Came for one question about direction. Her mentor listened for an hour before saying a word. They still meet monthly."},
+    {t:"profile",name:"Samuel O.",role:"Final-year student",story:"Was unsure he belonged. A quiet introduction changed the shape of his last year."},
+    {t:"text",title:"When you're ready",text:"One gentle introduction, no pressure, no forms shouting at you. The network keeps, and so do its people."}
+  ]},
+  tobias: { label:"Tobias · infrastructure", accent:"var(--blue)", layout:"grid", steps:["persona: analytical / expert / infrastructure","traversal: sectors, metadata completeness","compose: numbers and sources, no adjectives","grounding: 7/7 ids verified"], sections:[
+    {t:"text",span:1,title:"Methodology",text:"Match score = cosine similarity over 384-dim profile embeddings, intersected with shared-topic edges. Connections per sector below are counted, not estimated."},
+    {t:"enterprise",name:"Nordwind Technologies AG",sector:"Industrial AI",size:"1,200 FTE",hq:"Munich",needs:"cybersecurity, data science",completeness:"100%"},
+    {t:"enterprise",name:"Helvetia Analytics",sector:"Insurance",size:"340 FTE",hq:"Zurich",needs:"data quality, network analysis",completeness:"96%"},
+    {t:"text",span:1,title:"Connections per sector",text:"Industrial AI 34 · Finance 27 · Health 19 · Energy 12. Source: graph traversal, 2026-08-12. Filterable list available on request."}
+  ]}
+};
+const theater = document.getElementById('theater'), page = document.getElementById('page'), sw = document.getElementById('switch');
+Object.entries(PAGES).forEach(([id,p])=>{
+  const b=document.createElement('button'); b.className='pill'; b.textContent=p.label;
+  b.onclick=()=>play(id,b); sw.appendChild(b);
+});
+function card(s){
+  const d=document.createElement('div');
+  d.className = s.t==='banner' ? 'card banner span' : 'card' + (s.span?' span':'');
+  if(s.t==='text') d.innerHTML=`<div class="k">TextBlock</div><h3>${s.title}</h3><p>${s.text}</p>`;
+  if(s.t==='signal') d.innerHTML=`<div class="k">SignalCard</div><h3>${s.name}</h3><p>${s.school}</p>
+    <div class="score"><i style="width:${s.score}%"></i></div>
+    <div class="row"><span>match ${s.score}</span><span>${s.topics}</span></div>
+    <span class="cta solid">Contact</span>`;
+  if(s.t==='profile') d.innerHTML=`<div class="k">StudentProfile</div><h3>${s.name}</h3><p><b>${s.role}</b><br>${s.story}</p>`;
+  if(s.t==='enterprise') d.innerHTML=`<div class="k">EnterpriseCard</div><h3>${s.name}</h3>
+    <div class="meta"><div class="row"><span>sector</span><b>${s.sector}</b></div><div class="row"><span>size</span><b>${s.size}</b></div>
+    <div class="row"><span>hq</span><b>${s.hq}</b></div><div class="row"><span>metadata</span><b>${s.completeness}</b></div></div>
+    <div class="row" style="margin-top:8px"><span>seeks</span><b>${s.needs}</b></div>`;
+  if(s.t==='banner') d.innerHTML=`<div class="when">${s.when}</div><h3>${s.title}</h3><p>${s.text}</p>`;
+  return d;
+}
+function play(id,btn){
+  document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p===btn));
+  const p=PAGES[id]; document.documentElement.style.setProperty('--accent',p.accent);
+  theater.innerHTML=''; page.innerHTML=''; page.className='';
+  p.steps.forEach((s,i)=>{ const e=document.createElement('span'); e.className='step'; e.textContent=s; theater.appendChild(e);
+    setTimeout(()=>e.classList.add('on'), 350*i+150); });
+  const t0 = 350*p.steps.length + 400;
+  page.classList.add(p.layout);
+  p.sections.forEach((s,i)=>{ const c=card(s); page.appendChild(c); setTimeout(()=>c.classList.add('on'), t0+380*i); });
+}
+play('miriam', sw.firstChild);
+</script>
+</body>
+</html>

@@ -1,0 +1,1121 @@
+{
+  "students": [
+    {
+      "id": "stu-01",
+      "name": "Adrian Dunmore",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "security operations",
+        "penetration testing",
+        "SQL"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition",
+        "career development"
+      ],
+      "bio": "Adrian studies how data science strengthens cybersecurity defences and how employers can use it for better talent acquisition.",
+      "contact_email": "adrian.dunmore01@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-02",
+      "name": "Aisha Yardley",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MBA",
+      "school": "Warwick Business School",
+      "skills": [
+        "penetration testing",
+        "machine learning",
+        "SQL"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "From threat modelling to people analytics, Aisha connects cybersecurity, data science and talent acquisition.",
+      "contact_email": "aisha.yardley02@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-03",
+      "name": "Amelia Foss",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MSc Business Analytics",
+      "school": "Warwick Business School",
+      "skills": [
+        "SQL",
+        "security operations",
+        "machine learning"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "From threat modelling to people analytics, Amelia connects cybersecurity, data science and talent acquisition.",
+      "contact_email": "amelia.foss03@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-04",
+      "name": "Callum Calloway",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BA Economics",
+      "school": "University of Warwick",
+      "skills": [
+        "Python",
+        "security operations",
+        "machine learning"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "Focused on cybersecurity and applied data science, Callum wants to help organisations close the security skills gap through smarter talent acquisition.",
+      "contact_email": "callum.calloway04@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-05",
+      "name": "Callum Lomax",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MBA",
+      "school": "Warwick Business School",
+      "skills": [
+        "penetration testing",
+        "Python",
+        "machine learning"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "Focused on cybersecurity and applied data science, Callum wants to help organisations close the security skills gap through smarter talent acquisition.",
+      "contact_email": "callum.lomax05@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-06",
+      "name": "Elena Pemberton",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Business Analytics",
+      "school": "Warwick Business School",
+      "skills": [
+        "threat modelling",
+        "machine learning",
+        "SQL"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "From threat modelling to people analytics, Elena connects cybersecurity, data science and talent acquisition.",
+      "contact_email": "elena.pemberton06@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-07",
+      "name": "Emil Everly",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "machine learning",
+        "penetration testing",
+        "Python"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "Emil studies how data science strengthens cybersecurity defences and how employers can use it for better talent acquisition.",
+      "contact_email": "emil.everly07@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-08",
+      "name": "Esme Calloway",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Computer Science",
+      "school": "University of Warwick",
+      "skills": [
+        "Python",
+        "security operations",
+        "SQL"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition",
+        "sustainability"
+      ],
+      "bio": "From threat modelling to people analytics, Esme connects cybersecurity, data science and talent acquisition.",
+      "contact_email": "esme.calloway08@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-09",
+      "name": "Ethan Bellweather",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Finance",
+      "school": "Warwick Business School",
+      "skills": [
+        "SQL",
+        "machine learning",
+        "security operations"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "Focused on cybersecurity and applied data science, Ethan wants to help organisations close the security skills gap through smarter talent acquisition.",
+      "contact_email": "ethan.bellweather09@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-10",
+      "name": "Ethan Thornhill",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "people analytics",
+        "penetration testing",
+        "Python"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition",
+        "product management"
+      ],
+      "bio": "From threat modelling to people analytics, Ethan connects cybersecurity, data science and talent acquisition.",
+      "contact_email": "ethan.thornhill10@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-11",
+      "name": "Farah Cresswell",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MSc Marketing & Strategy",
+      "school": "Warwick Business School",
+      "skills": [
+        "penetration testing",
+        "Python",
+        "threat modelling"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition",
+        "artificial intelligence"
+      ],
+      "bio": "Focused on cybersecurity and applied data science, Farah wants to help organisations close the security skills gap through smarter talent acquisition.",
+      "contact_email": "farah.cresswell11@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-12",
+      "name": "Felix Rowan",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "Python",
+        "machine learning",
+        "threat modelling"
+      ],
+      "interests": [
+        "cybersecurity",
+        "data science",
+        "talent acquisition"
+      ],
+      "bio": "Felix studies how data science strengthens cybersecurity defences and how employers can use it for better talent acquisition.",
+      "contact_email": "felix.rowan12@warwick.example.ac.uk",
+      "attended": [
+        "evt-01"
+      ]
+    },
+    {
+      "id": "stu-13",
+      "name": "Finn Mercer",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "event planning",
+        "fundraising",
+        "public speaking"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "Finn thrives on networking, loves the energy of live events, and is building practical entrepreneurship skills.",
+      "contact_email": "finn.mercer13@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-14",
+      "name": "Hana Kirkland",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BA Sociology",
+      "school": "University of Warwick",
+      "skills": [
+        "event planning",
+        "fundraising",
+        "community building"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "Hana believes great ventures start with great events and even better networking, and wants to grow the entrepreneurship scene on campus.",
+      "contact_email": "hana.kirkland14@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-15",
+      "name": "Hassan Barnes",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BA Sociology",
+      "school": "University of Warwick",
+      "skills": [
+        "public speaking",
+        "pitching",
+        "social media"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events",
+        "career development"
+      ],
+      "bio": "Hassan believes great ventures start with great events and even better networking, and wants to grow the entrepreneurship scene on campus.",
+      "contact_email": "hassan.barnes15@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-16",
+      "name": "Hassan Mercer",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BSc Data Analytics",
+      "school": "University of Warwick",
+      "skills": [
+        "social media",
+        "public speaking",
+        "fundraising"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events",
+        "product management"
+      ],
+      "bio": "An aspiring founder, Hassan organises networking events and learns entrepreneurship by doing.",
+      "contact_email": "hassan.mercer16@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-17",
+      "name": "Isla Whitfield",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "fundraising",
+        "pitching",
+        "community building"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events",
+        "sustainability"
+      ],
+      "bio": "Isla believes great ventures start with great events and even better networking, and wants to grow the entrepreneurship scene on campus.",
+      "contact_email": "isla.whitfield17@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-18",
+      "name": "Jakub Whitfield",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Marketing & Strategy",
+      "school": "Warwick Business School",
+      "skills": [
+        "fundraising",
+        "social media",
+        "public speaking"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "An aspiring founder, Jakub organises networking events and learns entrepreneurship by doing.",
+      "contact_email": "jakub.whitfield18@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-19",
+      "name": "Keira Calloway",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Data Analytics",
+      "school": "University of Warwick",
+      "skills": [
+        "fundraising",
+        "pitching",
+        "event planning"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "Keira thrives on networking, loves the energy of live events, and is building practical entrepreneurship skills.",
+      "contact_email": "keira.calloway19@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-20",
+      "name": "Keira Pemberton",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "social media",
+        "community building",
+        "public speaking"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "Keira thrives on networking, loves the energy of live events, and is building practical entrepreneurship skills.",
+      "contact_email": "keira.pemberton20@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-21",
+      "name": "Kian Cresswell",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BA Economics",
+      "school": "University of Warwick",
+      "skills": [
+        "pitching",
+        "community building",
+        "social media"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events",
+        "artificial intelligence"
+      ],
+      "bio": "Kian believes great ventures start with great events and even better networking, and wants to grow the entrepreneurship scene on campus.",
+      "contact_email": "kian.cresswell21@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-22",
+      "name": "Kian Drewitt",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MSc Marketing & Strategy",
+      "school": "Warwick Business School",
+      "skills": [
+        "community building",
+        "social media",
+        "fundraising"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "Kian believes great ventures start with great events and even better networking, and wants to grow the entrepreneurship scene on campus.",
+      "contact_email": "kian.drewitt22@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-23",
+      "name": "Kian Underwood",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "event planning",
+        "pitching",
+        "fundraising"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events",
+        "career development"
+      ],
+      "bio": "Kian thrives on networking, loves the energy of live events, and is building practical entrepreneurship skills.",
+      "contact_email": "kian.underwood23@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-24",
+      "name": "Leo Naylor",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "pitching",
+        "public speaking",
+        "event planning"
+      ],
+      "interests": [
+        "networking",
+        "entrepreneurship",
+        "events"
+      ],
+      "bio": "An aspiring founder, Leo organises networking events and learns entrepreneurship by doing.",
+      "contact_email": "leo.naylor24@warwick.example.ac.uk",
+      "attended": [
+        "evt-02"
+      ]
+    },
+    {
+      "id": "stu-25",
+      "name": "Marcus Barnes",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "active listening",
+        "signposting",
+        "storytelling"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community"
+      ],
+      "bio": "Marcus cares deeply about student wellbeing, peer mentoring, and building inclusive community spaces.",
+      "contact_email": "marcus.barnes25@warwick.example.ac.uk",
+      "mentor_id": "alu-01",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-26",
+      "name": "Marcus Cresswell",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BA Economics",
+      "school": "University of Warwick",
+      "skills": [
+        "storytelling",
+        "programme coordination",
+        "active listening"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "product management"
+      ],
+      "bio": "Marcus is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "marcus.cresswell26@warwick.example.ac.uk",
+      "mentor_id": "alu-02",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-27",
+      "name": "Marta Drewitt",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Computer Science",
+      "school": "University of Warwick",
+      "skills": [
+        "programme coordination",
+        "active listening",
+        "signposting"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "product management"
+      ],
+      "bio": "Marta cares deeply about student wellbeing, peer mentoring, and building inclusive community spaces.",
+      "contact_email": "marta.drewitt27@warwick.example.ac.uk",
+      "mentor_id": "alu-03",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-28",
+      "name": "Mei Jepson",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "facilitation",
+        "peer coaching",
+        "active listening"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "marketing analytics"
+      ],
+      "bio": "Mei is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "mei.jepson28@warwick.example.ac.uk",
+      "mentor_id": "alu-04",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-29",
+      "name": "Mei Thornhill",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Computer Science",
+      "school": "University of Warwick",
+      "skills": [
+        "signposting",
+        "programme coordination",
+        "peer coaching"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "artificial intelligence"
+      ],
+      "bio": "Mei is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "mei.thornhill29@warwick.example.ac.uk",
+      "mentor_id": "alu-01",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-30",
+      "name": "Olive Dunmore",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Marketing & Strategy",
+      "school": "Warwick Business School",
+      "skills": [
+        "facilitation",
+        "peer coaching",
+        "active listening"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "sustainability"
+      ],
+      "bio": "A trained peer mentor, Olive champions wellbeing and keeps community at the heart of everything they do.",
+      "contact_email": "olive.dunmore30@warwick.example.ac.uk",
+      "mentor_id": "alu-02",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-31",
+      "name": "Oliver Iverson",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "facilitation",
+        "active listening",
+        "peer coaching"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community"
+      ],
+      "bio": "Oliver is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "oliver.iverson31@warwick.example.ac.uk",
+      "mentor_id": "alu-03",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-32",
+      "name": "Oliver Sedgwick",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BA Sociology",
+      "school": "University of Warwick",
+      "skills": [
+        "active listening",
+        "signposting",
+        "facilitation"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "fintech"
+      ],
+      "bio": "Oliver is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "oliver.sedgwick32@warwick.example.ac.uk",
+      "mentor_id": "alu-04",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-33",
+      "name": "Oscar Fairbank",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "facilitation",
+        "programme coordination",
+        "active listening"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community"
+      ],
+      "bio": "Oscar cares deeply about student wellbeing, peer mentoring, and building inclusive community spaces.",
+      "contact_email": "oscar.fairbank33@warwick.example.ac.uk",
+      "mentor_id": "alu-01",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-34",
+      "name": "Ravi Pemberton",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BA Economics",
+      "school": "University of Warwick",
+      "skills": [
+        "signposting",
+        "storytelling",
+        "active listening"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community",
+        "consulting"
+      ],
+      "bio": "Ravi is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "ravi.pemberton34@warwick.example.ac.uk",
+      "mentor_id": "alu-02",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-35",
+      "name": "Rosa Iverson",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BA Economics",
+      "school": "University of Warwick",
+      "skills": [
+        "active listening",
+        "storytelling",
+        "signposting"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community"
+      ],
+      "bio": "Rosa is exploring how mentoring relationships strengthen community and wellbeing on campus.",
+      "contact_email": "rosa.iverson35@warwick.example.ac.uk",
+      "mentor_id": "alu-03",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-36",
+      "name": "Sam Rowan",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "facilitation",
+        "peer coaching",
+        "signposting"
+      ],
+      "interests": [
+        "mentoring",
+        "wellbeing",
+        "community"
+      ],
+      "bio": "Sam cares deeply about student wellbeing, peer mentoring, and building inclusive community spaces.",
+      "contact_email": "sam.rowan36@warwick.example.ac.uk",
+      "mentor_id": "alu-04",
+      "attended": [
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-37",
+      "name": "Tara Drewitt",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "documentation",
+        "statistics",
+        "data auditing"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis",
+        "artificial intelligence"
+      ],
+      "bio": "Tara obsesses over data quality, rigorous research methodology, and network analysis of complex systems.",
+      "contact_email": "tara.drewitt37@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-38",
+      "name": "Tara Naylor",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MSc Management",
+      "school": "Warwick Business School",
+      "skills": [
+        "ETL",
+        "graph modelling",
+        "survey design"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis",
+        "sustainability"
+      ],
+      "bio": "Curious about how networks behave, Tara pairs research methodology with network analysis and careful data quality work.",
+      "contact_email": "tara.naylor38@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-39",
+      "name": "Vera Ormond",
+      "role": "student",
+      "year_or_cohort": "2026 cohort",
+      "program_or_role": "MSc Management",
+      "school": "Warwick Business School",
+      "skills": [
+        "data auditing",
+        "survey design",
+        "graph modelling"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis"
+      ],
+      "bio": "Vera obsesses over data quality, rigorous research methodology, and network analysis of complex systems.",
+      "contact_email": "vera.ormond39@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-40",
+      "name": "Victor Cresswell",
+      "role": "student",
+      "year_or_cohort": "Year 3",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "graph modelling",
+        "statistics",
+        "survey design"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis"
+      ],
+      "bio": "Victor applies research methodology and network analysis to measure and improve data quality.",
+      "contact_email": "victor.cresswell40@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-41",
+      "name": "Victor Fairbank",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "data auditing",
+        "statistics",
+        "survey design"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis"
+      ],
+      "bio": "Victor applies research methodology and network analysis to measure and improve data quality.",
+      "contact_email": "victor.fairbank41@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-42",
+      "name": "William Ashcroft",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Finance",
+      "school": "Warwick Business School",
+      "skills": [
+        "graph modelling",
+        "survey design",
+        "ETL"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis",
+        "fintech"
+      ],
+      "bio": "Curious about how networks behave, William pairs research methodology with network analysis and careful data quality work.",
+      "contact_email": "william.ashcroft42@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-43",
+      "name": "William Ormond",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BA Sociology",
+      "school": "University of Warwick",
+      "skills": [
+        "ETL",
+        "documentation",
+        "graph modelling"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis"
+      ],
+      "bio": "Curious about how networks behave, William pairs research methodology with network analysis and careful data quality work.",
+      "contact_email": "william.ormond43@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-44",
+      "name": "Wren Jepson",
+      "role": "student",
+      "year_or_cohort": "Year 1",
+      "program_or_role": "BSc Business Management",
+      "school": "University of Warwick",
+      "skills": [
+        "survey design",
+        "documentation",
+        "data auditing"
+      ],
+      "interests": [
+        "data quality",
+        "research methodology",
+        "network analysis"
+      ],
+      "bio": "Wren obsesses over data quality, rigorous research methodology, and network analysis of complex systems.",
+      "contact_email": "wren.jepson44@warwick.example.ac.uk"
+    },
+    {
+      "id": "stu-45",
+      "name": "Yasmin Cresswell",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Psychology",
+      "school": "University of Warwick",
+      "skills": [
+        "research",
+        "communication",
+        "analysis"
+      ],
+      "interests": [
+        "sustainability",
+        "fintech"
+      ],
+      "bio": "Yasmin is exploring sustainability and fintech and looking for where they connect.",
+      "contact_email": "yasmin.cresswell45@warwick.example.ac.uk",
+      "attended": [
+        "evt-01",
+        "evt-02",
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-46",
+      "name": "Yasmin Gosling",
+      "role": "student",
+      "year_or_cohort": "Year 2",
+      "program_or_role": "BSc Mathematics",
+      "school": "University of Warwick",
+      "skills": [
+        "research",
+        "communication",
+        "project work"
+      ],
+      "interests": [
+        "artificial intelligence",
+        "career development"
+      ],
+      "bio": "Keen to turn curiosity about artificial intelligence into real projects, Yasmin also enjoys career development.",
+      "contact_email": "yasmin.gosling46@warwick.example.ac.uk",
+      "attended": [
+        "evt-01",
+        "evt-02",
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-47",
+      "name": "Yasmin Kirkland",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MBA",
+      "school": "Warwick Business School",
+      "skills": [
+        "research",
+        "communication",
+        "project work"
+      ],
+      "interests": [
+        "artificial intelligence",
+        "career development"
+      ],
+      "bio": "Keen to turn curiosity about artificial intelligence into real projects, Yasmin also enjoys career development.",
+      "contact_email": "yasmin.kirkland47@warwick.example.ac.uk",
+      "mentor_id": "alu-02",
+      "attended": [
+        "evt-01",
+        "evt-02",
+        "evt-03"
+      ]
+    },
+    {
+      "id": "stu-48",
+      "name": "Yusuf Ashcroft",
+      "role": "student",
+      "year_or_cohort": "2025 cohort",
+      "program_or_role": "MSc Marketing & Strategy",
+      "school": "Warwick Business School",
+      "skills": [
+        "project work",
+        "research",
+        "analysis"
+      ],
+      "interests": [
+        "consulting",
+        "fintech"
+      ],
+      "bio": "Yusuf is exploring consulting and fintech and looking for where they connect.",
+      "contact_email": "yusuf.ashcroft48@warwick.example.ac.uk",
+      "mentor_id": "alu-03",
+      "attended": [
+        "evt-01",
+        "evt-02",
+        "evt-03"
+      ]
+    }
+  ]
+}

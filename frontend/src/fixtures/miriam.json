@@ -1,0 +1,71 @@
+{
+  "persona": {
+    "interests": ["cybersecurity", "data science", "hiring"],
+    "tone": "direct",
+    "accent_color": "warning",
+    "expertise_level": "expert",
+    "perspective": "enterprise"
+  },
+  "experience": {
+    "theme": "boardroom",
+    "layout": "grid",
+    "sections": [
+      {
+        "component": "TextBlock",
+        "title": "Your hiring signal",
+        "text": "Five Warwick students match your current need in cybersecurity and data science. Ranked by match score. Data, score, contact — nothing else.",
+        "children": [
+          {
+            "component": "TextBlock",
+            "title": "Method",
+            "text": "Match score = cosine similarity over 384-dim profile embeddings, intersected with shared-topic edges."
+          }
+        ]
+      },
+      { "component": "SignalCard", "entity_ids": ["stu-anna"] },
+      { "component": "SignalCard", "entity_ids": ["stu-ben"] },
+      { "component": "EnterpriseCard", "entity_ids": ["ent-nordwind"] },
+      {
+        "component": "EventBanner",
+        "entity_ids": ["evt-signal001"],
+        "title": "SIGNAL 001",
+        "text": "First-look access to the cohort that cracks real enterprise challenges."
+      },
+      { "component": "UnknownWidget", "title": "must render nothing" }
+    ],
+    "entities": {
+      "stu-anna": {
+        "type": "person",
+        "name": "Anna Keller",
+        "school": "WBS · MSc Management",
+        "score": 92,
+        "topics": ["cybersecurity", "data science"],
+        "contact": "Contact"
+      },
+      "stu-ben": {
+        "type": "person",
+        "name": "Ben Osei",
+        "school": "Warwick · BSc Computer Science",
+        "score": 87,
+        "topics": ["cybersecurity", "networks"],
+        "contact": "Contact"
+      },
+      "ent-nordwind": {
+        "type": "enterprise",
+        "name": "Nordwind Technologies AG",
+        "sector": "Industrial AI",
+        "size": "1,200 FTE",
+        "hq": "Munich",
+        "contact": "R. Vestergaard (Head of People)",
+        "topics": ["cybersecurity", "data science"]
+      },
+      "evt-signal001": {
+        "type": "event",
+        "name": "SIGNAL 001",
+        "date": "Q4 2026",
+        "location": "Warwick Business School",
+        "highlights": ["First-look cohort access", "Live challenge sessions"]
+      }
+    }
+  }
+}
