@@ -1,0 +1,55 @@
+version: 1
+scope:
+  include: []
+  exclude:
+    - "node_modules/**"
+    - "__pycache__/**"
+    - ".venv/**"
+    - "*.pyc"
+    - "dist/**"
+repowiki:
+  template: ""
+  notes:
+    - text: "Signal is the Wow-Page MVP for the SIGNAL event (Warwick Business School x OneMundi): a personalized, AI-composed page grounded in a Neo4j graph; demo on 2026-08-24 with the Dean of WBS. All deliverables are in English."
+      author: Manuel
+    - text: "Canonical stack: FastAPI + plain OpenAI client against OpenRouter free models (nvidia/nemotron-3-super-120b-a12b:free, fallback openai/gpt-oss-20b:free); embeddings are LOCAL fastembed BAAI/bge-small-en-v1.5 at 384 dims because OpenRouter serves no embedding models; the Aura vector index is 384 cosine via the current Cypher SEARCH clause (db.index.vector.queryNodes is deprecated)."
+    - text: "Generative UI is allowlist-only: the ComponentType/ColorToken/ActionType/Layout/Theme enums in backend/ui_schema.py are the only UI vocabulary; verify() whitelist-filters entity_ids; the entities map is server-authored after verify() and Agent 2 must leave it empty; the frontend never uses v-html."
+    - text: "The four files in personas/ are the acceptance set: each example prompt is the onboarding input and each expected PersonaModel JSON is the Agent-1 eval; the four pages must be visibly distinct via the themes boardroom/festival/garden/ledger."
+    - text: "The local repo is the source of truth. .scratch/wow-mvp/ is the wayfinder tracker: claim a ticket before working it, at most one non-research resolution per session, blocking via Blocked-by lines. Git identity is applied per-commit with -c flags (melkor42 noreply); .env is never committed."
+    - text: "Primary audience is parallel agent sessions; humans may read it too, but the register stays agent-first and precise."
+    - text: "Every page except 'Living State (dated)' is timeless: no dates, no current-status claims. Living State holds everything that goes stale and is updated only when the user prompts."
+  documents:
+    - title: "Signal: Vision and Story"
+      goal: "Why Signal exists: the Wow Page promise, IDEA.md, the Warwick/OneMundi context, the 2026-08-24 demo, and what the project is and is not."
+      hints: "IDEA.md, README.md, .scratch/wow-mvp/map.md"
+    - title: "Architecture Overview and Decisions"
+      goal: "System shape (Vue+Vite frontend, FastAPI orchestrator, Neo4j Aura + OpenRouter), online vs offline paths, and every settled decision with its rationale and its corrections."
+      hints: "docs/system.html, CONTEXT.md, .scratch/wow-mvp/research/, map Notes"
+    - title: "Backend: Orchestrator Pipeline"
+      goal: "main.py end to end: persona, retrieval, compose, verify, hydrate; graceful degradation, answers-hash cache, rate limit, Neo4j driver timeouts, CORS."
+      hints: "backend/main.py, backend/ui_schema.py, backend/graph_queries.py"
+    - title: "Agents: Prompts, Strategy, Iteration"
+      goal: "The two agents and their prompts, the json_schema strategy, retry/backoff/fallback policy, and how prompt iteration is done with eval_loop.py and trace.jsonl."
+      hints: "prompts/, backend/agents.py, backend/eval_loop.py"
+    - title: "Frontend: Rendering, Themes, Theater"
+      goal: "Vue app structure: recursive UiRenderer, component registry, the four theme CSS variable sets, the waiting-period graph/neural animation, mock mode, error paths."
+      hints: "frontend/src/, prototypes/brand-theater.html"
+    - title: "Data: Synthetic Graph and Ingest"
+      goal: "Domain glossary, dataset spec, generator and idempotent ingest, the 384-dim embedding contract, and the topic clusters aligned to the four fixtures."
+      hints: "CONTEXT.md, backend/generate_data.py, backend/ingest.py, data/"
+    - title: "Acceptance and Demo Ops"
+      goal: "How to run locally, the four-persona acceptance method, the demo script, and the failure modes the system is designed to degrade through (free-tier 429s, paused Aura, ungroundable input)."
+      hints: "README.md, personas/, acceptance/, backend/trace.jsonl"
+    - title: "Living State (dated)"
+      goal: "The only page allowed to go stale: dated snapshot of now — open iteration queue (numeric match scores for Miriam, 2-3 mentor stories for David, sector view and filterable list for Tobias, entrepreneurship naming for Jonas), model IDs and quota status, pending housekeeping such as the first GitHub push. Updated only when the user prompts."
+      hints: ".scratch/wow-mvp/map.md, .scratch/wow-mvp/issues/12-four-persona-acceptance.md"
+    - title: "Working Protocol for Parallel Sessions"
+      goal: "How agents work in this repo: the wayfinder tracker protocol, subagent orchestration with self-contained briefs, the staging/copy file pattern, per-commit git identity, secret handling."
+      hints: "AGENTS.md, docs/agents/, .scratch/wow-mvp/map.md"
+    - title: "Planning Artifacts and Provenance"
+      goal: "Where each planning artifact lives and what it decided: vision, architecture sketch, system reference, legacy CSV, brand prototype, fixtures, acceptance evidence; docs/ARTIFACTS.md narrates the same set for humans."
+      hints: "docs/ARTIFACTS.md, docs/architecture-sketch.png, docs/system.html, prototypes/, personas/, acceptance/, .scratch/wow-mvp/legacy-task-csv.md"
+knowledgecard:
+  notes:
+    - text: "Modules: backend/ (orchestrator, agents, retrieval, ingest), frontend/ (Vue rendering, themes, theater), data/ and prompts/ (assets), personas/ (acceptance fixtures), acceptance/ (screenshot evidence), prototypes/ (throwaway brand reference), .scratch/wow-mvp/ (tracker, not code)."
+    - text: "The offline path (generate_data.py + ingest.py) and the online path (POST /api/experience) share backend/graph_queries.py as the single source of truth for the embedding model and the hybrid retrieval query."

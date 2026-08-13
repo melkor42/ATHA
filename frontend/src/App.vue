@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import Theater from './components/Theater.vue'
 import WowPage from './components/WowPage.vue'
+import { ACCENT_HUES, DEFAULT_HUES } from './theme.js'
 
 const API_URL = 'http://localhost:8000/api/experience'
 
@@ -16,6 +17,7 @@ const persona = ref(null)
 const errorMsg = ref('')
 const theaterDone = ref(false)
 const dataReady = ref(false)
+const revealed = ref(false) // WowPage mounted — theater now plays its exit
 
 const STEPS = [
   'persona: reading you',
@@ -26,9 +28,14 @@ const STEPS = [
 
 const waiting = computed(() => phase.value === 'composing' && theaterDone.value && !dataReady.value)
 
+// substrate pulse palette follows the persona's ColorToken
+const theaterHues = computed(() => ACCENT_HUES[persona.value?.accent_color] ?? DEFAULT_HUES)
+
 function maybeReveal() {
   if (phase.value === 'composing' && theaterDone.value && dataReady.value) {
     phase.value = 'ready'
+    // small beat so the WowPage entrance overlaps the graph dissolve
+    setTimeout(() => { revealed.value = true }, 250)
   }
 }
 
@@ -47,6 +54,7 @@ async function start() {
   phase.value = 'composing'
   theaterDone.value = false
   dataReady.value = false
+  revealed.value = false
   schema.value = null
   errorMsg.value = ''
 
@@ -115,9 +123,16 @@ function restart() {
   </section>
 
   <template v-if="phase === 'composing' || phase === 'ready'">
-    <Theater :steps="STEPS" :active="phase === 'composing'" @done="theaterDone = true; maybeReveal()" />
     <p v-if="waiting" class="waiting">still composing — the network goes deep, give it a moment…</p>
-    <WowPage v-if="phase === 'ready' && schema" :schema="schema" :persona="persona" @restart="restart" />
+    <WowPage v-if="revealed && schema" :schema="schema" :persona="persona" @restart="restart" />
+    <Theater
+      :steps="STEPS"
+      :active="!revealed"
+      :exiting="revealed"
+      :dim="0.16"
+      :hues="theaterHues"
+      @done="theaterDone = true; maybeReveal()"
+    />
   </template>
 
   <section v-if="phase === 'error'" class="error">

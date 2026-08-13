@@ -24,6 +24,10 @@
   --gap: 16px;
   --pad: 22px;
   --bg-tint: transparent;
+  /* ambient field (Phase B) — bioluminescent aura over dark soil;
+     WowPage tints --aura per persona accent */
+  --aura: rgba(230, 190, 112, 0.10);
+  --breathe-dur: 16s;
 }
 
 * { box-sizing: border-box; }
@@ -34,7 +38,43 @@ body {
   font: 15px/1.6 var(--font-ui);
   min-height: 100vh;
 }
-#app { max-width: 1080px; margin: 0 auto; padding: 32px; }
+#app { max-width: 1080px; margin: 0 auto; padding: 32px; position: relative; z-index: 2; }
+
+/* ---------- ambient field (Phase B) — aurora glow + grain, behind everything ----------
+   Softness comes from gradient stops only; no filter: blur() (continuous repaints).
+   Breathing animates opacity/transform only (compositor-friendly). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(72vmax 72vmax at 10% 6%, var(--aura), transparent 68%),
+    radial-gradient(64vmax 64vmax at 92% 96%, var(--aura), transparent 70%);
+  animation: breathe var(--breathe-dur) ease-in-out infinite alternate;
+  will-change: opacity, transform;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+@keyframes breathe {
+  from { opacity: 0.6; transform: translate3d(-1.2%, -0.8%, 0) scale(1); }
+  to   { opacity: 1;   transform: translate3d(1.2%, 0.8%, 0) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; } /* static glows stay */
+}
+
+/* content stacks above the ambient field and the Theater substrate */
+.shell, .onboarding, .wow-page, .error { position: relative; z-index: 2; }
 
 /* ---------- brand shell ---------- */
 .shell h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4px; }
@@ -79,29 +119,16 @@ body {
 .onboarding textarea::placeholder { color: var(--subtle); }
 .onboarding .pill { align-self: flex-start; }
 
-/* ---------- theater (ticket 06) ---------- */
-.theater {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  margin: 8px 0 12px;
-  min-height: 26px;
-}
-.step {
-  color: var(--subtle);
-  font: 500 12px var(--font-mono);
-  opacity: 0;
-  transform: translateY(6px);
-  transition: all 0.5s var(--ease);
-  white-space: nowrap;
-}
-.step.on { opacity: 1; transform: none; color: var(--muted); }
-.step.on::before { content: "✓ "; color: var(--success); }
+/* ---------- theater (ticket 06) — layout lives scoped in Theater.vue ---------- */
 .waiting {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 7;
   color: var(--subtle);
   font: 500 12px var(--font-mono);
-  margin: 0 0 24px;
+  margin: 0;
   animation: pulse 2.2s var(--ease) infinite;
 }
 @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }

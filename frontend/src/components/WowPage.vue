@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, provide, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import UiRenderer from './UiRenderer.vue'
 
 const props = defineProps({
@@ -16,6 +16,15 @@ const ACCENTS = {
   success: 'var(--success)',
   warning: 'var(--warning)'
 }
+// precomputed aura literals per ColorToken — ambient glow behind the page
+// (harmonize with --primary/--accent-tok/--success/--warning, no color-mix)
+const ACCENT_AURA = {
+  primary: 'rgba(110, 160, 214, 0.10)',
+  accent: 'rgba(201, 140, 158, 0.10)',
+  success: 'rgba(150, 178, 112, 0.10)',
+  warning: 'rgba(224, 162, 78, 0.10)'
+}
+const DEFAULT_AURA = 'rgba(230, 190, 112, 0.10)'
 
 const theme = computed(() => (THEMES.has(props.schema?.theme) ? props.schema.theme : 'boardroom'))
 // accent comes from the persona's ColorToken (backend); fixtures may
@@ -23,6 +32,13 @@ const theme = computed(() => (THEMES.has(props.schema?.theme) ? props.schema.the
 const accent = computed(() =>
   ACCENTS[props.persona?.accent_color] ?? ACCENTS[props.schema?.accent] ?? 'var(--accent-tok)'
 )
+const aura = computed(() =>
+  ACCENT_AURA[props.persona?.accent_color] ?? ACCENT_AURA[props.schema?.accent] ?? DEFAULT_AURA
+)
+// the ambient layer lives on body::before — outside this component's cascade —
+// so the persona tint is mirrored onto the document root
+watch(aura, (v) => document.documentElement.style.setProperty('--aura', v), { immediate: true })
+onBeforeUnmount(() => document.documentElement.style.removeProperty('--aura'))
 const layout = computed(() => (props.schema?.layout === 'grid' ? 'grid' : 'single'))
 const sections = computed(() =>
   Array.isArray(props.schema?.sections) ? props.schema.sections : []
@@ -48,7 +64,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="wow-page" :class="['theme-' + theme, layout]" :style="{ '--accent': accent }">
+  <div class="wow-page" :class="['theme-' + theme, layout]" :style="{ '--accent': accent, '--aura': aura }">
     <UiRenderer
       v-for="(node, i) in sections"
       :key="i"
