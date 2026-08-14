@@ -1,16 +1,24 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Theater from './components/Theater.vue'
 import WowPage from './components/WowPage.vue'
 import { ACCENT_HUES, DEFAULT_HUES } from './theme.js'
 
-const API_URL = 'http://localhost:8000/api/experience'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/experience'
+// wake ping: spin up a sleeping hosted backend while the user types
+const HEALTH_URL = API_URL.replace(/\/api\/experience$/, '/health')
+function wakeBackend() {
+  try { fetch(HEALTH_URL, { method: 'GET' }).catch(() => {}) } catch { /* swallow */ }
+}
 
 // dev-only mock mode: ?fixture=miriam|jonas|david|tobias renders a
 // hand-written ExperienceSchema without the backend.
 const fixtureName = new URLSearchParams(window.location.search).get('fixture')
 
 const phase = ref('onboarding') // onboarding | composing | ready | error
+// fire one cheap /health ping each time the onboarding phase mounts — a
+// sleeping Render backend wakes during the typing, no retries
+watch(phase, (v) => { if (v === 'onboarding') wakeBackend() }, { immediate: true })
 const input = ref('')
 const schema = ref(null)
 const persona = ref(null)

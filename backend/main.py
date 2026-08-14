@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 import time
 from collections import OrderedDict
 from datetime import date
@@ -37,7 +38,7 @@ from agents import (
     persona_agent,
     render_pool,
 )
-from graph_queries import get_database, get_driver, hybrid_retrieve
+from graph_queries import get_database, get_driver, get_embedder, hybrid_retrieve
 from ui_schema import (
     ActionType,
     Button,
@@ -64,7 +65,8 @@ app = FastAPI(title="SIGNAL wow-page orchestrator", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"]
+    + [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -102,6 +104,21 @@ def get_app_driver() -> AsyncDriver:
     if _driver is None:
         _driver = get_driver()
     return _driver
+
+
+@app.on_event("startup")
+async def _warmup() -> None:
+    """Warm the embedder (initiates the first-use fastembed model download,
+    ~90MB — intended) and the Neo4j driver so the first real request starts
+    warm. A paused Aura or a slow download only warns: startup never fails."""
+    try:
+        get_embedder()
+    except Exception as exc:  # noqa: BLE001 — warm-up is best-effort
+        log.warning("warm-up: embedder not ready yet: %s", exc)
+    try:
+        get_app_driver()
+    except Exception as exc:  # noqa: BLE001 — warm-up is best-effort
+        log.warning("warm-up: Neo4j driver not ready yet: %s", exc)
 
 
 @app.on_event("shutdown")

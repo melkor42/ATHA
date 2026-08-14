@@ -16,6 +16,7 @@ that verify() checks entity_ids against.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -59,11 +60,26 @@ LIMIT $limit
 
 # --- environment / driver ------------------------------------------------------
 
+# keys that may arrive via platform env (Render) instead of a .env file
+_PLATFORM_KEYS = (
+    "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD",
+    "NEO4J_DATABASE", "OPENROUTER_API_KEY",
+)
+
+
 def load_env() -> dict[str, str]:
-    """Load .env from the repo root (tolerates a UTF-8 BOM on the first key)."""
+    """Merged config: .env values from the repo root, overridden by platform
+    env vars on conflict (hosts like Render inject secrets as platform env
+    and ship no .env file). Tolerates a UTF-8 BOM on the first .env key.
+    Locally (.env present, no platform vars) the result is unchanged.
+    """
     env_path = Path(__file__).resolve().parents[1] / ".env"
     values = dotenv_values(env_path)
-    return {k.lstrip("\ufeff"): v for k, v in values.items() if v is not None}
+    merged = {k.lstrip("\ufeff"): v for k, v in values.items() if v is not None}
+    for key in _PLATFORM_KEYS:
+        if os.environ.get(key):
+            merged[key] = os.environ[key]  # platform env wins
+    return merged
 
 
 def get_driver(env: dict[str, str] | None = None) -> AsyncDriver:
