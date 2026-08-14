@@ -46,7 +46,8 @@ from ui_schema import (
     EntityType,
     ExperienceSchema,
     Layout,
-    Theme,
+    Spectrum,
+    StyleMode,
     UINode,
 )
 
@@ -72,7 +73,8 @@ app.add_middleware(
 
 DEFAULT_EXPERIENCE = ExperienceSchema(
     layout=Layout.SINGLE_COLUMN,
-    theme=Theme.GARDEN,
+    spectrum=Spectrum.TERRA,
+    mode=StyleMode.NONE,
     sections=[
         UINode(
             component=ComponentType.TEXT_BLOCK,
@@ -252,10 +254,17 @@ def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
         ]
     return ExperienceSchema(
         layout=schema.layout,
-        theme=schema.theme,
+        spectrum=schema.spectrum,
+        mode=schema.mode,
         sections=kept[:6],
         entities={},
     )
+
+
+# round-trip smoke: verify() rebuilds the schema naming fields explicitly —
+# if spectrum/mode were ever dropped there, this assert fails at import.
+assert verify(DEFAULT_EXPERIENCE, set()).spectrum == DEFAULT_EXPERIENCE.spectrum
+assert verify(DEFAULT_EXPERIENCE, set()).mode == DEFAULT_EXPERIENCE.mode
 
 
 # --- rate limit + cache + trace -----------------------------------------------------------------

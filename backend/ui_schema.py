@@ -1,6 +1,7 @@
 """backend/ui_schema.py — the allowlist contract between Agent 2 and the frontend.
 
-Enums for components, color tokens, actions, layouts and themes; a recursive
+Enums for components, color tokens, actions, layouts, spectra and style
+modes; a recursive
 ``UINode`` with length limits and a ``strip_markup`` validator; and the
 ``ExperienceSchema`` with a server-side ``entities`` hydration map keyed by
 entity_id. No free HTML anywhere — every value the LLM may emit is on an
@@ -43,11 +44,25 @@ class Layout(str, Enum):
     GRID = "grid"
 
 
-class Theme(str, Enum):
-    BOARDROOM = "boardroom"
-    FESTIVAL = "festival"
-    GARDEN = "garden"
-    LEDGER = "ledger"
+class Spectrum(str, Enum):
+    """Axis 1 — color/glow family (sci-fi ↔ organic)."""
+
+    MYCELIUM = "mycelium"
+    TERRA = "terra"
+    AURORA = "aurora"
+    NEON = "neon"
+    VOID = "void"
+
+
+class StyleMode(str, Enum):
+    """Axis 2 — design world (materiality/typography/atmosphere)."""
+
+    NONE = "none"
+    MINIMAL = "minimal"
+    RETRO = "retro"
+    ORGANIC = "organic"
+    EARTH = "earth"
+    STEAMPUNK = "steampunk"
 
 
 class EntityType(str, Enum):
@@ -147,7 +162,8 @@ class ExperienceSchema(BaseModel):
     """Agent 2's output + server hydration. The frontend contract."""
 
     layout: Layout
-    theme: Theme
+    spectrum: Spectrum = Spectrum.TERRA
+    mode: StyleMode = StyleMode.NONE
     sections: list[UINode] = Field(min_length=1, max_length=6)
     entities: dict[str, EntityPayload] = Field(default_factory=dict)
 

@@ -4,7 +4,7 @@ Reads the four fixtures from personas/*.md (example prompt + expected
 PersonaModel), posts each prompt to the live POST /api/experience endpoint,
 scores Agent 1 against the expected PersonaModel, validates the returned
 schema, and checks that the four compositions are visibly different
-(distinct themes + component mixes).
+(distinct spectra + component mixes).
 
 Run:  python eval_loop.py [--url http://127.0.0.1:8000]
 """
@@ -29,12 +29,12 @@ PROMPT_RE = re.compile(
 )
 EXPECTED_RE = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
 
-# Ticket-07 contrast table: the theme each fixture must land on.
-EXPECTED_THEME = {
-    "miriam-stahl": "boardroom",
-    "jonas-neumann": "festival",
-    "david-bergmann": "garden",
-    "tobias-winter": "ledger",
+# Phase-A contrast table: the spectrum each fixture must land on.
+EXPECTED_SPECTRUM = {
+    "miriam-stahl": "void",
+    "jonas-neumann": "aurora",
+    "david-bergmann": "mycelium",
+    "tobias-winter": "neon",
 }
 
 
@@ -139,12 +139,14 @@ async def run(base_url: str) -> int:
             exp = body.get("experience", {})
             valid, problems = validate_experience(exp)
             theme = exp.get("theme")
+            spectrum = exp.get("spectrum")
+            mode = exp.get("mode")
             mix = ",".join(s.get("component", "?") for s in exp.get("sections", []))
             layout = exp.get("layout")
-            theme_ok = theme == EXPECTED_THEME[fx["slug"]]
-            ok = persona_score.get("pass", False) and valid and theme_ok
-            results.append({"slug": fx["slug"], "ok": ok, "theme": theme,
-                            "mix": mix})
+            spectrum_ok = spectrum == EXPECTED_SPECTRUM[fx["slug"]]
+            ok = persona_score.get("pass", False) and valid and spectrum_ok
+            results.append({"slug": fx["slug"], "ok": ok, "spectrum": spectrum,
+                            "mode": mode, "mix": mix})
             print(f"\n=== {fx['slug']} ({ms} ms) "
                   f"{'PASS' if ok else 'FAIL'} ===")
             print(f"  persona: {'PASS' if persona_score.get('pass') else 'FAIL'}")
@@ -156,16 +158,18 @@ async def run(base_url: str) -> int:
                 print(f"    reason: {persona_score['reason']}")
             print(f"  schema: {'valid' if valid else 'INVALID'} "
                   f"{problems if problems else ''}")
-            print(f"  theme: {theme} (want {EXPECTED_THEME[fx['slug']]}) "
-                  f"| layout: {layout} | mix: {mix}")
+            print(f"  spectrum: {spectrum} (want {EXPECTED_SPECTRUM[fx['slug']]}) "
+                  f"| mode: {mode} | layout: {layout} | mix: {mix}")
+            if theme is not None:
+                print(f"  WARNING: legacy 'theme' field present: {theme}")
 
-    themes = {r.get("theme") for r in results if r.get("theme")}
+    spectra = {r.get("spectrum") for r in results if r.get("spectrum")}
     mixes = {r.get("mix") for r in results if r.get("mix")}
-    diverse = len(themes) == 4 and len(mixes) >= 3
+    diverse = len(spectra) == 4 and len(mixes) >= 3
     all_ok = bool(results) and all(r.get("ok") for r in results)
     print("\n--- summary ---")
-    print(f"themes distinct: {sorted(t for t in themes if t)} "
-          f"(distinct={len(themes)}/4)")
+    print(f"spectra distinct: {sorted(s for s in spectra if s)} "
+          f"(distinct={len(spectra)}/4)")
     print(f"component mixes distinct: {len(mixes)}/4")
     print(f"latency: {min(latencies) if latencies else '-'}–"
           f"{max(latencies) if latencies else '-'} ms")

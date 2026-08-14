@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGNAL · axis grammar preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,500;1,600&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   SIGNAL · axis grammar preview — throwaway prototype
+   Axis 1 "spectrum" (sci-fi ↔ organic)  -> .spectrum-* sets COLOR/GLOW only
+   Axis 2 "mode"     (structural overlay) -> .mode-* sets STRUCTURE/TYPE only
+   Orthogonality mirrors the grammar that will ship in the LLM pipeline.
+   ===================================================================== */
+
+:root {
+  /* base brand tokens — frontend/src/assets/style.css */
+  --bg: #0B0A09;
+  --surface: #131110;
+  --surface2: #1A1715;
+  --text: #F1EDE6;
+  --muted: #9C948A;
+  --subtle: #6A635B;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  /* structural defaults (mode-none values, so root stays renderable) */
+  --radius: 18px;
+  --gap: 16px;
+  --pad: 22px;
+  --bdw: 1px;               /* border width */
+  --shadow: none;
+  --font-display: var(--font-ui);
+
+  /* color defaults (spectrum-aurora values) — overridden by .spectrum-* */
+  --s-surface: #101216;
+  --s-surface2: #161B21;
+  --s-border: rgba(95, 217, 203, 0.16);
+  --s-accent: #5FD9CB;
+  --s-accent2: #9A7FC8;
+  --s-glow1: rgba(95, 217, 203, 0.10);
+  --s-glow2: rgba(154, 127, 200, 0.09);
+  --s-dimtext: #A3ABA6;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 var(--font-ui);
+  min-height: 100vh;
+}
+
+/* =====================================================================
+   AMBIENT FIELD — bioluminescent aura over dark soil.
+   Port of style.css body::before / body::after; glows read spectrum vars.
+   ===================================================================== */
+#ambient {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(72vmax 72vmax at 10% 6%,  var(--s-glow1), transparent 68%),
+    radial-gradient(64vmax 64vmax at 92% 96%, var(--s-glow2), transparent 70%);
+  animation: breathe 16s ease-in-out infinite alternate;
+  will-change: opacity, transform;
+  transition: background 0.8s var(--ease);
+}
+#grain {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+#net { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.32; }
+@keyframes breathe {
+  from { opacity: 0.6; transform: translate3d(-1.2%, -0.8%, 0) scale(1); }
+  to   { opacity: 1;   transform: translate3d(1.2%, 0.8%, 0) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) { #ambient { animation: none; } }
+
+/* retro scanlines — visible only under .mode-retro (3% opacity) */
+#scanlines {
+  position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.9) 0 1px, transparent 1px 3px);
+  transition: opacity 0.4s var(--ease);
+}
+body.mode-retro #scanlines { opacity: 0.03; }
+
+/* CRT vignette — darkened edges, only lit under .mode-retro */
+#vignette {
+  position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0;
+  background: radial-gradient(120% 95% at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+  transition: opacity 0.5s var(--ease);
+}
+
+/* =====================================================================
+   AXIS 1 — SPECTRA · color/glow character ONLY
+   ===================================================================== */
+
+/* mycelium — deepest organic · underground network, dark soil */
+.spectrum-mycelium {
+  --s-surface:  #0F120C;
+  --s-surface2: #161B11;
+  --s-border:   rgba(143, 169, 110, 0.13);   /* softest border of the set */
+  --s-accent:   #8FA96E;                     /* moss-green vein glow */
+  --s-accent2:  #B4A26E;                     /* faint root amber */
+  --s-glow1:    rgba(143, 169, 110, 0.09);
+  --s-glow2:    rgba(90, 104, 68, 0.08);
+  --s-dimtext:  #9AA18C;
+}
+/* terra — warm organic · ochre & amber, the pachamama end */
+.spectrum-terra {
+  --s-surface:  #15110B;
+  --s-surface2: #1D170F;
+  --s-border:   rgba(216, 162, 76, 0.18);
+  --s-accent:   #D8A24C;
+  --s-accent2:  #8FA96E;                     /* moss under amber */
+  --s-glow1:    rgba(216, 162, 76, 0.12);    /* generous glow */
+  --s-glow2:    rgba(143, 169, 110, 0.10);
+  --s-dimtext:  #AFA08A;
+}
+/* aurora — balanced bioluminescent center · current SIGNAL identity evolved */
+.spectrum-aurora {
+  --s-surface:  #101216;
+  --s-surface2: #161B21;
+  --s-border:   rgba(95, 217, 203, 0.16);
+  --s-accent:   #5FD9CB;
+  --s-accent2:  #9A7FC8;
+  --s-glow1:    rgba(95, 217, 203, 0.10);
+  --s-glow2:    rgba(154, 127, 200, 0.09);
+  --s-dimtext:  #A3ABA6;
+}
+/* neon — tech-forward · colder surfaces, vivid saturated rims */
+.spectrum-neon {
+  --s-surface:  #0A0E14;
+  --s-surface2: #0F141D;
+  --s-border:   rgba(111, 199, 242, 0.30);   /* stronger electric rim */
+  --s-accent:   #6FC7F2;
+  --s-accent2:  #5B7FE0;
+  --s-glow1:    rgba(111, 199, 242, 0.13);
+  --s-glow2:    rgba(91, 127, 224, 0.10);
+  --s-dimtext:  #93A3B3;
+}
+/* void — pure sci-fi minimal · near-empty cold dark, hairline rim light */
+.spectrum-void {
+  --s-surface:  #0A0B0E;
+  --s-surface2: #0E1014;
+  --s-border:   rgba(214, 228, 240, 0.22);   /* crisp blue-white hairline */
+  --s-accent:   #CFE0EE;
+  --s-accent2:  #7E97AD;
+  --s-glow1:    rgba(207, 224, 238, 0.05);   /* least ornament */
+  --s-glow2:    rgba(126, 151, 173, 0.04);
+  --s-dimtext:  #8B96A0;
+}
+
+/* =====================================================================
+   AXIS 2 — MODES · v2: three full design worlds.
+   Each mode owns typography scale, card anatomy, atmosphere intensity,
+   ornament and motion character. The strict color/structure split is
+   relaxed by design decision: modes may apply controlled color
+   transforms (muting, saturation pushes, border tints) — the spectrum
+   still owns the hue family itself.
+   ===================================================================== */
+
+/* ---------- none · "signal prime" — the refined baseline world ---------- */
+.mode-none {
+  --radius: 18px; --gap: 16px; --pad: 22px;
+  --bdw: 1px; --shadow: none;
+  --font-display: var(--font-ui);
+}
+body.mode-none #net { opacity: 0.32; }
+/* signature polish: cards lift faintly toward their glow */
+.mode-none .card { transition: background 0.5s var(--ease), border-color 0.5s var(--ease),
+  border-radius 0.4s var(--ease), box-shadow 0.5s var(--ease), transform 0.5s var(--ease); }
+.mode-none .card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--s-accent) 30%, var(--s-border));
+  box-shadow: 0 16px 44px -20px color-mix(in srgb, var(--s-accent) 40%, transparent);
+}
+.mode-none .num { text-shadow: 0 0 14px color-mix(in srgb, var(--s-accent) 30%, transparent); }
+
+/* ---------- minimal · "stillness" — Apple-grade serenity world ----------
+   volume turned down: no boxes, hairline dividers, near-monochrome ink,
+   the spectral accent reduced to a whisper (one thin line, one numeral). */
+.mode-minimal {
+  --radius: 24px; --gap: 0px; --pad: 26px 0;
+  --bdw: 1px; --shadow: none;
+  --font-display: var(--font-ui);
+  --m-ink: color-mix(in srgb, var(--text) 92%, transparent);
+  --m-dim: #8E8B86;   /* neutral, near-monochrome mute */
+}
+body.mode-minimal #ambient { animation-play-state: paused; opacity: 0.35; }
+body.mode-minimal #net { opacity: 0.10; }
+body.mode-minimal #grain { opacity: 0.02; }
+.mode-minimal header h1 { font-weight: 300; letter-spacing: -0.02em; }
+.mode-minimal header h1 .grad { background: none; -webkit-background-clip: border-box;
+  background-clip: border-box; color: var(--text); }
+.mode-minimal header .axisline { color: var(--m-dim); }
+.mode-minimal .pill { border-color: color-mix(in srgb, var(--text) 13%, transparent);
+  font-weight: 500; padding: 7px 18px; transition-duration: 0.7s; }
+.mode-minimal .pill.on { background: transparent; color: var(--text); border-color: var(--text); }
+.mode-minimal .readout, .mode-minimal footer { color: color-mix(in srgb, var(--m-dim) 75%, transparent); }
+/* composition becomes a single airy column of open sections */
+.mode-minimal .stage {
+  background: none; grid-template-columns: 1fr; max-width: 720px;
+  margin: 0 auto; padding: 40px 6px 24px; gap: 0;
+}
+.mode-minimal .stage > .wide { grid-column: auto; }
+.mode-minimal .card {
+  background: transparent; border: 0; border-radius: 0;
+  padding: 34px 0; box-shadow: none;
+}
+.mode-minimal .stage .card + .card { border-top: 1px solid color-mix(in srgb, var(--text) 9%, transparent); }
+.mode-minimal .headline { padding-top: 6px; }
+.mode-minimal .headline h2 { font-size: 44px; font-weight: 200; letter-spacing: -0.045em; line-height: 1.1; }
+.mode-minimal .headline p { color: var(--m-dim); font-size: 15px; line-height: 1.75; max-width: 50ch; }
+.mode-minimal .k { font-size: 10px; letter-spacing: 0.24em; color: var(--m-dim);
+  position: relative; padding-bottom: 9px; margin-bottom: 18px; }
+/* the whisper: a single 26px accent hairline under each eyebrow */
+.mode-minimal .k::after { content: ""; position: absolute; left: 0; bottom: 0;
+  width: 26px; height: 1px; background: var(--s-accent); opacity: 0.75; }
+.mode-minimal .card h3 { font-size: 21px; font-weight: 400; letter-spacing: -0.015em; }
+.mode-minimal .card .sub, .mode-minimal .row, .mode-minimal .score-line { color: var(--m-dim); }
+.mode-minimal .row b { font-weight: 500; color: var(--m-ink); }
+.mode-minimal .score { height: 2px; border-radius: 0; margin: 20px 0 10px;
+  background: color-mix(in srgb, var(--text) 8%, transparent); }
+.mode-minimal .score i { border-radius: 0; background: color-mix(in srgb, var(--s-accent) 65%, transparent); }
+.mode-minimal .num { color: var(--s-accent); font-weight: 400; }  /* the other whisper */
+.mode-minimal .cta { border: 0; border-radius: 0; padding: 2px 0; margin-top: 18px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--m-ink); border-bottom: 1px solid var(--s-accent); }
+.mode-minimal .cta:hover { background: transparent; color: var(--s-accent); }
+.mode-minimal .thumb { border-radius: 14px; border-color: color-mix(in srgb, var(--text) 7%, transparent); }
+.mode-minimal .thumb-mini { background: transparent; border: 0; border-radius: 0; box-shadow: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 12%, transparent); padding: 6px 2px 8px; }
+.mode-minimal .thumb-mini .t { font-weight: 400; }
+.mode-minimal .thumb-mini .bar { height: 2px; border-radius: 0; }
+.mode-minimal .thumb-mini .pilldot { border: 0; border-radius: 0; padding: 1px 0;
+  border-bottom: 1px solid var(--s-accent); color: var(--m-dim); }
+
+/* ---------- retro · "arcade" — full 1987 CRT terminal world ----------
+   VT323 across the board, panel title bars, segmented health bars,
+   scanlines + vignette, saturated accent push, pixel ornament. */
+.mode-retro {
+  --radius: 0px; --gap: 18px; --pad: 20px;
+  --bdw: 2px; --shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.65);
+  --font-display: 'VT323', ui-monospace, monospace;
+}
+body.mode-retro { font-family: 'VT323', ui-monospace, monospace; font-size: 17px; }
+body.mode-retro #scanlines { opacity: 0.05; }
+body.mode-retro #vignette { opacity: 1; }
+body.mode-retro #net { opacity: 0.45; }
+body.mode-retro #ambient { animation-duration: 10s; }  /* more energetic field */
+.mode-retro header h1 { font-family: 'VT323', monospace; font-weight: 400; font-size: 34px; letter-spacing: 0.02em; }
+.mode-retro header h1::before { content: "► "; color: var(--s-accent); }
+.mode-retro .ctrl-group .lbl { font-family: 'VT323', monospace; font-size: 14px; letter-spacing: 0.05em; }
+.mode-retro .pill { border-radius: 0; border-width: 2px; font-family: 'VT323', monospace;
+  font-size: 16px; font-weight: 400; padding: 3px 12px; }
+.mode-retro .pill.on { box-shadow: 2px 2px 0 0 rgba(0,0,0,0.6); }
+.mode-retro .pill.view { border-style: solid; }
+.mode-retro .readout { font-family: 'VT323', monospace; font-size: 17px; }
+.mode-retro .readout::before { content: "► "; color: var(--s-accent); }
+.mode-retro footer { font-family: 'VT323', monospace; font-size: 14px; }
+/* stepped/dithered glow bands instead of the soft radial wash */
+.mode-retro .stage {
+  background: repeating-linear-gradient(to top,
+    color-mix(in srgb, var(--s-accent) 4%, transparent) 0 2px, transparent 2px 6px);
+}
+/* card anatomy: full-bleed title bar + pixel panel body */
+.mode-retro .card { padding: 0 0 16px; line-height: 1.4;
+  border-color: color-mix(in srgb, var(--s-accent) 55%, var(--s-border)); }
+.mode-retro .k {
+  margin: 0 0 10px; padding: 5px 14px; font-family: 'VT323', monospace;
+  font-size: 15px; letter-spacing: 0.06em; text-shadow: none;
+  color: var(--s-accent);
+  border-bottom: 2px solid color-mix(in srgb, var(--s-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--s-accent) 8%, transparent);
+}
+.mode-retro .k::before { content: "▓░ "; }
+.mode-retro .k::after { content: " ░▓"; float: right; }
+.mode-retro .card h3 { margin: 4px 14px 2px; font-size: 26px; font-weight: 400;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--s-accent) 45%, transparent); }
+.mode-retro .card .sub { margin: 0 14px; font-size: 16px; }
+.mode-retro .score { margin: 12px 14px 6px; height: 10px; border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--s-accent) 40%, transparent); background: var(--s-surface2); }
+/* segmented pixel health bar */
+.mode-retro .score i { border-radius: 0;
+  background: repeating-linear-gradient(90deg, var(--s-accent) 0 6px, transparent 6px 9px); }
+.mode-retro .score-line { margin: 0 14px; font-size: 15px; }
+.mode-retro .num { font: 400 20px 'VT323', monospace;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--s-accent) 60%, transparent); }
+.mode-retro .row { margin: 2px 14px; font-size: 15px; }
+.mode-retro .cta { margin: 12px 14px 0; border-radius: 0; border-width: 2px;
+  box-shadow: 3px 3px 0 0 rgba(0,0,0,0.65);
+  font-family: 'VT323', monospace; font-size: 17px; font-weight: 400; padding: 3px 14px; }
+.mode-retro .cta:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 0 rgba(0,0,0,0.65); }
+.mode-retro .headline { padding-bottom: 2px; }
+.mode-retro .headline h2 { margin: 12px 14px 4px; font-size: 42px; font-weight: 400;
+  letter-spacing: 0; text-shadow: 0 0 14px color-mix(in srgb, var(--s-accent) 45%, transparent); }
+.mode-retro .headline h2::after { content: "█"; margin-left: 8px; font-size: 0.75em;
+  color: var(--s-accent); animation: blink 1.1s steps(1) infinite; }
+.mode-retro .headline p { margin: 0 14px; font-size: 17px; }
+@keyframes blink { 50% { opacity: 0; } }
+.mode-retro .thumb { border-radius: 0; }
+.mode-retro .thumb-mini { padding: 6px 8px 8px;
+  border-color: color-mix(in srgb, var(--s-accent) 50%, var(--s-border)); }
+.mode-retro .thumb-mini .t { font-family: 'VT323', monospace; font-size: 15px; font-weight: 400; }
+.mode-retro .thumb-mini .t::before { content: "▓ "; color: var(--s-accent); }
+.mode-retro .thumb-mini .bar { height: 6px; border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--s-accent) 40%, transparent); }
+.mode-retro .thumb-mini .bar i {
+  background: repeating-linear-gradient(90deg, var(--s-accent) 0 4px, transparent 4px 6px); }
+.mode-retro .thumb-mini .pilldot { border-radius: 0; border-width: 2px;
+  font-family: 'VT323', monospace; font-size: 12px; }
+
+/* =====================================================================
+   AXIS 2b — v3: three more full mode worlds (organic · earth · steampunk).
+   Font budget: +2 families — 'Cormorant Garamond' shared by organic
+   (light italic humanist serif) and earth (heavy weight, sturdy serif);
+   'Oswald' condensed grotesk for steampunk metro signage.
+   Same relaxed orthogonality as v2: spectrum owns hue, modes mix it.
+   ===================================================================== */
+
+/* ---------- organic · "pachamama" — nature's forms over geometry ----------
+   asymmetric grown radii, leaf ornament, humanist serif, thicker greener
+   breathing atmosphere, sway motion instead of rise. */
+.mode-organic {
+  --radius: 26px 10px 24px 12px; --gap: 20px; --pad: 26px;
+  --bdw: 1px; --shadow: 0 14px 34px -22px color-mix(in srgb, var(--s-accent) 35%, transparent);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+}
+body.mode-organic #ambient { animation-duration: 20s; opacity: 1; }
+body.mode-organic #net { opacity: 0.36; }
+/* greener thickening: mix the spectral glows toward moss regardless of spectrum */
+.mode-organic .stage {
+  background: radial-gradient(900px 420px at 50% -80px,
+    color-mix(in srgb, var(--s-glow1) 60%, rgba(143, 169, 110, 0.14)), transparent);
+}
+.mode-organic header h1 { font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600; font-size: 30px; letter-spacing: 0; }
+.mode-organic header .axisline b { font-weight: 700; }
+.mode-organic .pill { border-radius: 16px 7px 15px 8px; font-weight: 500; }
+.mode-organic .k { letter-spacing: 0.14em; color: color-mix(in srgb, var(--s-accent) 55%, var(--subtle)); }
+.mode-organic .k::before { content: "❧ "; color: var(--s-accent); }   /* hedera leaf mark */
+.mode-organic .card { transition: background 0.5s var(--ease), border-color 0.5s var(--ease),
+  border-radius 0.4s var(--ease), box-shadow 0.5s var(--ease), transform 0.7s var(--ease); }
+.mode-organic .card:nth-child(odd) { border-radius: 12px 26px 10px 24px; }   /* irregular, alternating */
+.mode-organic .card:hover { transform: rotate(-0.4deg) translateY(-2px); }
+.mode-organic .headline h2 { font-size: 46px; font-weight: 500; font-style: italic;
+  letter-spacing: -0.01em; line-height: 1.05; }
+.mode-organic .headline p { font-size: 15px; line-height: 1.7; }
+.mode-organic .card h3 { font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px; font-weight: 600; letter-spacing: 0; }
+/* score bar that feels grown: rounded swelling fill with leaf-vein striations */
+.mode-organic .score { height: 7px; border-radius: 8px; margin: 16px 0 8px;
+  background: color-mix(in srgb, var(--s-surface2) 70%, var(--s-accent) 6%); }
+.mode-organic .score i { border-radius: 8px;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.13) 0 1px, transparent 1px 7px),
+    linear-gradient(90deg, color-mix(in srgb, var(--s-accent) 70%, #4a5c38), var(--s-accent));
+}
+.mode-organic .num { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; font-style: italic; }
+.mode-organic .cta { border-radius: 18px 8px 18px 8px; font-weight: 500; letter-spacing: 0.02em; }
+.mode-organic .thumb { border-radius: 16px 8px 15px 9px; }
+.mode-organic .thumb-mini .t::before { content: "❧ "; color: var(--s-accent); }
+.mode-organic .thumb-mini .bar { border-radius: 6px; }
+.mode-organic .thumb-mini .bar i { border-radius: 6px; }
+.mode-organic .thumb-mini .pilldot { border-radius: 9px 4px 9px 4px; }
+
+/* ---------- earth · "hand-pressed" — raw materiality & craft ----------
+   TEXTURE world, deliberately NOT a hue world: heavy grain, pressed-fiber
+   panels, chunky desaturated soil borders mixed from the spectrum accent,
+   warm downward shadows, pigmented grainy score bars. Reads distinct from
+   the earth SPECTRUM (which only sets warm hues) under every spectrum. */
+.mode-earth {
+  --radius: 8px; --gap: 18px; --pad: 24px;
+  --bdw: 3px;
+  --shadow: 0 16px 28px -12px rgba(52, 34, 18, 0.6), 0 3px 0 0 rgba(0, 0, 0, 0.28);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  /* soil tone derived from the spectrum accent, desaturated toward clay */
+  --e-soil: color-mix(in srgb, var(--s-accent) 34%, #57493A);
+  --e-pig: color-mix(in srgb, var(--s-accent) 72%, #7a5a38);
+}
+body.mode-earth #grain { opacity: 0.12; }          /* pressed-fiber: grain pushed ~3.4× */
+body.mode-earth #net { opacity: 0.22; }
+body.mode-earth #ambient { animation-duration: 22s; opacity: 0.8; }
+.mode-earth .stage { gap: 22px;
+  background: radial-gradient(900px 380px at 50% -80px,
+    color-mix(in srgb, var(--s-glow1) 70%, rgba(120, 90, 60, 0.08)), transparent); }
+.mode-earth header h1 { font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700; font-size: 29px; letter-spacing: 0.01em; }
+.mode-earth .pill { border-radius: 8px; border-width: 2px;
+  border-color: color-mix(in srgb, var(--e-soil) 70%, transparent); }
+.mode-earth .pill.on { background: var(--e-soil); border-color: var(--e-soil); color: var(--text); }
+.mode-earth .card { position: relative; border-color: var(--e-soil);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--s-surface) 88%, #2a2118), var(--s-surface)); }
+.mode-earth .k { color: var(--e-soil); letter-spacing: 0.1em;
+  border-bottom: 2px solid color-mix(in srgb, var(--e-soil) 45%, transparent); padding-bottom: 6px; }
+.mode-earth .k::before { content: "◆ "; }   /* stamped pigment mark */
+.mode-earth .headline h2 { font-size: 40px; font-weight: 700; letter-spacing: -0.01em; }
+.mode-earth .card h3 { font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px; font-weight: 700; letter-spacing: 0; }
+/* pigmented bar with a grainy fill */
+.mode-earth .score { height: 8px; border-radius: 4px; margin: 16px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--e-soil) 50%, transparent);
+  background: color-mix(in srgb, var(--s-surface2) 80%, #3a2f24); }
+.mode-earth .score i { border-radius: 3px;
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.28) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 4px),
+    var(--e-pig);
+}
+.mode-earth .num { color: var(--e-pig); }
+.mode-earth .cta { border-width: 2px; border-radius: 8px;
+  border-color: var(--e-soil); color: var(--text);
+  background: color-mix(in srgb, var(--e-soil) 30%, transparent); }
+.mode-earth .cta:hover { background: var(--e-soil); color: var(--text); }
+.mode-earth .thumb-mini { border-color: var(--e-soil); }
+.mode-earth .thumb-mini .bar { height: 5px; border-radius: 2px; }
+.mode-earth .thumb-mini .bar i {
+  background: repeating-linear-gradient(45deg, rgba(0,0,0,0.28) 0 1px, transparent 1px 3px), var(--e-pig); }
+.mode-earth .thumb-mini .pilldot { border-radius: 5px; border-width: 2px; border-color: var(--e-soil); color: var(--text); }
+/* organic refinement — living tendrils over the pressed clay: vine corner
+   ornaments on cards, a rooting score bar, a leaf-flecked eyebrow. */
+.mode-earth .card::before { content: ""; position: absolute; left: 5px; bottom: 5px;
+  width: 30px; height: 30px; pointer-events: none; opacity: 0.55;
+  border-left: 2px solid color-mix(in srgb, var(--e-soil) 80%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--e-soil) 80%, transparent);
+  border-bottom-left-radius: 22px; }
+.mode-earth .card::after { content: "❧"; position: absolute; left: 18px; bottom: 24px;
+  font-size: 11px; line-height: 1; color: color-mix(in srgb, var(--e-pig) 85%, transparent);
+  transform: rotate(14deg); pointer-events: none; }
+.mode-earth .thumb-mini::after { content: none; }   /* keep overview thumbs clean */
+.mode-earth .score { position: relative; }
+.mode-earth .score i::after { content: ""; position: absolute; right: -1px; top: -3px;
+  width: 6px; height: 12px; border-radius: 60% 40% 55% 45% / 55% 60% 40% 45%;
+  background: color-mix(in srgb, var(--e-pig) 80%, #5f7247); }   /* root-tip leaf */
+.mode-earth .k::after { content: " ❧"; color: color-mix(in srgb, var(--e-pig) 75%, transparent); }
+
+/* ---------- steampunk · "metro" — Victorian industrial transit ----------
+   brass & copper over dark iron: riveted frames, conduit hairlines,
+   pressure-gauge score bar with needle, Oswald metro signage, brass glow
+   warming the spectral glow, mechanical clunk-overshoot reveals. */
+.mode-steampunk {
+  --radius: 4px; --gap: 26px; --pad: 26px;
+  --bdw: 2px;
+  --shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+  /* brass derived from the spectrum accent toward #C08A3E */
+  --sp-brass: color-mix(in srgb, var(--s-accent) 32%, #C08A3E);
+  --sp-amber: color-mix(in srgb, var(--s-accent) 30%, #E8A33D);
+  --sp-iron: #15130F;
+}
+body.mode-steampunk #net { opacity: 0.26; }
+body.mode-steampunk #ambient { animation-duration: 13s; }
+/* brass glow replaces/warms the spectral wash */
+.mode-steampunk .stage {
+  background: radial-gradient(900px 380px at 50% -70px,
+    color-mix(in srgb, var(--s-glow1) 35%, rgba(192, 138, 62, 0.13)), transparent);
+}
+.mode-steampunk header h1 { font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 600; font-size: 27px; letter-spacing: 0.06em; text-transform: uppercase; }
+.mode-steampunk header .axisline { letter-spacing: 0.02em; }
+.mode-steampunk .ctrl-group .lbl { letter-spacing: 0.18em; }
+.mode-steampunk .pill { border-radius: 4px; font-family: 'Oswald', sans-serif;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
+.mode-steampunk .pill.on { background: var(--sp-brass); border-color: var(--sp-brass); color: #14100A;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px -2px rgba(0,0,0,0.6); }
+.mode-steampunk .readout { letter-spacing: 0.08em; text-transform: uppercase; }
+.mode-steampunk .readout::before { content: "◉ "; color: var(--sp-brass); }
+/* conduit hairlines linking the cards — the pipes of the network */
+.mode-steampunk .stage { gap: 34px; }
+.mode-steampunk .stage .card:not(.wide)::before { content: ""; position: absolute;
+  left: 50%; top: -34px; width: 1px; height: 34px;
+  background: linear-gradient(var(--sp-brass), transparent); opacity: 0.45; }
+.mode-steampunk .stage .card:not(.wide)::after { content: ""; position: absolute;
+  left: calc(50% - 3px); top: -38px; width: 5px; height: 5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--sp-brass) 70%, white), var(--sp-brass));
+  opacity: 0.7; }
+.mode-steampunk .card { position: relative; border-color: var(--sp-brass);
+  /* dark iron panel with four rivet studs baked into the background */
+  background:
+    radial-gradient(circle 3px at 9px 9px, var(--sp-brass) 55%, transparent 62%),
+    radial-gradient(circle 3px at calc(100% - 9px) 9px, var(--sp-brass) 55%, transparent 62%),
+    radial-gradient(circle 3px at 9px calc(100% - 9px), var(--sp-brass) 55%, transparent 62%),
+    radial-gradient(circle 3px at calc(100% - 9px) calc(100% - 9px), var(--sp-brass) 55%, transparent 62%),
+    linear-gradient(180deg, var(--sp-iron), var(--s-surface));
+}
+.mode-steampunk .k { font-family: 'Oswald', sans-serif; font-weight: 500;
+  letter-spacing: 0.22em; color: var(--sp-brass);
+  border-bottom: 1px solid color-mix(in srgb, var(--sp-brass) 40%, transparent); padding-bottom: 7px; }
+.mode-steampunk .headline h2 { font-size: 34px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase; }
+.mode-steampunk .card h3 { font-family: 'Oswald', sans-serif; font-size: 20px;
+  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+/* pressure-gauge take: riveted brass channel with a needle marker */
+.mode-steampunk .score { height: 9px; border-radius: 5px; overflow: visible;
+  margin: 20px 0 10px; border: 1px solid color-mix(in srgb, var(--sp-brass) 60%, transparent);
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.35) 0 1px, transparent 1px 10%),
+    linear-gradient(180deg, #1d1913, var(--s-surface2));
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.55);
+}
+.mode-steampunk .score i { position: relative; border-radius: 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 70%, #f0d9a8), var(--sp-brass));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--sp-brass) 45%, transparent); }
+.mode-steampunk .score i::after { content: ""; position: absolute; right: 0; top: -5px;
+  width: 2px; height: 19px; background: var(--sp-amber);
+  box-shadow: 0 0 6px var(--sp-amber); transform: translateX(50%); }   /* the needle */
+.mode-steampunk .score-line { text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+.mode-steampunk .num { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px;
+  color: var(--sp-amber); text-shadow: 0 0 10px color-mix(in srgb, var(--sp-amber) 55%, transparent); }
+.mode-steampunk .row { letter-spacing: 0.03em; }
+/* brass button with inset shadows */
+.mode-steampunk .cta { border-radius: 5px; border-width: 1px;
+  font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: #16110A;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 78%, #f2ddab), var(--sp-brass));
+  border-color: color-mix(in srgb, var(--sp-brass) 60%, #5a4020);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 3px rgba(0,0,0,0.35), 0 3px 6px -2px rgba(0,0,0,0.55); }
+.mode-steampunk .cta:hover { background: linear-gradient(180deg,
+  color-mix(in srgb, var(--sp-brass) 88%, #fff), var(--sp-brass)); color: #16110A;
+  transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); }
+.mode-steampunk .thumb-mini { border-color: color-mix(in srgb, var(--sp-brass) 70%, transparent); }
+.mode-steampunk .thumb-mini .t { font-family: 'Oswald', sans-serif; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; }
+.mode-steampunk .thumb-mini .t::before { content: "◉ "; color: var(--sp-brass); }
+.mode-steampunk .thumb-mini .bar { height: 5px; border-radius: 3px; overflow: visible;
+  border: 1px solid color-mix(in srgb, var(--sp-brass) 50%, transparent);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); }
+.mode-steampunk .thumb-mini .bar i { border-radius: 2px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 70%, #f0d9a8), var(--sp-brass)); }
+.mode-steampunk .thumb-mini .bar i::after { content: ""; position: absolute; right: 0; top: -2px;
+  width: 1px; height: 7px; background: var(--sp-amber); transform: translateX(50%); }
+.mode-steampunk .thumb-mini .bar i { position: relative; }
+.mode-steampunk .thumb-mini .pilldot { border-radius: 4px; border: 0; padding: 2px 8px;
+  font-family: 'Oswald', sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #16110A;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 78%, #f2ddab), var(--sp-brass)); }
+
+/* ---------- reveal choreography — motion character per world ---------- */
+.stage.reveal > * { animation: rv 0.6s var(--ease) both; }
+.stage.reveal > *:nth-child(2) { animation-delay: 0.09s; }
+.stage.reveal > *:nth-child(3) { animation-delay: 0.18s; }
+@keyframes rv { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes rv-calm { from { opacity: 0; } to { opacity: 1; } }
+.mode-minimal .stage.reveal > * { animation-name: rv-calm; animation-duration: 1.1s; animation-timing-function: ease; }
+.mode-minimal .stage.reveal > *:nth-child(2) { animation-delay: 0.2s; }
+.mode-minimal .stage.reveal > *:nth-child(3) { animation-delay: 0.4s; }
+.mode-retro .stage.reveal > * { animation-name: rv; animation-duration: 0.34s; animation-timing-function: steps(4, end); }
+.mode-retro .stage.reveal > *:nth-child(2) { animation-delay: 0.07s; }
+.mode-retro .stage.reveal > *:nth-child(3) { animation-delay: 0.14s; }
+/* organic — gentle slow sway instead of a rise */
+@keyframes rv-sway { from { opacity: 0; transform: rotate(-1.4deg) translateY(10px); }
+  to { opacity: 1; transform: none; } }
+.mode-organic .stage.reveal > * { animation-name: rv-sway; animation-duration: 1.05s;
+  animation-timing-function: cubic-bezier(0.26, 0.8, 0.32, 1); transform-origin: 50% 100%; }
+.mode-organic .stage.reveal > *:nth-child(2) { animation-delay: 0.16s; }
+.mode-organic .stage.reveal > *:nth-child(3) { animation-delay: 0.32s; }
+/* earth — heavy, grounded settle */
+.mode-earth .stage.reveal > * { animation-name: rv; animation-duration: 0.85s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1); }
+.mode-earth .stage.reveal > *:nth-child(2) { animation-delay: 0.12s; }
+.mode-earth .stage.reveal > *:nth-child(3) { animation-delay: 0.24s; }
+/* steampunk — mechanical clunk with overshoot */
+@keyframes rv-clunk { 0% { opacity: 0; transform: translateY(-12px); }
+  62% { opacity: 1; transform: translateY(3px); }
+  82% { transform: translateY(-1px); }
+  100% { opacity: 1; transform: none; } }
+.mode-steampunk .stage.reveal > * { animation-name: rv-clunk; animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.35, 0, 0.6, 1); }
+.mode-steampunk .stage.reveal > *:nth-child(2) { animation-delay: 0.1s; }
+.mode-steampunk .stage.reveal > *:nth-child(3) { animation-delay: 0.2s; }
+@media (prefers-reduced-motion: reduce) {
+  .stage.reveal > * { animation: none !important; }
+  .mode-retro .headline h2::after { animation: none; }
+}
+
+/* =====================================================================
+   LAYOUT SHELL
+   ===================================================================== */
+#app { max-width: 1080px; margin: 0 auto; padding: 32px; position: relative; z-index: 2; }
+
+header h1 {
+  font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4px;
+  font-family: var(--font-ui);
+}
+header h1 .grad {
+  background: linear-gradient(100deg, #D8A24C, #CF7053, #9A7FC8, #5FD9CB);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+header .axisline { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+header .axisline b { color: var(--text); font-weight: 600; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; margin-bottom: 26px; }
+.ctrl-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ctrl-group .lbl {
+  font: 500 10px var(--font-mono); color: var(--subtle);
+  text-transform: uppercase; letter-spacing: 0.12em; margin-right: 2px;
+}
+.pill {
+  background: transparent; color: var(--text);
+  border: 1px solid rgba(241, 237, 230, 0.16); border-radius: 100px;
+  padding: 7px 16px; font: 600 12px var(--font-ui); cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.pill:hover { border-color: var(--text); }
+.pill.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.pill.view { border-style: dashed; }
+
+/* combo readout */
+.readout {
+  font: 500 12px var(--font-mono); color: var(--subtle);
+  margin: 0 0 18px; letter-spacing: 0.04em;
+}
+.readout b { color: var(--text); font-weight: 500; }
+
+/* =====================================================================
+   DETAIL VIEW — sample composition in the ambient environment
+   ===================================================================== */
+.stage {
+  padding: 26px 22px; border-radius: 22px;
+  background: radial-gradient(900px 360px at 50% -70px, var(--s-glow1), transparent);
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start;
+  transition: background 0.6s var(--ease);
+}
+.stage > .wide { grid-column: 1 / -1; }
+
+.card {
+  background: var(--s-surface);
+  border: var(--bdw) solid var(--s-border);
+  border-radius: var(--radius);
+  padding: var(--pad);
+  box-shadow: var(--shadow);
+  transition: background 0.5s var(--ease), border-color 0.5s var(--ease),
+              border-radius 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+.headline h2 {
+  font-family: var(--font-display);
+  font-size: 30px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 8px;
+}
+.mode-retro .headline h2 { font-weight: 400; font-size: 40px; letter-spacing: 0; }
+.headline p { margin: 0; color: var(--s-dimtext); font-size: 14px; max-width: 62ch; }
+.k {
+  font: 500 11px var(--font-mono); color: var(--subtle);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+}
+.mode-minimal .k { color: var(--s-accent2); }
+
+.card h3 {
+  font-family: var(--font-display);
+  margin: 0 0 6px; font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
+}
+.card .sub { margin: 0; color: var(--s-dimtext); font-size: 13px; }
+.score {
+  height: 4px; border-radius: 2px; background: var(--s-surface2);
+  margin: 14px 0 8px; overflow: hidden;
+}
+.score i { display: block; height: 100%; background: var(--s-accent); border-radius: 2px; }
+.score-line { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.score-line .num { color: var(--s-accent); font: 600 13px var(--font-mono); }
+.row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); margin: 3px 0; }
+.row b { color: var(--text); font-weight: 600; }
+.cta {
+  display: inline-block; margin-top: 14px;
+  border: var(--bdw) solid var(--s-accent); color: var(--s-accent);
+  background: transparent; border-radius: 100px; padding: 7px 16px;
+  font: 600 12px var(--font-ui); cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.mode-retro .cta { border-radius: 0; box-shadow: 3px 3px 0 0 rgba(0,0,0,0.6); } /* superseded by the arcade world block */
+.cta:hover { background: var(--s-accent); color: var(--bg); }
+
+/* =====================================================================
+   OVERVIEW VIEW — 5 spectra × 3 modes
+   ===================================================================== */
+#overview { display: none; }
+body.view-overview #overview { display: block; }
+body.view-overview #detail { display: none; }
+
+.ov-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.ov-rowlabel {
+  grid-column: 1 / -1; margin: 10px 0 -4px;
+  font: 500 10px var(--font-mono); color: var(--subtle);
+  text-transform: uppercase; letter-spacing: 0.14em;
+}
+.thumb {
+  background: transparent; border: 1px solid rgba(241,237,230,0.08);
+  border-radius: 12px; padding: 10px; cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: all 0.3s var(--ease);
+}
+.thumb:hover { border-color: rgba(241,237,230,0.3); transform: translateY(-2px); }
+.thumb.current { border-color: var(--text); }
+.thumb .swatch {
+  border-radius: 8px; padding: 10px;
+  background:
+    radial-gradient(120px 70px at 20% 0%, var(--s-glow1), transparent 75%),
+    radial-gradient(120px 80px at 90% 100%, var(--s-glow2), transparent 75%),
+    var(--bg);
+}
+.thumb-mini {
+  background: var(--s-surface);
+  border: var(--bdw) solid var(--s-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px 10px;
+}
+.thumb-mini .t { font-size: 10px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.mode-retro .thumb-mini .t { font-family: 'VT323', monospace; font-size: 14px; font-weight: 400; }
+.thumb-mini .bar { height: 3px; border-radius: 2px; background: var(--s-surface2); overflow: hidden; }
+.mode-retro .thumb-mini .bar { border-radius: 0; }
+.thumb-mini .bar i { display: block; height: 100%; width: 78%; background: var(--s-accent); }
+.thumb-mini .pilldot {
+  display: inline-block; margin-top: 6px; font-size: 8px; padding: 2px 7px;
+  border: 1px solid var(--s-accent); color: var(--s-accent); border-radius: 100px;
+}
+.mode-retro .thumb-mini .pilldot { border-radius: 0; }
+.thumb .tag { font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: 0.05em; }
+.thumb .tag b { color: var(--text); font-weight: 500; }
+
+footer {
+  margin-top: 34px; font: 500 11px var(--font-mono); color: var(--subtle);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 860px) {
+  .ov-grid { grid-template-columns: repeat(3, 1fr); }
+  .stage { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="spectrum-aurora mode-none view-detail">
+
+<div id="ambient"></div>
+<canvas id="net"></canvas>
+<div id="grain"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="app">
+  <header>
+    <h1><span class="grad">SIGNAL</span> · axis grammar preview</h1>
+    <p class="axisline">
+      <b>Axis 1 · spectrum</b> — sci-fi ↔ organic (mycelium · terra · aurora · neon · void)&nbsp;&nbsp;·&nbsp;&nbsp;
+      <b>Axis 2 · mode</b> — design world (none · minimal · retro · organic · earth · steampunk)
+    </p>
+  </header>
+
+  <div class="controls">
+    <div class="ctrl-group" id="spectrum-ctrl">
+      <span class="lbl">spectrum</span>
+      <button class="pill" data-spectrum="mycelium">mycelium</button>
+      <button class="pill" data-spectrum="terra">terra</button>
+      <button class="pill on" data-spectrum="aurora">aurora</button>
+      <button class="pill" data-spectrum="neon">neon</button>
+      <button class="pill" data-spectrum="void">void</button>
+    </div>
+    <div class="ctrl-group" id="mode-ctrl">
+      <span class="lbl">mode</span>
+      <button class="pill on" data-mode="none">none</button>
+      <button class="pill" data-mode="minimal">minimal</button>
+      <button class="pill" data-mode="retro">retro</button>
+      <button class="pill" data-mode="organic">organic</button>
+      <button class="pill" data-mode="earth">earth</button>
+      <button class="pill" data-mode="steampunk">steampunk</button>
+    </div>
+    <div class="ctrl-group" id="view-ctrl">
+      <span class="lbl">view</span>
+      <button class="pill view on" data-view="detail">detail</button>
+      <button class="pill view" data-view="overview">overview · 5×6</button>
+    </div>
+  </div>
+
+  <p class="readout">rendering <b id="readout">aurora × none</b> — living light over dark soil</p>
+
+  <!-- ================= DETAIL VIEW ================= -->
+  <div id="detail">
+    <div class="stage">
+      <div class="card headline wide">
+        <div class="k">symbiosis feed</div>
+        <h2>Your living signal</h2>
+        <p>Three matches grown from your interests this week. Technology doing the invisible
+           work, so the meeting that matters happens over coffee — not over forms.</p>
+      </div>
+
+      <div class="card">
+        <div class="k">match · student</div>
+        <h3>Anna Keller</h3>
+        <p class="sub">WBS · MSc Management</p>
+        <div class="score"><i style="width: 92%"></i></div>
+        <div class="score-line"><span>match score</span><span class="num">92</span></div>
+        <div class="row"><span>focus</span><b>cybersecurity · data science</b></div>
+        <button class="cta">Contact</button>
+      </div>
+
+      <div class="card">
+        <div class="k">match · student</div>
+        <h3>Ben Osei</h3>
+        <p class="sub">Warwick · BSc Computer Science</p>
+        <div class="score"><i style="width: 87%"></i></div>
+        <div class="score-line"><span>match score</span><span class="num">87</span></div>
+        <div class="row"><span>focus</span><b>cybersecurity · networks</b></div>
+        <button class="cta">Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= OVERVIEW VIEW ================= -->
+  <div id="overview">
+    <div class="ov-grid" id="ov-grid"><!-- thumbnails generated by JS --></div>
+  </div>
+
+  <footer>SIGNAL axis grammar · throwaway prototype v3 · spectra = hue family · 6 mode worlds</footer>
+</div>
+
+<script>
+'use strict';
+/* ---------------------------------------------------------------------
+   state + switchers
+--------------------------------------------------------------------- */
+const SPECTRA = ['mycelium', 'terra', 'aurora', 'neon', 'void'];
+const MODES = ['none', 'minimal', 'retro', 'organic', 'earth', 'steampunk'];
+const state = { spectrum: 'aurora', mode: 'none', view: 'detail' };
+
+function applyClasses() {
+  document.body.classList.remove(
+    ...SPECTRA.map(s => 'spectrum-' + s),
+    ...MODES.map(m => 'mode-' + m),
+    'view-detail', 'view-overview'
+  );
+  document.body.classList.add(
+    'spectrum-' + state.spectrum,
+    'mode-' + state.mode,
+    'view-' + state.view
+  );
+  document.getElementById('readout').textContent = state.spectrum + ' \u00d7 ' + state.mode;
+  hues = HUES[state.spectrum];
+  document.querySelectorAll('[data-spectrum]').forEach(b =>
+    b.classList.toggle('on', b.dataset.spectrum === state.spectrum));
+  document.querySelectorAll('[data-mode]').forEach(b =>
+    b.classList.toggle('on', b.dataset.mode === state.mode));
+  document.querySelectorAll('[data-view]').forEach(b =>
+    b.classList.toggle('on', b.dataset.view === state.view));
+  document.querySelectorAll('.thumb').forEach(t =>
+    t.classList.toggle('current',
+      t.dataset.spectrum === state.spectrum && t.dataset.mode === state.mode));
+  replayReveal();
+}
+
+/* ---------------------------------------------------------------------
+   reveal choreography — each world enters with its own motion character
+   (CSS: .mode-none rise, .mode-minimal slow calm fade, .mode-retro CRT steps)
+--------------------------------------------------------------------- */
+const stage = document.querySelector('.stage');
+let lastKey = '';
+function replayReveal() {
+  if (typeof reducedMotion !== 'undefined' && reducedMotion) return;
+  const key = state.spectrum + '|' + state.mode + '|' + state.view;
+  if (key === lastKey) return;
+  lastKey = key;
+  if (state.view !== 'detail') return;   // only reveal what is visible
+  stage.classList.remove('reveal');
+  void stage.offsetWidth;                // reflow to restart the animation
+  stage.classList.add('reveal');
+}
+
+document.getElementById('spectrum-ctrl').addEventListener('click', e => {
+  const b = e.target.closest('[data-spectrum]'); if (!b) return;
+  state.spectrum = b.dataset.spectrum; applyClasses();
+});
+document.getElementById('mode-ctrl').addEventListener('click', e => {
+  const b = e.target.closest('[data-mode]'); if (!b) return;
+  state.mode = b.dataset.mode; applyClasses();
+});
+document.getElementById('view-ctrl').addEventListener('click', e => {
+  const b = e.target.closest('[data-view]'); if (!b) return;
+  state.view = b.dataset.view; applyClasses();
+});
+
+/* ---------------------------------------------------------------------
+   overview grid — 6 mode rows × 5 spectrum columns
+--------------------------------------------------------------------- */
+const ov = document.getElementById('ov-grid');
+MODES.forEach(mode => {
+  const rowLbl = document.createElement('div');
+  rowLbl.className = 'ov-rowlabel';
+  rowLbl.textContent = 'mode \u00b7 ' + mode;
+  ov.appendChild(rowLbl);
+  SPECTRA.forEach(spec => {
+    const t = document.createElement('button');
+    t.className = 'thumb spectrum-' + spec + ' mode-' + mode;
+    t.dataset.spectrum = spec;
+    t.dataset.mode = mode;
+    t.innerHTML =
+      '<span class="swatch"><span class="thumb-mini">' +
+      '<span class="t">Anna K.</span>' +
+      '<span class="bar"><i></i></span>' +
+      '<span class="pilldot">Contact</span>' +
+      '</span></span>' +
+      '<span class="tag"><b>' + spec + '</b> \u00d7 ' + mode + '</span>';
+    t.addEventListener('click', () => {
+      state.spectrum = spec; state.mode = mode; state.view = 'detail';
+      applyClasses();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    ov.appendChild(t);
+  });
+});
+
+/* ---------------------------------------------------------------------
+   network pulse canvas — simplified, dimmed port of Theater.vue.
+   Fewer nodes, slower pulses, throttled to ~15 fps, paused when hidden.
+   Element opacity 0.32 × internal fade 0.5 ≈ effective ~0.15 alpha.
+--------------------------------------------------------------------- */
+const cv = document.getElementById('net');
+const ctx = cv.getContext('2d');
+const HUES = {
+  mycelium: ['#8FA96E', '#B4A26E'],
+  terra:    ['#D8A24C', '#8FA96E'],
+  aurora:   ['#5FD9CB', '#9A7FC8'],
+  neon:     ['#6FC7F2', '#5B7FE0'],
+  void:     ['#CFE0EE', '#7E97AD']
+};
+let hues = HUES.aurora;
+const FADE = 0.5;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+let nodes = [], edges = [], pulses = [];
+const litEdges = new Map();
+
+function build(w, h) {
+  const n = 26; // deliberately fewer than Theater's 30–90
+  nodes = Array.from({ length: n }, () => ({
+    x: 16 + rnd() * (w - 32), y: 16 + rnd() * (h - 32), r: 1.8 + rnd() * 2.2, lit: 0, adj: []
+  }));
+  edges = [];
+  nodes.forEach((node, i) => {
+    const near = nodes
+      .map((m, j) => [i === j ? 1e9 : (node.x - m.x) ** 2 + (node.y - m.y) ** 2, j])
+      .sort((a, b) => a[0] - b[0]);
+    near.slice(0, 2).forEach(([, j]) => {
+      if (!node.adj.includes(j)) { node.adj.push(j); nodes[j].adj.push(i); edges.push([i, j]); }
+    });
+  });
+  pulses = Array.from({ length: 3 }, () =>
+    ({ from: 0, to: nodes[0].adj[0] || 1, t: rnd() }));
+}
+
+function draw(w, h, time) {
+  ctx.clearRect(0, 0, w, h);
+  // base edges
+  ctx.strokeStyle = 'rgba(241,237,230,' + (0.09 * FADE) + ')';
+  ctx.lineWidth = 1;
+  edges.forEach(([a, b]) => {
+    ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke();
+  });
+  // lit edge wake
+  litEdges.forEach((e, key) => {
+    e.heat -= 0.012; // slower decay than Theater — calmer field
+    if (e.heat <= 0) { litEdges.delete(key); return; }
+    const [a, b] = key.split('-').map(Number);
+    ctx.strokeStyle = e.hue;
+    ctx.globalAlpha = e.heat * 0.5 * FADE;
+    ctx.lineWidth = 1 + e.heat;
+    ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+  // nodes
+  nodes.forEach((n, i) => {
+    n.lit = Math.max(0, n.lit - 0.008);
+    const hue = hues[i % hues.length];
+    if (n.lit > 0.02) {
+      const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 6);
+      g.addColorStop(0, hue); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = n.lit * 0.3 * FADE;
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 6, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r + n.lit * 2.2, 0, 7);
+    ctx.fillStyle = n.lit > 0.02 ? hue : 'rgba(241,237,230,' + (0.30 * FADE) + ')';
+    ctx.globalAlpha = (0.35 + n.lit * 0.65) * FADE; ctx.fill(); ctx.globalAlpha = 1;
+  });
+  // traveling pulses
+  pulses.forEach(p => {
+    p.t += 0.011; // slower travel than Theater's 0.018
+    if (p.t >= 1) {
+      const arrived = nodes[p.to];
+      arrived.lit = 1;
+      const key = p.from < p.to ? p.from + '-' + p.to : p.to + '-' + p.from;
+      litEdges.set(key, { heat: 1, hue: hues[p.from % hues.length] });
+      const nexts = arrived.adj.filter(j => j !== p.from);
+      const to = nexts.length ? nexts[Math.floor(rnd() * nexts.length)] : (arrived.adj[0] || p.from);
+      Object.assign(p, { from: p.to, to, t: 0 });
+    }
+    const a = nodes[p.from], b = nodes[p.to];
+    const x = a.x + (b.x - a.x) * p.t, y = a.y + (b.y - a.y) * p.t;
+    const col = hues[p.from % hues.length];
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 14);
+    g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = FADE;
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 14, 0, 7); ctx.fill();
+    ctx.fillStyle = '#EFFFFC'; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+let raf = 0, running = false, lastDraw = 0;
+function loop(time) {
+  if (!running) return;
+  if (time - lastDraw >= 66) { // ~15 fps throttle
+    lastDraw = time;
+    draw(cv.width, cv.height, time);
+  }
+  raf = requestAnimationFrame(loop);
+}
+function start() {
+  if (running) return;
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  if (!nodes.length) build(cv.width, cv.height);
+  if (reducedMotion) { draw(cv.width, cv.height, 1200); return; }
+  running = true; lastDraw = 0;
+  raf = requestAnimationFrame(loop);
+}
+function resize() {
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  build(cv.width, cv.height);
+  if (reducedMotion) draw(cv.width, cv.height, 1200);
+}
+window.addEventListener('resize', resize);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
+  else if (running && !raf) raf = requestAnimationFrame(loop);
+});
+
+applyClasses();
+start();
+</script>
+</body>
+</html>

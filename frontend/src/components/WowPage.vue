@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import UiRenderer from './UiRenderer.vue'
+import { TEMPO } from '../theme.js'
 
 const props = defineProps({
   schema: { type: Object, required: true },
@@ -8,8 +9,10 @@ const props = defineProps({
 })
 const emit = defineEmits(['restart'])
 
-// allowlists — the LLM only ever picks enum values (ticket 07)
-const THEMES = new Set(['boardroom', 'festival', 'garden', 'ledger'])
+// allowlists — the LLM only ever picks enum values (Phase A axis grammar:
+// Spectrum × StyleMode, contract shared with backend/ui_schema.py)
+const SPECTRA = new Set(['mycelium', 'terra', 'aurora', 'neon', 'void'])
+const MODES = new Set(['none', 'minimal', 'retro', 'organic', 'earth', 'steampunk'])
 const ACCENTS = {
   primary: 'var(--primary)',
   accent: 'var(--accent-tok)',
@@ -26,7 +29,16 @@ const ACCENT_AURA = {
 }
 const DEFAULT_AURA = 'rgba(230, 190, 112, 0.10)'
 
-const theme = computed(() => (THEMES.has(props.schema?.theme) ? props.schema.theme : 'boardroom'))
+const spectrum = computed(() => (SPECTRA.has(props.schema?.spectrum) ? props.schema.spectrum : 'terra'))
+const mode = computed(() => (MODES.has(props.schema?.mode) ? props.schema.mode : 'none'))
+// persona signature: tone sets the ambient breathing tempo
+const breathe = computed(() => {
+  const tone = (props.persona?.tone || '').toLowerCase()
+  if (tone.includes('calm') || tone.includes('warm')) return TEMPO.calm
+  if (tone.includes('direct')) return TEMPO.direct
+  if (tone.includes('playful')) return TEMPO.playful
+  return TEMPO.default
+})
 // accent comes from the persona's ColorToken (backend); fixtures may
 // carry it directly on the schema as a fallback
 const accent = computed(() =>
@@ -35,10 +47,14 @@ const accent = computed(() =>
 const aura = computed(() =>
   ACCENT_AURA[props.persona?.accent_color] ?? ACCENT_AURA[props.schema?.accent] ?? DEFAULT_AURA
 )
-// the ambient layer lives on body::before — outside this component's cascade —
-// so the persona tint is mirrored onto the document root
+// the ambient layers live on body::before/body::after — outside this
+// component's cascade — so persona tint and tempo are mirrored onto the root
 watch(aura, (v) => document.documentElement.style.setProperty('--aura', v), { immediate: true })
-onBeforeUnmount(() => document.documentElement.style.removeProperty('--aura'))
+watch(breathe, (v) => document.documentElement.style.setProperty('--breathe-dur', v), { immediate: true })
+onBeforeUnmount(() => {
+  document.documentElement.style.removeProperty('--aura')
+  document.documentElement.style.removeProperty('--breathe-dur')
+})
 const layout = computed(() => (props.schema?.layout === 'grid' ? 'grid' : 'single'))
 const sections = computed(() =>
   Array.isArray(props.schema?.sections) ? props.schema.sections : []
@@ -64,7 +80,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="wow-page" :class="['theme-' + theme, layout]" :style="{ '--accent': accent, '--aura': aura }">
+  <div class="wow-page" :class="['spectrum-' + spectrum, mode !== 'none' ? 'mode-' + mode : '', layout]" :style="{ '--accent': accent, '--breathe-dur': breathe }">
     <UiRenderer
       v-for="(node, i) in sections"
       :key="i"
