@@ -11,7 +11,7 @@ The vocabulary the project uses. Terms are defined as used; don't drift to synon
 - **Profile** — the embedding-bearing text of a Person; the vector surface of retrieval. Same embedding model in ingest and query (fastembed bge-small-en-v1.5, 384 dims).
 - **Perspective** — the visitor's stance: `enterprise` | `talent` | `infrastructure` | `education`. Agent 1's primary branching axis; inherited from the page the Wow Page replaces.
 - **PersonaModel** — Agent 1's output: interests, tone, accent_color (ColorToken), expertise_level, perspective.
-- **ExperienceSchema** — the contract between Agent 2 and the frontend: allowlist enums (components, color tokens, actions, layouts), recursive UINode, entity_ids whitelist-checked by verify().
+- **ExperienceSchema** — the contract between Agent 2 and the frontend: allowlist enums (components, color tokens, actions, layouts, Spectrum, StyleMode), recursive UINode, entity_ids whitelist-checked by verify(). **Spectrum** (`mycelium | terra | aurora | neon | void`) owns the hue family — surfaces, borders, glows, ambient aura; selected by perspective. **StyleMode** (`none | minimal | retro | organic | earth | steampunk`) owns materiality, typography and atmosphere; selected by explicit design words or persona temperament. The two axes compose orthogonally (axis grammar).
 - **Wow Page** — the composed personal page: grounded, visibly different per persona, building itself in front of the user.
 
 ## Dataset spec (synthetic v1)

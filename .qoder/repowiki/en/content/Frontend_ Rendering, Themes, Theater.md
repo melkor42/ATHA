@@ -18,9 +18,9 @@
 
 `UiRenderer.vue` is recursive: it resolves `node.component` through `registry.js` onto the five shipped components (TextBlock, SignalCard, StudentProfile, EnterpriseCard, EventBanner) and recurses into `children`. Unknown component types render nothing and never crash. There is no `v-html` anywhere; all text passes through Vue template escaping. Card data comes from the response's server-hydrated entities map via `entity_ids`.
 
-## Themes
+## Axis grammar (spectrum × mode)
 
-The schema's `theme` enum selects a frontend-owned CSS variable set: boardroom (dense grid, ~10px radius, gold, numbers-forward), festival (single column, ~24px radius, mauve-tinted surface), garden (spacious single column, green wash, softest radius, quiet borders), ledger (strict grid, ~6px radius, hairline borders, blue mono numerals). The persona's accent ColorToken maps to the brand support palette (primary #5E92C4, accent #BD8794, success #8FA96E, warning #D8A24C). Base brand tokens — warm charcoal #0B0A09, cream #F1EDE6, Inter, pill CTAs, the gold→rust→violet→blue gradient headline — come from the prototype that locked the look.
+The retired four-theme enum (boardroom / festival / garden / ledger) was replaced by an orthogonal axis grammar. The schema's `spectrum` enum (mycelium, terra, aurora, neon, void) owns the hue family — spectral surface/border/glow variables plus the ambient aura; the schema's `mode` enum (none, minimal, retro, organic, earth, steampunk) owns materiality, typography and atmosphere — structure tokens, card anatomy, overlays and reveal motion, written against semantic classes under `.mode-*` scope in `style.css`. Modes may mix controlled color derived from `--s-accent`; the spectrum keeps the hue family. The persona's accent ColorToken maps to the brand support palette (primary #5E92C4, accent #BD8794, success #8FA96E, warning #D8A24C). Base brand tokens — warm charcoal #0B0A09, cream #F1EDE6, Inter, pill CTAs, the gold→rust→violet→blue gradient headline — come from the prototype that locked the look.
 
 ## The waiting theater
 

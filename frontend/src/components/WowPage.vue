@@ -19,41 +19,64 @@ const ACCENTS = {
   success: 'var(--success)',
   warning: 'var(--warning)'
 }
-// precomputed aura literals per ColorToken — ambient glow behind the page
-// (harmonize with --primary/--accent-tok/--success/--warning, no color-mix)
+// precomputed aura RGB triples per ColorToken — ambient glow behind the
+// page (harmonize with --primary/--accent-tok/--success/--warning)
 const ACCENT_AURA = {
-  primary: 'rgba(110, 160, 214, 0.10)',
-  accent: 'rgba(201, 140, 158, 0.10)',
-  success: 'rgba(150, 178, 112, 0.10)',
-  warning: 'rgba(224, 162, 78, 0.10)'
+  primary: '110, 160, 214',
+  accent: '201, 140, 158',
+  success: '150, 178, 112',
+  warning: '224, 162, 78'
 }
-const DEFAULT_AURA = 'rgba(230, 190, 112, 0.10)'
+const DEFAULT_AURA = '230, 190, 112'
 
 const spectrum = computed(() => (SPECTRA.has(props.schema?.spectrum) ? props.schema.spectrum : 'terra'))
 const mode = computed(() => (MODES.has(props.schema?.mode) ? props.schema.mode : 'none'))
-// persona signature: tone sets the ambient breathing tempo
-const breathe = computed(() => {
+// per-mode ambient modulation, mirrored from prototypes/axis-preview.html.
+// Merge rule — MODE WINS: the mode sets the field tier (breathing tempo,
+// aura dim, grain); the persona tone fine-tunes the tempo only in mode-none.
+const AMBIENT = {
+  none: {},                                            // persona tone drives tempo
+  minimal: { dur: '16s', paused: true, dim: 0.35, grain: 0.02 },
+  retro: { dur: '10s' },
+  organic: { dur: '20s' },
+  earth: { dur: '22s', dim: 0.8, grain: 0.12 },
+  steampunk: { dur: '13s' }
+}
+const amb = computed(() => AMBIENT[mode.value] ?? {})
+// persona signature: tone sets the ambient breathing tempo (mode-none only)
+const toneTempo = computed(() => {
   const tone = (props.persona?.tone || '').toLowerCase()
   if (tone.includes('calm') || tone.includes('warm')) return TEMPO.calm
   if (tone.includes('direct')) return TEMPO.direct
   if (tone.includes('playful')) return TEMPO.playful
   return TEMPO.default
 })
+const breathe = computed(() => amb.value.dur ?? toneTempo.value)
+const breathePlay = computed(() => (amb.value.paused ? 'paused' : 'running'))
+const grain = computed(() => String(amb.value.grain ?? 0.035))
 // accent comes from the persona's ColorToken (backend); fixtures may
 // carry it directly on the schema as a fallback
 const accent = computed(() =>
   ACCENTS[props.persona?.accent_color] ?? ACCENTS[props.schema?.accent] ?? 'var(--accent-tok)'
 )
-const aura = computed(() =>
-  ACCENT_AURA[props.persona?.accent_color] ?? ACCENT_AURA[props.schema?.accent] ?? DEFAULT_AURA
-)
+// aura alpha is dimmed per mode (minimal whispers, earth settles)
+const aura = computed(() => {
+  const rgb =
+    ACCENT_AURA[props.persona?.accent_color] ?? ACCENT_AURA[props.schema?.accent] ?? DEFAULT_AURA
+  return `rgba(${rgb}, ${(0.1 * (amb.value.dim ?? 1)).toFixed(3)})`
+})
 // the ambient layers live on body::before/body::after — outside this
-// component's cascade — so persona tint and tempo are mirrored onto the root
+// component's cascade — so persona tint, tempo and mode atmosphere are
+// mirrored onto the document root
 watch(aura, (v) => document.documentElement.style.setProperty('--aura', v), { immediate: true })
 watch(breathe, (v) => document.documentElement.style.setProperty('--breathe-dur', v), { immediate: true })
+watch(breathePlay, (v) => document.documentElement.style.setProperty('--breathe-play', v), { immediate: true })
+watch(grain, (v) => document.documentElement.style.setProperty('--grain-opacity', v), { immediate: true })
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--aura')
   document.documentElement.style.removeProperty('--breathe-dur')
+  document.documentElement.style.removeProperty('--breathe-play')
+  document.documentElement.style.removeProperty('--grain-opacity')
 })
 const layout = computed(() => (props.schema?.layout === 'grid' ? 'grid' : 'single'))
 const sections = computed(() =>
@@ -80,7 +103,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="wow-page" :class="['spectrum-' + spectrum, mode !== 'none' ? 'mode-' + mode : '', layout]" :style="{ '--accent': accent, '--breathe-dur': breathe }">
+  <div class="wow-page" :class="['spectrum-' + spectrum, 'mode-' + mode, layout]" :style="{ '--accent': accent, '--breathe-dur': breathe }">
     <UiRenderer
       v-for="(node, i) in sections"
       :key="i"

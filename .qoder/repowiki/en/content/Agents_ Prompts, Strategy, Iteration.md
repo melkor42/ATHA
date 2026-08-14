@@ -10,7 +10,7 @@
 
 ## The two agents
 
-Agent 1 (Persona Modeler) maps free-text onboarding input to a PersonaModel: interests, tone, accent_color (a ColorToken), expertise_level, and perspective (enterprise / talent / infrastructure / education). Its prompt instructs it to infer perspective from role and intent, not keywords alone. Agent 2 (Experience Builder) maps PersonaModel + retrieved data pool to an ExperienceSchema, encoding the composition grammar: perspective selects section mix and theme, tone selects copy register, expertise selects density, the persona carries the accent token.
+Agent 1 (Persona Modeler) maps free-text onboarding input to a PersonaModel: interests, tone, accent_color (a ColorToken), expertise_level, and perspective (enterprise / talent / infrastructure / education). Its prompt instructs it to infer perspective from role and intent, not keywords alone. Agent 2 (Experience Builder) maps PersonaModel + retrieved data pool to an ExperienceSchema, encoding the composition grammar: perspective selects section mix and spectrum, explicit design words select the mode only (never the spectrum), tone selects copy register, expertise selects density, the persona carries the accent token.
 
 ## Prompt management
 

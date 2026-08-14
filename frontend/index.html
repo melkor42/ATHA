@@ -6,10 +6,19 @@
     <title>SIGNAL — Wow Page</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- non-blocking font load: media=print + swap to all on load -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=VT323&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,500;1,600&family=Oswald:wght@500;600&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=VT323&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,500;1,600&family=Oswald:wght@500;600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <div id="app"></div>

@@ -32,4 +32,4 @@ Miriam, Jonas, David, Tobias: the four people the MVP is judged by. Each file ca
 
 ## 8. The acceptance evidence — [`acceptance/`](../acceptance/)
 
-The four pages composed by the live pipeline on 2026-08-13 — boardroom, festival, garden, ledger. The proof the grammar works.
+The four pages composed by the live pipeline on 2026-08-13 — boardroom, festival, garden, ledger. They prove the grammar worked, but they render the **retired theme system**: the Theme enum has since been superseded by the Spectrum × StyleMode axis grammar, so these screenshots are historical. New acceptance baselines under the axis grammar are to be re-captured manually.

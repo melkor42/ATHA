@@ -170,6 +170,22 @@ function onVisibility() {
   else if (running && !raf) raf = requestAnimationFrame(loop)
 }
 
+// debounced resize: re-size + rebuild the field so it tracks the viewport
+let resizeT = 0
+function onResize() {
+  clearTimeout(resizeT)
+  resizeT = setTimeout(() => {
+    const cv = canvas.value
+    if (!cv) return
+    const w = cv.clientWidth, h = cv.clientHeight
+    if (w === cv.width && h === cv.height && nodes.length) return
+    cv.width = w; cv.height = h
+    build(w, h)
+    if (reducedMotion) { draw(cv.getContext('2d'), w, h, 1200, props.exiting ? props.dim : fade.value); return }
+    if (!running && (props.active || substrate.value)) start()
+  }, 200)
+}
+
 watch(() => props.active, v => {
   if (v) start()
   else if (!props.exiting) stop() // exiting keeps the loop alive for the dissolve/substrate
@@ -180,18 +196,23 @@ watch(() => props.exiting, v => {
   if (!running) start() // safety: never exit from a frozen canvas
 })
 
+const stepTimers = []
 onMounted(() => {
   document.addEventListener('visibilitychange', onVisibility)
+  window.addEventListener('resize', onResize)
   props.steps.forEach((_, i) => {
-    setTimeout(() => {
+    stepTimers.push(setTimeout(() => {
       on.value = i + 1
-      if (i === props.steps.length - 1) setTimeout(() => emit('done'), 400)
-    }, props.cadence * i + 150)
+      if (i === props.steps.length - 1) stepTimers.push(setTimeout(() => emit('done'), 400))
+    }, props.cadence * i + 150))
   })
   if (props.active) start()
 })
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibility)
+  window.removeEventListener('resize', onResize)
+  clearTimeout(resizeT)
+  stepTimers.forEach(clearTimeout)   // restarts must not leak late 'done' emits
   stop()
 })
 </script>

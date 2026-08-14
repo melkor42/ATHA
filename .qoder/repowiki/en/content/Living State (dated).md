@@ -4,7 +4,7 @@
 
 ## Snapshot — 2026-08-13
 
-- MVP built end to end; the four-persona acceptance run passed 4/4 (boardroom / festival / garden / ledger all visibly distinct, all entities grounded). Evidence in `acceptance/`.
+- MVP built end to end; the four-persona acceptance run passed 4/4 (boardroom / festival / garden / ledger all visibly distinct, all entities grounded). Evidence in `acceptance/`. Note: those renders came from the Theme enum, since retired and replaced by the Spectrum × StyleMode axis grammar; new acceptance baselines are to be re-captured manually.
 - Repo pushed to https://github.com/melkor42/Signal (commits: initial setup, docs layer).
 - Wiki authored into the Signal workspace store; knowledge-card atlas build pending.
 - Ticket *Run the four-persona acceptance* (.scratch/wow-mvp/issues/12) remains OPEN pending the user's final acceptance.

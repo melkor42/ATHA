@@ -14,7 +14,7 @@ One-time data load: `cd backend; python generate_data.py; python ingest.py`. Bac
 
 ## The acceptance method
 
-The four fixtures in `personas/` are the acceptance set. Each file carries three instruments: the example prompt (the onboarding input), the expected PersonaModel JSON (Agent 1's eval target), and a per-persona eval note for Agent 2 (e.g. "capture energy without mistaking him for shallow", "ranking vs methodology"). Acceptance passes when all four prompts compose live, Agent 1's outputs match the expected models, every displayed entity is whitelist-grounded, and the four pages are visibly distinct in theme, layout, and register. Evidence screenshots live in `acceptance/`.
+The four fixtures in `personas/` are the acceptance set. Each file carries three instruments: the example prompt (the onboarding input), the expected PersonaModel JSON (Agent 1's eval target), and a per-persona eval note for Agent 2 (e.g. "capture energy without mistaking him for shallow", "ranking vs methodology"). Acceptance passes when all four prompts compose live, Agent 1's outputs match the expected models, every displayed entity is whitelist-grounded, and the four pages are visibly distinct in spectrum, mode, layout, and register. Evidence screenshots live in `acceptance/`.
 
 ## Designed degradations
 

@@ -14,7 +14,7 @@ The Signal Wow-Page MVP is acceptable and demo-ready for the 2026-08-24 meeting 
 - **API contract** (settled at charting): single `POST /api/experience` → `ExperienceSchema` JSON; the client-side staged-reveal theater fills the wait and shows the real pipeline steps (not live-synced). SSE live-sync is an upgrade path — see Not yet specified.
 - **Components shipped**: `TextBlock`, `SignalCard`, `StudentProfile`, `EnterpriseCard`, `EventBanner`. `NetworkGraph` post-demo.
 - **Perspective** (Enterprise / Talent / Infrastructure / Education, from signal.onemundi.one) is Agent 1's primary branching axis.
-- **Per-persona design themes** (user request 2026-08-12): design differentiates as visibly as content — Theme enum (boardroom / festival / garden / ledger) mapped to CSS variable sets (tint, radius, spacing, border, type emphasis), always within SIGNAL's identity.
+- **Per-persona design grammar** (user request 2026-08-12, superseded 2026-08-14 commit `7a54a75`): design differentiates as visibly as content. The retired Theme enum (boardroom / festival / garden / ledger) gave way to the orthogonal axis grammar: Spectrum (`mycelium | terra | aurora | neon | void`, perspective-driven) × StyleMode (`none | minimal | retro | organic | earth | steampunk`, design-words/temperament-driven), both as CSS variable sets within SIGNAL's identity.
 - **Onboarding**: single free-text input; grows into a learning system post-MVP (fog).
 - **Synthetic data**: fully fictional; the agent has discretion to invent missing entities, asking the user only when a decision is truly his.
 - **Demo script**: prepared contrasting inputs typed live; the Dean may get the keyboard; one rehearsed graceful-degradation run.
@@ -33,7 +33,7 @@ The Signal Wow-Page MVP is acceptable and demo-ready for the 2026-08-24 meeting 
 - [Compare free hosting options](issues/08-free-hosting-compare.md) — Vercel + Render free post-demo; deployment decision deferred past Aug 24.
 - [Provision OpenRouter access](issues/01-provision-openrouter.md) — `.env` + `.gitignore` in repo; key verified (free tier); free-only restriction → selection per ticket 13.
 - [Choose free-tier OpenRouter model pair](issues/13-free-model-pair.md) — nemotron-3-super-120b-a12b:free for both agents; embeddings local fastembed @384; corrects ticket 02.
-- [Define the composition grammar](issues/07-composition-grammar.md) — perspective→mix+theme, tone→register, expertise→density, persona→accent; themes boardroom/festival/garden/ledger as frontend CSS variable sets.
+- [Define the composition grammar](issues/07-composition-grammar.md) — perspective→mix+spectrum, tone→register, expertise→density, persona→accent; the original themes boardroom/festival/garden/ledger were replaced by the Spectrum × StyleMode axis grammar (commit `7a54a75`).
 - [Build the ingest pipeline](issues/09-ingest-pipeline.md) — 60 persons / 12 enterprises / 20 topics / 8 events ingested; idempotency proven; four sanity clusters disjoint; current vector SEARCH syntax.
 - [Build the backend orchestrator](issues/10-backend-orchestrator.md) — nemotron-3-super free + json_schema; 4/4 fixtures pass persona+schema after 5 prompt iterations; themes correct; 79ms cached repeats; tracing + answers-hash cache in.
 - [Build the Vue frontend](issues/11-vue-frontend.md) — five components, four theme variable sets, recursive UiRenderer, zero v-html; live render against the real backend verified.

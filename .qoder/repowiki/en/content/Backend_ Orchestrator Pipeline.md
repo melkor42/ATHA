@@ -23,7 +23,7 @@
 
 ## Allowlist schema
 
-`backend/ui_schema.py` defines the only UI vocabulary: ComponentType (SignalCard, StudentProfile, EnterpriseCard, EventBanner, TextBlock), ColorToken (primary, accent, success, warning), ActionType, Layout (single_column, grid), Theme (boardroom, festival, garden, ledger). UINode is recursive with children; titles/texts are length-capped and stripped of markup characters.
+`backend/ui_schema.py` defines the only UI vocabulary: ComponentType (SignalCard, StudentProfile, EnterpriseCard, EventBanner, TextBlock), ColorToken (primary, accent, success, warning), ActionType, Layout (single_column, grid), Spectrum (mycelium, terra, aurora, neon, void) and StyleMode (none, minimal, retro, organic, earth, steampunk). UINode is recursive with children; titles/texts are length-capped and stripped of markup characters.
 
 ## Failure strategy
 
