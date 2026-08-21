@@ -1,15 +1,14 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useGate, Q1, Q2 } from '../../composables/useGate.js'
-import { usePlaza } from '../../composables/usePlaza.js'
+import { useGate } from '../../composables/useGate.js'
 import bg from '../../assets/plaza/south.png'
 
 // S2 South — Story & Entrance-Gate (spec §3).
 // (a) five phases revealed on scroll like growing light;
-// (b) CAM asks Q1 then Q2 as soft organic cards, closing + route advice.
-const { goTo } = usePlaza()
+// (b) the gate questions themselves are asked by CAM in his bubble,
+//     anywhere in the plaza — the zone only keeps the welcome-back card.
 const gate = useGate()
-const { step, seen, visibleQ1, route } = gate
+const { seen, route, changeRoute } = gate
 
 // Phase lines carry only approved brief copy (docs/signal-context-brief.md) —
 // no invented program details.
@@ -22,9 +21,7 @@ const PHASES = [
 ]
 
 const scroller = ref(null)
-const gateEl = ref(null)
 const revealed = ref(new Set())
-const changing = ref(false)
 
 let obs = null
 onMounted(() => {
@@ -37,25 +34,13 @@ onMounted(() => {
           revealed.value.add(i)
           revealed.value = new Set(revealed.value) // retrigger reactivity
         }
-        if (en.target.dataset.gate === '1' && step.value === 'idle') {
-          if (seen.value && !changing.value) return // welcome-back renders instead
-          gate.start()
-        }
       }
     },
     { root: scroller.value, threshold: 0.35 }
   )
   scroller.value.querySelectorAll('.phase').forEach((el) => obs.observe(el))
-  obs.observe(gateEl.value)
 })
 onBeforeUnmount(() => obs?.disconnect())
-
-function follow() {
-  if (!route.value) return
-  const target = route.value.zone
-  gate.finish()
-  goTo(target)
-}
 </script>
 
 <template>
@@ -74,56 +59,15 @@ function follow() {
       </article>
     </div>
 
-    <div class="gate" ref="gateEl">
-      <!-- first visit / changing route: CAM asks Q1 then Q2 -->
-      <template v-if="!seen || changing">
-        <div v-if="step === 'q1'" class="gate-card">
-          <h3>{{ Q1.question }}</h3>
-          <button
-            v-for="o in visibleQ1"
-            :key="o.id"
-            type="button"
-            class="answer-card"
-            @click="gate.answer1(o.id)"
-          >
-            {{ o.label }}
-          </button>
-        </div>
-        <div v-else-if="step === 'q2'" class="gate-card">
-          <h3>{{ Q2.question }}</h3>
-          <button
-            v-for="o in Q2.options"
-            :key="o.id"
-            type="button"
-            class="answer-card"
-            @click="gate.answer2(o.id)"
-          >
-            {{ o.label }}
-          </button>
-        </div>
-        <div v-else-if="step === 'closing'" class="gate-card closing">
-          <h3>Your way into Signal begins here.</h3>
-          <div class="cta-row">
-            <button type="button" class="plaza-btn solid" @click="follow">
-              Follow my light path
-            </button>
-            <button type="button" class="plaza-btn" @click="gate.changeRoute()">
-              Change your route
-            </button>
-          </div>
-        </div>
-        <p v-else class="gate-hint">CAM is waiting below…</p>
-      </template>
-
-      <!-- returning visitor: gate skipped, route change stays visible (§6) -->
-      <template v-else>
-        <div class="gate-card welcome-back">
-          <h3>Welcome back — your route is set.</h3>
-          <button type="button" class="plaza-btn" @click="changing = true; gate.start()">
-            Change your route
-          </button>
-        </div>
-      </template>
+    <div class="gate">
+      <!-- returning visitor: route change reopens CAM's questions (§6) -->
+      <div v-if="seen" class="gate-card welcome-back">
+        <h3>Welcome back — your route is set.</h3>
+        <button type="button" class="plaza-btn" @click="changeRoute()">
+          Change your route
+        </button>
+      </div>
+      <p v-else class="gate-hint">CAM walks with you — he will ask how to guide you.</p>
     </div>
   </section>
 </template>
@@ -210,27 +154,6 @@ function follow() {
   font-weight: 300;
   font-size: 22px;
   color: #241f1b;
-}
-.answer-card {
-  text-align: left;
-  border: 1px solid rgba(120, 105, 85, 0.25);
-  background: rgba(255, 252, 246, 0.92);
-  border-radius: 20px 24px 22px 18px;
-  padding: 13px 18px;
-  font-size: 15.5px;
-  color: #2b2622;
-  cursor: pointer;
-  transition: background 0.35s, transform 0.35s, box-shadow 0.35s;
-}
-.answer-card:hover {
-  background: rgba(127, 227, 240, 0.22);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(47, 143, 163, 0.18);
-}
-.cta-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 .gate-hint {
   color: rgba(43, 38, 34, 0.55);

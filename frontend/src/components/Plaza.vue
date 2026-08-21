@@ -17,7 +17,7 @@ import RegisterZone from './zones/RegisterZone.vue'
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
 const { current, traveling, reduced, travelMs, goTo, setPulse, toggleReduced, note } = usePlaza()
-const { step, route } = useGate()
+const { step, seen, route, visibleQ1, start, answer1, answer2, finish } = useGate()
 
 const arrived = ref(
   typeof sessionStorage !== 'undefined' &&
@@ -32,23 +32,49 @@ const LINES = {
   east: 'Where you join: bring a challenge, or bring your talent.',
   south: 'The story of Signal grows as you walk down.'
 }
-const gateActive = computed(() =>
-  current.value === 'south' && ['q1', 'q2', 'closing'].includes(step.value)
-)
+// CAM asks the gate questions himself, in any zone (spec §4)
 const camLine = computed(() => {
   if (!arrived.value) return ''
   if (note.value) return note.value
-  // at the gate CAM himself asks Q1/Q2 and names the lit path (spec §4)
-  if (current.value === 'south') {
-    if (step.value === 'q1') return Q1.question
-    if (step.value === 'q2') return Q2.question
-    if (step.value === 'closing' && route.value) {
-      return `Your way into Signal begins here. The ${route.value.zone} path is lit for you.`
-    }
+  if (step.value === 'q1') return Q1.question
+  if (step.value === 'q2') return Q2.question
+  if (step.value === 'closing' && route.value) {
+    return `Your way into Signal begins here. The ${route.value.zone} path is lit for you.`
   }
   return LINES[current.value]
 })
-const camProminent = computed(() => gateActive.value)
+const camProminent = computed(() => ['q1', 'q2', 'closing'].includes(step.value))
+const gateOptions = computed(() => {
+  if (step.value === 'q1') return visibleQ1.value
+  if (step.value === 'q2') return Q2.options
+  return []
+})
+function onAnswer1(id) {
+  answer1(id)
+}
+// answering Q2: CAM names the lit path, then walks you there once said
+let pendingRoute = null
+function onAnswer2(id) {
+  answer2(id)
+  pendingRoute = route.value?.zone ?? null
+}
+function onCamSaid() {
+  if (step.value === 'closing' && pendingRoute) {
+    const target = pendingRoute
+    pendingRoute = null
+    finish()
+    goTo(target)
+  }
+}
+
+// first arrival: once the welcome overlay closes, CAM starts asking
+watch(
+  arrived,
+  (v) => {
+    if (v && !seen.value && step.value === 'idle') start()
+  },
+  { immediate: true }
+)
 
 // the closing pulse: CAM's recommendation lights the matching vein (spec §4)
 watch(step, (s) => {
@@ -150,7 +176,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </button>
 
     <Compass />
-    <Cam :line="camLine" :zone="current" :prominent="camProminent" :rolling="!arrived" />
+    <Cam
+      :line="camLine"
+      :zone="current"
+      :prominent="camProminent"
+      :rolling="!arrived"
+      :options="gateOptions"
+      @answer="step === 'q1' ? onAnswer1($event) : onAnswer2($event)"
+      @said="onCamSaid"
+    />
     <ArrivalOverlay v-if="!arrived" @done="arrived = true" />
   </div>
 </template>

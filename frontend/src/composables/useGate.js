@@ -34,13 +34,14 @@ export const ROUTE = {
 const step = ref('idle') // idle | q1 | q2 | closing | done
 const a1 = ref(null)
 const a2 = ref(null)
+// module-level so Plaza (who asks) and the gate zone (who renders
+// welcome-back) share one visitor state
+const seen = ref(
+  typeof sessionStorage !== 'undefined' &&
+    sessionStorage.getItem(SESSION_KEYS.entrance) === '1'
+)
 
 export function useGate() {
-  const seen = ref(
-    typeof sessionStorage !== 'undefined' &&
-      sessionStorage.getItem(SESSION_KEYS.entrance) === '1'
-  )
-
   const visibleQ1 = computed(() =>
     Q1.options.filter((o) => !o.afterOnly || LIFECYCLE === 'AFTER')
   )

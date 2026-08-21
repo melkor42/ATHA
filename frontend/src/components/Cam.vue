@@ -9,8 +9,12 @@ const props = defineProps({
   line: { type: String, default: '' },
   zone: { type: String, default: 'center' },
   prominent: { type: Boolean, default: false },
-  rolling: { type: Boolean, default: false }
+  rolling: { type: Boolean, default: false },
+  // while CAM asks a gate question, the bubble grows answer options
+  options: { type: Array, default: () => [] }
 })
+
+const emit = defineEmits(['answer', 'said'])
 
 const { reduced } = usePlaza()
 
@@ -82,6 +86,10 @@ watch([() => props.line, () => props.zone], () => {
 
 const activeLine = computed(() => poke.value ?? props.line)
 
+// answer options only appear once CAM has finished speaking the question
+const said = ref(false)
+const optionsAreActive = computed(() => props.options.length > 0 && said.value)
+
 // typewriter voice: CAM writes his lines, antenna pulses while talking
 const shown = ref('')
 const talking = ref(false)
@@ -92,6 +100,7 @@ watch(
   (v) => {
     clearInterval(typeTimer)
     clearTimeout(talkTimer)
+    said.value = false
     if (!v) {
       shown.value = ''
       talking.value = false
@@ -101,6 +110,8 @@ watch(
     if (reduced.value) {
       shown.value = v
       talkTimer = setTimeout(() => (talking.value = false), 1600)
+      said.value = true
+      emit('said')
       return
     }
     shown.value = ''
@@ -111,6 +122,8 @@ watch(
       if (i >= v.length) {
         clearInterval(typeTimer)
         talkTimer = setTimeout(() => (talking.value = false), 1600)
+        said.value = true
+        emit('said')
       }
     }, 18)
   },
@@ -131,8 +144,19 @@ watch(activeLine, (v) => {
 
 <template>
   <div class="cam" :class="{ prominent, rolling }" @click="onPoke" title="poke CAM">
-    <div v-if="shown" class="cam-bubble" :class="{ talking }">
+    <div v-if="shown" class="cam-bubble" :class="{ talking, question: optionsAreActive }">
       {{ shown }}<span v-if="talking && !reduced" class="caret"></span>
+      <div v-if="optionsAreActive" class="cam-options">
+        <button
+          v-for="o in options"
+          :key="o.id"
+          type="button"
+          class="cam-option"
+          @click.stop="emit('answer', o.id)"
+        >
+          {{ o.label }}
+        </button>
+      </div>
     </div>
     <div class="cam-pop" :key="popKey" :class="{ happy }">
       <svg class="cam-body" :class="{ still: reduced }" viewBox="0 0 160 150" aria-label="CAM, your plaza companion">
@@ -231,6 +255,44 @@ watch(activeLine, (v) => {
 }
 @keyframes caret-blink {
   50% { opacity: 0; }
+}
+
+/* big speaking bubble: CAM asks the gate questions with live answers */
+.cam-bubble.question {
+  width: min(320px, 78vw);
+  padding: 16px 18px;
+  font-size: 14.5px;
+}
+.cam-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cam-option {
+  text-align: left;
+  border: 1px solid rgba(120, 105, 85, 0.28);
+  background: rgba(255, 252, 246, 0.95);
+  border-radius: 16px 18px 17px 14px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #2b2622;
+  cursor: pointer;
+  animation: option-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.cam-option:nth-child(2) { animation-delay: 0.08s; }
+.cam-option:nth-child(3) { animation-delay: 0.16s; }
+.cam-option:nth-child(4) { animation-delay: 0.24s; }
+@keyframes option-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+.cam-option:hover {
+  background: rgba(127, 227, 240, 0.26);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(47, 143, 163, 0.18);
 }
 
 .cam-pop { transform-origin: bottom right; }
