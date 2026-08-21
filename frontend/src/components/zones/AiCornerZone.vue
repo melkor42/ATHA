@@ -130,13 +130,18 @@ watch(
 }
 .north-copy {
   position: relative;
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 18px;
-  padding: 12vh 6vw 14vh;
+  padding: clamp(56px, 8vh, 110px) 6vw clamp(24px, 7vh, 96px);
 }
+/* the wing rarely gets the full design canvas: when the column is shorter
+   than the space we have, auto margins center it in that space; when it is
+   taller, they collapse to zero and the wing scrolls as before */
+.north-copy > :first-child { margin-top: auto; }
+.north-copy > :last-child { margin-bottom: auto; }
 .eyebrow {
   font-size: 12px;
   letter-spacing: 0.34em;
@@ -207,6 +212,10 @@ watch(
   filter: blur(0);
 }
 .graph-panel {
+  /* the graph yields to the space we have instead of forcing its aspect */
+  --graph-h: clamp(140px, 30vh, 396px);
+  display: flex;
+  align-items: center;
   background: rgba(14, 26, 30, 0.72);
   border: 1px solid rgba(127, 227, 240, 0.2);
   border-radius: 30px 34px 32px 28px;

@@ -74,7 +74,9 @@ function edgeD(e) {
 <style scoped>
 .network-graph {
   width: 100%;
-  height: auto;
+  /* parent zones set --graph-h to align the drawing with the space they
+     have; auto keeps the raw aspect when nobody claims it */
+  height: var(--graph-h, auto);
   display: block;
 }
 .edge {
