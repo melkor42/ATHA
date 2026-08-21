@@ -676,3 +676,63 @@ body::after {
   .mode-retro.wow-page::before,
   .mode-retro.wow-page::after { content: none; }
 }
+
+/* ============ Plaza (Town Square) — shared layer ============
+   Clean natural futuristic / flowy organic (spec §1).
+   Bright limestone base; dusk lives only inside .zone-north. */
+.zone {
+  position: absolute;
+  inset: 0;
+  background-color: #e9e2d4;
+  background-image: var(--bg);
+  background-size: cover;
+  background-position: center;
+}
+/* stacking: zone photo (own bg, z0) < veins overlay (z1) < content (z2) */
+.zone > * { z-index: 2; }
+.zone::after {
+  /* calm scrim so panels and type stay readable on photography */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 85% at 50% 45%, rgba(233, 226, 212, 0.28) 40%, rgba(233, 226, 212, 0.62) 100%);
+}
+.zone-north::after {
+  background: radial-gradient(115% 85% at 50% 45%, rgba(8, 16, 20, 0.3) 40%, rgba(8, 16, 20, 0.66) 100%);
+}
+
+.plaza-btn {
+  display: inline-block;
+  text-decoration: none;
+  border: 1px solid rgba(120, 105, 85, 0.35);
+  background: rgba(250, 247, 240, 0.72);
+  backdrop-filter: blur(10px);
+  color: #2b2622;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.35s, box-shadow 0.35s, background 0.35s;
+}
+.plaza-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(30, 40, 45, 0.18);
+  background: rgba(252, 250, 245, 0.9);
+}
+.plaza-btn.solid {
+  background: linear-gradient(135deg, #f2b361, #e2784e);
+  border-color: transparent;
+  color: #241f1b;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(226, 120, 78, 0.35);
+}
+.plaza-btn.solid:hover { box-shadow: 0 12px 28px rgba(226, 120, 78, 0.45); }
+
+/* reduced motion: the plaza keeps snap, drops flow and pans (spec §8) */
+.plaza.reduced .plaza-world { transition-duration: 200ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .plaza-world { transition-duration: 200ms !important; }
+}
