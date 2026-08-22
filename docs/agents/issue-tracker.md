@@ -2,7 +2,7 @@
 
 Issues and specs for this repo live as markdown files in `.scratch/`.
 
-GitHub (https://github.com/melkor42/Signal) is the code remote only; it becomes the tracker after `gh auth login` is set up and this file is regenerated. Until then, markdown files are canonical.
+GitHub (https://github.com/melkor42/Signal) is the code remote only; it becomes the tracker after `gh auth login` is set up and this file is regenerated. Until then, markdown files are canonical. (The repo rename to Atha is pending on GitHub — external task; the URL keeps its old name until then.)
 
 ## Conventions
 

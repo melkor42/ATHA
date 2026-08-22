@@ -1,4 +1,4 @@
-"""backend/ingest.py — offline, idempotent ingest pipeline for the SIGNAL graph.
+"""backend/ingest.py — offline, idempotent ingest pipeline for the ATHA graph.
 
 Reads data/*.json (produced by generate_data.py), transforms each Person into
 profile text per the CONTEXT.md template, embeds via fastembed

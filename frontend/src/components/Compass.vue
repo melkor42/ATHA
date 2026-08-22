@@ -9,7 +9,8 @@ const DOTS = [
   { zone: 'west', x: 16, y: 50 },
   { zone: 'center', x: 50, y: 50 },
   { zone: 'east', x: 84, y: 50 },
-  { zone: 'south', x: 50, y: 84 }
+  { zone: 'south', x: 50, y: 84 },
+  { zone: 'wisdom', x: 84, y: 84 }
 ]
 </script>
 

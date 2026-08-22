@@ -1,4 +1,4 @@
-"""backend/graph_queries.py — verified hybrid retrieval for the SIGNAL wow-page.
+"""backend/graph_queries.py — verified hybrid retrieval for the ATHA wow-page.
 
 Single source of truth for:
   * the local embedding model (fastembed BAAI/bge-small-en-v1.5, 384 dims) —

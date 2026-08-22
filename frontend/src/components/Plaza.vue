@@ -12,8 +12,9 @@ import StoryGateZone from './zones/StoryGateZone.vue'
 import AiCornerZone from './zones/AiCornerZone.vue'
 import InfosZone from './zones/InfosZone.vue'
 import RegisterZone from './zones/RegisterZone.vue'
+import WisdomCornerZone from './zones/WisdomCornerZone.vue'
 
-// The Town Square shell (spec §2): one place, five zones, a soft camera.
+// The Town Square shell (spec §2): one place, six zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
 const { current, traveling, reduced, travelMs, goTo, setPulse, toggleReduced, note } = usePlaza()
@@ -30,7 +31,8 @@ const LINES = {
   north: 'The night side of the plaza: everything here is composed live, for you.',
   west: 'The quiet wing. Facts, bright and clear — no decoration.',
   east: 'Where you join: bring a challenge, or bring your talent.',
-  south: 'The story of Signal grows as you walk down.'
+  south: 'The story of Atha grows as you walk down.',
+  wisdom: 'The still corner: how Atha works, and what makes a decision good.'
 }
 // CAM asks the gate questions himself, in any zone (spec §4)
 const camLine = computed(() => {
@@ -39,7 +41,7 @@ const camLine = computed(() => {
   if (step.value === 'q1') return Q1.question
   if (step.value === 'q2') return Q2.question
   if (step.value === 'closing' && route.value) {
-    return `Your way into Signal begins here. The ${route.value.zone} path is lit for you.`
+    return `Your way into Atha begins here. The ${route.value.zone} path is lit for you.`
   }
   return LINES[current.value]
 })
@@ -150,7 +152,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 <template>
   <div
     class="plaza"
-    :class="{ reduced }"
+    :class="{ reduced, arriving: !arrived }"
     @wheel.passive="onWheel"
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
@@ -166,6 +168,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="tile" :style="{ '--tx': 1, '--ty': 1 }"><CenterZone /></div>
         <div class="tile" :style="{ '--tx': 2, '--ty': 1 }"><RegisterZone /></div>
         <div class="tile" :style="{ '--tx': 1, '--ty': 2 }"><StoryGateZone /></div>
+        <div class="tile" :style="{ '--tx': 2, '--ty': 2 }"><WisdomCornerZone /></div>
         <VeinsOverlay />
       </div>
     </div>
@@ -195,7 +198,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   inset: 0;
   overflow: hidden;
   background: #e9e2d4;
+  transition: background-color 1.6s ease;
 }
+/* arrival (delta §1): the square sits in the same void as the overlay,
+   then brightens into daylight as the veil lifts — no black/white cut */
+.plaza.arriving { background: #0d0b09; }
+.plaza.reduced { transition: none; }
 .plaza-world {
   position: absolute;
   width: 300vw;
@@ -208,6 +216,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   position: absolute;
   inset: 0;
 }
+/* fly-in (delta §1): while the arrival veil speaks, the square sits
+   scaled up and dimmed; on reveal it settles down to full presence */
+.plaza.arriving .plaza-zoom {
+  transform: scale(1.07);
+  opacity: 0.32;
+}
+.plaza-zoom {
+  transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.3s ease;
+}
+.plaza.reduced .plaza-zoom { transition: none; }
 .plaza-zoom.dip {
   animation: cam-dip both;
   animation-timing-function: cubic-bezier(0.3, 0.8, 0.4, 1);

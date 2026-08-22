@@ -43,6 +43,35 @@
   --s-glow1: rgba(95, 217, 203, 0.10);
   --s-glow2: rgba(154, 127, 200, 0.09);
   --s-dimtext: #A3ABA6;         /* spectrum-owned body-text tint */
+
+  /* ATHA tokens — authority: .scratch/ATHA_Design-Direction.html.
+     Consumed only by the new Wisdom Corner zone; all legacy tokens above
+     are untouched. Usage rules: no gradients, no drop shadows, no rounded
+     containers; --atha-ferrous appears at most once per view;
+     --atha-rind covers ≤5% of a view and never carries text. */
+  --atha-clay: #2A2622;
+  --atha-chalk: #F2EDE4;
+  --atha-slip: #E0D8C9;
+  --atha-field: #4C5A3E;
+  --atha-ferrous: #8A3B26;
+  --atha-rind: #C9D34A;
+  --atha-rule: #A39C90;
+  --atha-deep: #1E2419;
+  --atha-hair: rgba(42, 38, 34, 0.20);
+  --atha-font-display: Fraunces, serif;
+  --atha-font-body: 'Instrument Sans', sans-serif;
+  --atha-font-mono: 'IBM Plex Mono', monospace;
+  /* ATHA type scale (px mirror of the rem scale in the design direction) */
+  --atha-s0: 12px;
+  --atha-s1: 13px;
+  --atha-s2: 14px;
+  --atha-s3: 16px;
+  --atha-s4: 20px;
+  --atha-s5: 28px;
+  --atha-s6: 44px;
+  --atha-s7: 72px;
+  /* ATHA motion */
+  --atha-ease: cubic-bezier(.2, .7, .25, 1);
 }
 
 * { box-sizing: border-box; }
@@ -704,6 +733,9 @@ body::after {
 /* the south wing keeps its photography clean — no scrim, the story
    type carries its own text-shadow */
 .zone-south::after { content: none; }
+/* wisdom corner is flat chalk (ATHA surface: no gradients) — opt out of
+   the shared limestone radial scrim */
+.zone-wisdom::after { content: none; }
 
 .plaza-btn {
   display: inline-block;

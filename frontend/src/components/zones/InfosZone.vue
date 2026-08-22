@@ -2,12 +2,12 @@
 import bg from '../../assets/plaza/west.png'
 
 // S4 West — Essential Infos (spec §3): calm, bright, maximum readability.
-// Values from docs/signal-context-brief.md (approved copy only);
+// Values from docs/atha-context-brief.md (approved copy only);
 // unconfirmed facts carry their status per the brief's content rules.
 const FACTS = [
-  ['Format', 'The AI-Native Viability Sprint — 48 hours. Not a hackathon · Not a conference · Something new.'],
-  ['When', 'Q4 2026 · exact dates: Open'],
-  ['Where', 'Warwick Business School × OneMundi'],
+  ['Format', 'A multi-day working experience — the duration is determined by the rhythm · Proposed'],
+  ['When', 'Direction: around March 2027 · Not fixed'],
+  ['Where', 'Warwick/Coventry as the core working location — initiated by OneMundi, co-hosted with Warwick Business School · Proposed'],
   ['Access', '[PLACEHOLDER] · Open'],
   ['Contact', 'hello@onemundi.one']
 ]

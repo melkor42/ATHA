@@ -4,6 +4,6 @@
 export const LIFECYCLE = 'BEFORE'
 
 export const SESSION_KEYS = {
-  arrival: 'signal.arrivalPlayed',
-  entrance: 'signal.hasSeenEntrance'
+  arrival: 'atha.arrivalPlayed',
+  entrance: 'atha.hasSeenEntrance'
 }

@@ -3,20 +3,20 @@ import { LIFECYCLE, SESSION_KEYS } from '../config.js'
 
 // Copy is EXACT per spec §5 — do not reword.
 export const Q1 = {
-  question: 'How are you meeting Signal today?',
+  question: 'How are you meeting Atha today?',
   options: [
-    { id: 'first', label: 'I am discovering Signal for the first time' },
+    { id: 'first', label: 'I am discovering Atha for the first time' },
     { id: 'deciding', label: 'I am deciding whether to attend' },
     { id: 'preparing', label: 'I am preparing to come' },
     // only visible/active AFTER the event (spec §5/§6)
-    { id: 'experienced', label: 'I have already experienced Signal', afterOnly: true }
+    { id: 'experienced', label: 'I have already experienced Atha', afterOnly: true }
   ]
 }
 
 export const Q2 = {
   question: 'What would be most helpful now?',
   options: [
-    { id: 'understand', label: 'Help me understand what Signal is' },
+    { id: 'understand', label: 'Help me understand what Atha is' },
     { id: 'essential', label: 'Show me the essential details' },
     { id: 'atmosphere', label: 'Guide me into the atmosphere' },
     { id: 'explore', label: 'Let me explore in my own way' }
@@ -63,8 +63,8 @@ export function useGate() {
   function answer1(id) {
     a1.value = id
     step.value = 'q2'
-    // canonical session keys per docs/signal-context-brief.md
-    try { sessionStorage.setItem('signalVisitorState', id) } catch { /* private mode */ }
+    // canonical session keys per docs/atha-context-brief.md
+    try { sessionStorage.setItem('athaVisitorState', id) } catch { /* private mode */ }
   }
 
   function answer2(id) {
@@ -72,8 +72,8 @@ export function useGate() {
     step.value = 'closing'
     seen.value = true
     try {
-      sessionStorage.setItem('signalExplorationMode', id)
-      sessionStorage.setItem('signalEntryRoute', ROUTE[id]?.zone ?? '')
+      sessionStorage.setItem('athaExplorationMode', id)
+      sessionStorage.setItem('athaEntryRoute', ROUTE[id]?.zone ?? '')
       sessionStorage.setItem(SESSION_KEYS.entrance, '1')
     } catch { /* private mode */ }
   }

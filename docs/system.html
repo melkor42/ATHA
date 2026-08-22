@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal App – MVP Systemübersicht</title>
+<title>Atha App – MVP Systemübersicht</title>
 <style>
   :root{--bg:#0f1115;--card:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#9aa3b2;
         --blue:#4f8ff7;--green:#3ecf8e;--orange:#f7934f;--purple:#b07df7;}
@@ -44,7 +44,7 @@
 </style>
 </head>
 <body>
-<h1>Signal App – MVP Systemübersicht</h1>
+<h1>Atha App – MVP Systemübersicht</h1>
 <p class="hint">Klicke auf eine Box, um zum zugehörigen Code zu springen.
    Blau = Online-Query-Pfad, Orange = Offline-Ingest-Pfad.</p>
 
@@ -314,7 +314,7 @@ def verify(schema: ExperienceSchema, allowed: set[str]) -> ExperienceSchema:
 
 DEFAULT_EXPERIENCE = ExperienceSchema(
     sections=[UINode(component="TextBlock",
-                     title="Willkommen im Signal-Netzwerk")],
+                     title="Willkommen im Atha-Netzwerk")],
 )
 
 @app.post("/api/experience", response_model=ExperienceSchema)

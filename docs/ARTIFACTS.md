@@ -4,7 +4,7 @@ A curated gallery for humans. Every artifact lives canonically in the folder lin
 
 ## 1. The vision — [`IDEA.md`](../IDEA.md)
 
-What SIGNAL is (a 48-hour AI-native viability environment) and why the Wow Page exists: a personal front door composed for one person, grounded in their actual profile, building itself in front of them. The promise every later decision serves: *the platform understands you before asking anything of you.*
+What ATHA is (a 48-hour AI-native viability environment) and why the Wow Page exists: a personal front door composed for one person, grounded in their actual profile, building itself in front of them. The promise every later decision serves: *the platform understands you before asking anything of you.*
 
 ## 2. The architecture sketch — [`docs/architecture-sketch.png`](architecture-sketch.png)
 

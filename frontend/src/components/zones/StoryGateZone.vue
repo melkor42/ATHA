@@ -10,14 +10,17 @@ import bg from '../../assets/plaza/south.png'
 const gate = useGate()
 const { seen, route, changeRoute } = gate
 
-// Phase lines carry only approved brief copy (docs/signal-context-brief.md) —
-// no invented program details.
+// Phase lines carry only approved brief copy (docs/atha-context-brief.md) —
+// no invented program details. The seven-stage ATHA rhythm; the length
+// of each stage is a decision, and the gaps between them are designed too.
 const PHASES = [
-  { n: '01', title: 'Challenge', line: 'Real enterprise AI challenges enter the room, carried by the people who own them.' },
-  { n: '02', title: 'Cohort', line: 'Talent gathers: depth, judgment, context. No spectators.' },
-  { n: '03', title: '48 Hours', line: 'Five lenses — Desirability, Feasibility, Viability, Scalability, Responsibility. The deliverable is a board-ready verdict, not a demo.' },
-  { n: '04', title: 'Experience', line: 'Wellbeing is infrastructure. Supported, not depleted.' },
-  { n: '05', title: 'Signal', line: 'Everyone else resets. We compound.' }
+  { n: '01', title: 'Arrive & Settle', line: 'People are met rather than processed. The room is made, not booked.' },
+  { n: '02', title: 'Open & Sense', line: 'The question is opened before it is attacked — presented as it actually sits, with what was tried and what is feared.' },
+  { n: '03', title: 'Connect', line: 'Teams form across disciplines, around the question — not around a single skill.' },
+  { n: '04', title: 'Create', line: 'The longest stage: investigation with AI as a working partner, never accepted blindly.' },
+  { n: '05', title: 'Discern', line: 'Given more room than any stage except the work itself — evidence, consequences, uncertainty, trade-offs.' },
+  { n: '06', title: 'Celebrate', line: 'Recognition is shared, not ranked. Different forms of excellence — no overall winner.' },
+  { n: '07', title: 'Integrate & Return', line: 'Leave with something integrated. The relationships carry into the next edition.' }
 ]
 
 const scroller = ref(null)
@@ -25,6 +28,7 @@ const revealed = ref(new Set())
 
 let obs = null
 onMounted(() => {
+  // observes every .phase regardless of count; one-shot unobserve per reveal
   obs = new IntersectionObserver(
     (entries) => {
       for (const en of entries) {
@@ -34,6 +38,7 @@ onMounted(() => {
           revealed.value.add(i)
           revealed.value = new Set(revealed.value) // retrigger reactivity
         }
+        obs.unobserve(en.target)
       }
     },
     { root: scroller.value, threshold: 0.35 }

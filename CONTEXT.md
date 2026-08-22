@@ -1,13 +1,14 @@
-# CONTEXT.md — Signal Wow-Page domain glossary
+# CONTEXT.md — Atha Wow-Page domain glossary
 
 The vocabulary the project uses. Terms are defined as used; don't drift to synonyms.
 
-- **Person** — a human in the SIGNAL network. Role `student` (currently at Warwick) or `alumnus`. One label, because retrieval then has a single path. The subject of a Profile.
+- **Person** — a human in the ATHA network. Role `student` (currently at Warwick) or `alumnus`. One label, because retrieval then has a single path. The subject of a Profile.
 - **Mentor** — an alumnus in the object position of `MENTORED_BY`. Not a separate label; a role an alumnus plays in a story.
-- **Enterprise** — an organization partnering with SIGNAL. Carries sector, size, HQ, description, and a contact person as fields (not a separate node), with complete metadata for filterable lists. Expresses hiring needs via `SEEKS_EXPERTISE`.
+- **Enterprise** — an organization partnering with ATHA. Carries sector, size, HQ, description, and a contact person as fields (not a separate node), with complete metadata for filterable lists. Expresses hiring needs via `SEEKS_EXPERTISE`.
 - **Topic** — a shared vocabulary node (~20) joining interests to needs. The join key that makes a Signal.
 - **Signal** — a *derived* match between a Person and an Enterprise via a shared Topic. Never stored as a node; computed by the hybrid query and rendered by SignalCard.
-- **Event** — a gathering on the SIGNAL timeline. Past events carry `highlights` (the "best moments"); upcoming events carry date and location. **SIGNAL 001 · Q4 2026 · Warwick Business School is the single real entity in the synthetic dataset**; everything else is fictional.
+- Note: the brand is **Atha**; **Signal** survives only as this domain term (the derived match) and in its wire-contract strings (`SignalCard`, `save_signal`, `SIGNAL_CARD`).
+- **Event** — a gathering on the ATHA timeline. Past events carry `highlights` (the "best moments"); upcoming events carry date and location. **ATHA 001 · Q4 2026 · Warwick Business School is the single real entity in the synthetic dataset**; everything else is fictional.
 - **Profile** — the embedding-bearing text of a Person; the vector surface of retrieval. Same embedding model in ingest and query (fastembed bge-small-en-v1.5, 384 dims).
 - **Perspective** — the visitor's stance: `enterprise` | `talent` | `infrastructure` | `education`. Agent 1's primary branching axis; inherited from the page the Wow Page replaces.
 - **PersonaModel** — Agent 1's output: interests, tone, accent_color (ColorToken), expertise_level, perspective.
@@ -16,7 +17,7 @@ The vocabulary the project uses. Terms are defined as used; don't drift to synon
 
 ## Dataset spec (synthetic v1)
 
-Counts: 48 students · 12 alumni · 12 enterprises · 20 topics · 8 events (3 past with highlights, 5 upcoming incl. SIGNAL 001) · 2 schools.
+Counts: 48 students · 12 alumni · 12 enterprises · 20 topics · 8 events (3 past with highlights, 5 upcoming incl. ATHA 001) · 2 schools.
 
 Fields:
 - Person: id, name, role, year_or_cohort, program_or_role, school, skills[], bio, contact_email

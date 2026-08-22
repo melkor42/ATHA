@@ -2,18 +2,18 @@
 import bg from '../../assets/plaza/east.png'
 
 // S5 East — Anmeldung (spec §3): warm welcoming pole, two organic CTAs.
-// Copy = the four-perspective deliverables (docs/signal-context-brief.md);
+// Copy = the four-perspective deliverables (docs/atha-context-brief.md);
 // entry points are the brief's approved mailto subjects.
 const CARDS = [
   {
     cta: 'Bring a Challenge',
     line: 'Bring a real AI workflow. Get an evidence-grade verdict, modelled unit economics, first-look talent access.',
-    href: 'mailto:hello@onemundi.one?subject=SIGNAL%20001%20%E2%80%94%20Enterprise%20Challenge'
+    href: 'mailto:hello@onemundi.one?subject=ATHA%20001%20%E2%80%94%20Enterprise%20Challenge'
   },
   {
     cta: 'Apply as Talent',
     line: 'Bring depth, judgment, context. Get proof of how you operate with AI — and a place in a compounding ecosystem.',
-    href: 'mailto:hello@onemundi.one?subject=SIGNAL%20001%20%E2%80%94%20Talent%20Application'
+    href: 'mailto:hello@onemundi.one?subject=ATHA%20001%20%E2%80%94%20Talent%20Application'
   }
 ]
 </script>

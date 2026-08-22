@@ -1,8 +1,8 @@
 """backend/generate_data.py — deterministic, seeded, fully fictional dataset.
 
-Produces the synthetic SIGNAL network per CONTEXT.md "Dataset spec (synthetic v1)":
+Produces the synthetic ATHA network per CONTEXT.md "Dataset spec (synthetic v1)":
 48 students, 12 alumni, 12 enterprises, 20 topics, 8 events (3 past with
-highlights, 5 upcoming incl. the single real entity SIGNAL 001), 2 schools.
+highlights, 5 upcoming incl. the single real entity ATHA 001), 2 schools.
 
 Topic clusters are shaped so the four acceptance fixtures retrieve distinct,
 plausible matches:
@@ -228,7 +228,7 @@ EVENTS = [
          "Alumni fireside chat on staying well in demanding careers",
      ]},
     # Upcoming events — evt-04 is the SINGLE REAL entity in the dataset
-    {"id": "evt-04", "name": "SIGNAL 001", "date": "2026-Q4",
+    {"id": "evt-04", "name": "ATHA 001", "date": "2026-Q4",
      "kind": "upcoming", "location": "Warwick Business School", "highlights": []},
     {"id": "evt-05", "name": "Autumn Founders Roundtable", "date": "2026-09-24",
      "kind": "upcoming", "location": "Warwick Business School", "highlights": []},
