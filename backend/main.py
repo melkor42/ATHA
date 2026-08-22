@@ -1,15 +1,18 @@
 """backend/main.py — FastAPI orchestrator for the SIGNAL wow-page (ticket 10).
 
-Pipeline per POST /api/experience {text}:
-  Agent 1 (PersonaModel) -> hybrid retrieval (graph_queries.hybrid_retrieve,
-  REUSED from ticket 09) -> Agent 2 (ExperienceSchema, prompt includes persona
-  JSON + data pool WITH ids) -> verify() filters entity_ids against the
-  whitelist -> hydrate() fills the entities map from Neo4j -> ExperienceSchema
-  JSON. Any failure degrades to DEFAULT_EXPERIENCE — the endpoint never crashes.
+Pipeline per POST /api/experience {role, topics, style}:
+  visitor's role selection -> deterministic PersonaModel synthesis (no LLM)
+  -> hybrid retrieval over the selected topics (graph_queries.hybrid_retrieve,
+  REUSED from ticket 09) -> compose agent (ExperienceSchema, prompt includes
+  persona JSON + data pool WITH ids) -> the visitor-chosen style overrides
+  the schema's mode (prompt stays untouched) -> verify() filters entity_ids
+  against the whitelist -> hydrate() fills the entities map from Neo4j ->
+  ExperienceSchema JSON. Any failure degrades to DEFAULT_EXPERIENCE — the
+  endpoint never crashes.
 
 Plus: CORS for the Vite dev server, /health, in-memory rate limit
 (30 req/day per IP), per-request tracing to backend/trace.jsonl, and a
-sha256(text)-keyed response cache so repeat runs cost zero LLM calls.
+role+topics+style-keyed response cache so repeat runs cost zero LLM calls.
 
 Run:  uvicorn main:app --reload   (from backend/)
 """
@@ -35,18 +38,19 @@ from agents import (
     PRIMARY_MODEL,
     experience_agent,
     get_client,
-    persona_agent,
     render_pool,
 )
 from graph_queries import get_database, get_driver, get_embedder, hybrid_retrieve
 from ui_schema import (
     ActionType,
     Button,
+    ColorToken,
     ComponentType,
     EntityPayload,
     EntityType,
     ExperienceSchema,
     Layout,
+    PersonaModel,
     Spectrum,
     StyleMode,
     UINode,
@@ -128,7 +132,64 @@ async def _shutdown() -> None:
 
 
 class ExperienceRequest(BaseModel):
-    text: str
+    role: str
+    topics: list[str] = []
+    style: StyleMode | None = None
+
+
+# --- role selection ---------------------------------------------------------------
+# The persona modeler is gone: the visitor picks a role and (optionally) topics
+# in the AI Corner; the PersonaModel the compose agent consumes is synthesized
+# deterministically here. The curated topic lists double as the retrieval
+# fallback when the visitor selects none.
+
+ROLE_PROFILES: dict[str, dict] = {
+    "student": {
+        "topics": ["networking", "mentoring", "career development",
+                   "events", "entrepreneurship"],
+        "tone": "playful",
+        "accent_color": ColorToken.ACCENT,
+        "expertise_level": "advanced",
+        "perspective": "talent",
+    },
+    "warwick": {
+        "topics": ["mentoring", "wellbeing", "community",
+                   "events", "leadership"],
+        "tone": "warm",
+        "accent_color": ColorToken.SUCCESS,
+        "expertise_level": "expert",
+        "perspective": "education",
+    },
+    "business": {
+        "topics": ["talent acquisition", "consulting", "fintech",
+                   "sustainability", "entrepreneurship"],
+        "tone": "direct",
+        "accent_color": ColorToken.PRIMARY,
+        "expertise_level": "expert",
+        "perspective": "enterprise",
+    },
+}
+
+
+def resolve_topics(role: str, requested: list[str]) -> list[str]:
+    """Keep only topics from the role's curated list (order-preserving,
+    de-duplicated); an empty or fully unknown selection means CAM chooses —
+    the role's full list."""
+    curated = ROLE_PROFILES[role]["topics"]
+    allowed = set(curated)
+    picked = list(dict.fromkeys(t.strip().lower() for t in requested if t and t.strip().lower() in allowed))
+    return picked or list(curated)
+
+
+def synthesize_persona(role: str, topics: list[str]) -> PersonaModel:
+    profile = ROLE_PROFILES[role]
+    return PersonaModel(
+        interests=topics,
+        tone=profile["tone"],
+        accent_color=profile["accent_color"],
+        expertise_level=profile["expertise_level"],
+        perspective=profile["perspective"],
+    )
 
 
 # --- hydration queries (server-side, by id) ----------------------------------------------
@@ -335,17 +396,26 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         raise HTTPException(status_code=429,
                             detail=f"Rate limit: {RATE_LIMIT_PER_DAY} requests/day.")
 
-    text = (body.text or "").strip()
-    if not text:
-        raise HTTPException(status_code=422, detail="Empty input text.")
+    role = (body.role or "").strip().lower()
+    if role not in ROLE_PROFILES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown role: {role!r}. Expected one of {sorted(ROLE_PROFILES)}.",
+        )
+    topics = resolve_topics(role, body.topics)
+    style = body.style  # StyleMode | None, pydantic-validated
 
-    key = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    key = hashlib.sha256(
+        f"{role}|{'.'.join(topics)}|{style.value if style else ''}".encode("utf-8")
+    ).hexdigest()
     started = time.perf_counter()
     cached = _response_cache.get(key)
     if cached is not None:
         _response_cache.move_to_end(key)
         _append_trace({
-            "ts": time.time(), "input": text, "persona": cached.get("persona"),
+            "ts": time.time(), "role": role, "topics": topics,
+            "style": style.value if style else None,
+            "persona": cached.get("persona"),
             "allowed_ids": cached.get("allowed_ids"),
             "ui_schema": cached.get("experience"), "latency_ms": 0,
             "cache_hit": True,
@@ -358,10 +428,10 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     experience = DEFAULT_EXPERIENCE.model_dump()
     try:
         client = get_client()
-        persona_model = await persona_agent(text, client)
+        persona_model = synthesize_persona(role, topics)
         persona = persona_model.model_dump()
 
-        query_text = " ".join(persona_model.interests) or text
+        query_text = " ".join(persona_model.interests)
         rows, allowed = await hybrid_retrieve(
             query_text, top_k=TOP_K, limit=LIMIT, driver=get_app_driver()
         )
@@ -372,6 +442,11 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 
         pool_text = render_pool(rows, events)
         draft = await experience_agent(persona_model, pool_text, ids, client)
+        # the visitor's style pick wins over the agent's temperament choice —
+        # server-side, deterministic, prompt untouched. No style chosen:
+        # keep the agent's mode (the diversity rule).
+        if style is not None:
+            draft.mode = style
         draft_schema = draft.model_dump()
         verified = verify(draft, ids)
         entities = await _hydrate(get_app_driver(),
@@ -390,7 +465,9 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 
     latency_ms = int((time.perf_counter() - started) * 1000)
     _append_trace({
-        "ts": time.time(), "input": text, "persona": persona,
+        "ts": time.time(), "role": role, "topics": topics,
+        "style": style.value if style else None,
+        "persona": persona,
         "allowed_ids": allowed_ids, "draft_schema": draft_schema,
         "ui_schema": experience,
         "latency_ms": latency_ms, "cache_hit": False,

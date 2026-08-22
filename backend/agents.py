@@ -1,7 +1,7 @@
-"""backend/agents.py — the two LLM agents behind the SIGNAL wow-page.
+"""backend/agents.py — the LLM agent behind the SIGNAL wow-page.
 
-Agent 1 (persona_modeler): free-text onboarding input -> PersonaModel.
-Agent 2 (experience_builder): PersonaModel + retrieved data pool -> ExperienceSchema.
+experience_builder: PersonaModel (synthesized server-side from the visitor's
+role selection) + retrieved data pool -> ExperienceSchema.
 
 Plain async OpenAI client against OpenRouter's OpenAI-compatible endpoint
 (ticket 13: nvidia/nemotron-3-super-120b-a12b:free — the only large free model
@@ -40,7 +40,6 @@ T = TypeVar("T")
 
 # --- system prompts (loaded once at startup from prompts/*.md) ------------------
 
-PERSONA_SYSTEM = (PROMPTS_DIR / "persona_modeler.md").read_text(encoding="utf-8")
 EXPERIENCE_SYSTEM = (PROMPTS_DIR / "experience_builder.md").read_text(encoding="utf-8")
 
 
@@ -66,8 +65,8 @@ def get_client() -> AsyncOpenAI:
 
 # --- json schema + parsing -------------------------------------------------------
 
-_PERSONA_SCHEMA = TypeAdapter(PersonaModel).json_schema()
-# Agent 2 authors sections only; the entities hydration map is server-side.
+# The compose agent authors sections only; the entities hydration map is
+# server-side.
 _EXPERIENCE_SCHEMA = TypeAdapter(ExperienceSchema).json_schema()
 
 
@@ -163,28 +162,11 @@ async def _chat_json(
     )
 
 
-# --- Agent 1: persona modeler -------------------------------------------------------
-
-
-async def persona_agent(text: str, client: AsyncOpenAI | None = None) -> PersonaModel:
-    """Free-text onboarding input -> validated PersonaModel."""
-    client = client or get_client()
-    data = await _chat_json(
-        client,
-        system=PERSONA_SYSTEM,
-        user=text,
-        json_schema=_PERSONA_SCHEMA,
-        schema_name="persona_model",
-        temperature=0.1,
-    )
-    return PersonaModel.model_validate(data)
-
-
-# --- Agent 2: experience builder ------------------------------------------------------
+# --- the compose agent (experience builder) -------------------------------------------
 
 
 def render_pool(rows: list[dict], events: list[dict]) -> str:
-    """Render the retrieved data pool WITH ids for Agent 2's prompt."""
+    """Render the retrieved data pool WITH ids for the compose agent's prompt."""
     lines: list[str] = []
     for row in rows[:8]:
         matched = ", ".join(
