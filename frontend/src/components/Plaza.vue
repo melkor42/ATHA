@@ -17,7 +17,7 @@ import WisdomCornerZone from './zones/WisdomCornerZone.vue'
 // The Town Square shell (spec §2): one place, six zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
-const { current, traveling, reduced, travelMs, goTo, setPulse, toggleReduced, note } = usePlaza()
+const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, note } = usePlaza()
 const { step, seen, route, visibleQ1, start, answer1, answer2, finish } = useGate()
 
 const arrived = ref(
@@ -174,9 +174,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </div>
 
     <button type="button" class="essentials-pill" @click="goTo('west')">Essentials</button>
-    <button type="button" class="motion-pill" @click="toggleReduced">
-      {{ reduced ? 'motion: calm' : 'motion: full' }}
-    </button>
+    <label class="travel-pill">
+      <span>travel · {{ travelMs }}ms</span>
+      <input
+        type="range"
+        min="100"
+        max="1300"
+        step="25"
+        :value="travelMs"
+        @input="setTravelMs(Number($event.target.value))"
+      />
+    </label>
 
     <Compass />
     <Cam
@@ -244,7 +252,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 }
 
 .essentials-pill,
-.motion-pill {
+.travel-pill {
   position: fixed;
   top: 18px;
   z-index: 40;
@@ -262,7 +270,28 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   transition: background 0.35s, transform 0.35s;
 }
 .essentials-pill { left: 20px; }
-.motion-pill { left: 138px; font-size: 11px; letter-spacing: 0.08em; opacity: 0.85; }
-.essentials-pill:hover,
-.motion-pill:hover { background: rgba(250, 247, 240, 0.85); transform: translateY(-1px); }
+.travel-pill {
+  left: 138px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: default;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+.travel-pill span {
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.travel-pill input[type='range'] {
+  width: 96px;
+  height: 14px;
+  accent-color: #3c352e;
+  cursor: pointer;
+}
+.essentials-pill:hover { background: rgba(250, 247, 240, 0.85); transform: translateY(-1px); }
 </style>

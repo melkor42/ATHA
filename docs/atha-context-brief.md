@@ -85,6 +85,7 @@ Inherited from the Hadora experience system; ATHA-specific values:
 - **Visitor states (Q1):** discovering Atha for the first time / deciding whether to attend / preparing to come / already experienced.
 - **Exploration modes (Q2):** understand what Atha is / essential details / into the atmosphere / explore my own way.
 - **Session values (canonical):** `athaVisitorState`, `athaExplorationMode`, `athaEntryRoute`, `atha.arrivalPlayed`, `atha.hasSeenEntrance`.
+- **Travel preference:** `atha.travelMs` (localStorage) — owner-dialed zone-transfer duration in ms; a preference, not gate state.
 - **Lifecycle phases:** Before / During / After Atha — states, content, CTAs change by phase without rebuild.
 - **Essential-information rule:** personalization may reorder emphasis but must NEVER hide dates, location, registration, accessibility.
 

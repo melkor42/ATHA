@@ -24,11 +24,33 @@ const reduced = ref(
     matchMedia('(prefers-reduced-motion: reduce)').matches
 )
 
-const TRAVEL_MS = 1250
+const TRAVEL_MIN = 100
+const TRAVEL_MAX = 1300
+const clampTravel = (ms) => Math.min(TRAVEL_MAX, Math.max(TRAVEL_MIN, Number(ms) || 600))
+
+// owner-dialed travel duration, persisted; the slider IS the choice
+const userTravelMs = ref((() => {
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem('atha.travelMs')
+    if (stored !== null && !Number.isNaN(Number(stored))) return clampTravel(stored)
+  }
+  return 600
+})())
+
+function setTravelMs(ms) {
+  userTravelMs.value = clampTravel(ms)
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('atha.travelMs', String(userTravelMs.value))
+    } catch {
+      /* storage unavailable — keep the in-memory value */
+    }
+  }
+}
 
 // singleton spatial state — the plaza is one place, one camera
 export function usePlaza() {
-  const travelMs = computed(() => (reduced.value ? 220 : TRAVEL_MS))
+  const travelMs = computed(() => userTravelMs.value)
 
   function goTo(zone, opts = {}) {
     if (!ZONE_POS[zone] || zone === current.value || traveling.value) return
@@ -56,5 +78,5 @@ export function usePlaza() {
     reduced.value = !reduced.value
   }
 
-  return { current, traveling, pulse, slowVeins, reduced, travelMs, goTo, setPulse, toggleReduced, note, say }
+  return { current, traveling, pulse, slowVeins, reduced, travelMs, userTravelMs, setTravelMs, goTo, setPulse, toggleReduced, note, say }
 }
