@@ -1,5 +1,5 @@
 <script setup>
-import { computed, provide } from 'vue'
+import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
 import UiRenderer from '../UiRenderer.vue'
 import NetworkGraph from '../NetworkGraph.vue'
 import Theater from '../Theater.vue'
@@ -9,11 +9,21 @@ import bg from '../../assets/plaza/north.png'
 
 // S3 North — AI Corner (spec §3): the only dusk-tonality zone. Everything
 // here is composed live from the existing backend. The ritual is three
-// questions from CAM — role, topics, style — then the compose agent builds
-// the page; the compose state lives in useCompose so the ~1-minute wait
-// survives leaving the wing. Loading is the Theater field, never a spinner.
+// questions from CAM — role, topics, style — asked sequentially by Boris
+// himself (useCompose step machine); the zone shows a compact summary of
+// the selections. Loading is the Theater field, never a spinner.
 
-const { state, schema, persona, errorMsg, revealed, selections, compose, restart } = useCompose()
+const {
+  state,
+  schema,
+  persona,
+  errorMsg,
+  revealed,
+  selections,
+  compose,
+  restart,
+  reopen
+} = useCompose()
 
 provide('entities', computed(() => schema.value?.entities ?? {}))
 const sections = computed(() => (Array.isArray(schema.value?.sections) ? schema.value.sections : []))
@@ -39,19 +49,29 @@ const hues = computed(() => ACCENT_HUES[ROLE_HUE[selections.value.role]] ?? DEFA
 
 const theaterSteps = ['asking the network', 'retrieving your matches', 'composing your page']
 
-function pickRole(id) {
-  selections.value.role = id
-  selections.value.topics = []
-}
+// compact selection summary — the picking itself happens with Boris
+const roleLabel = computed(() => ROLES[selections.value.role]?.label ?? '')
+const topicsLabel = computed(() =>
+  selections.value.topics.length ? selections.value.topics.join(', ') : 'Boris chooses'
+)
+const styleLabel = computed(
+  () => STYLES.find((s) => s.id === selections.value.style)?.label ?? ''
+)
 
-function toggleTopic(topic) {
-  const t = selections.value.topics
-  selections.value.topics = t.includes(topic) ? t.filter((x) => x !== topic) : [...t, topic]
-}
-
-function pickStyle(id) {
-  selections.value.style = id
-}
+// loading → ready choreography: the opaque dark Theater used to unmount in
+// one frame while panels faded in from zero — a hard flicker. Now it stays
+// mounted with exiting/dim and dissolves over ~0.8s WHILE the panels
+// assemble beneath it; unmount only after the fade finishes.
+const theaterExiting = ref(false)
+let exitTimer = 0
+watch(state, (s, prev) => {
+  if (s === 'ready' && prev === 'loading') {
+    theaterExiting.value = true
+    clearTimeout(exitTimer)
+    exitTimer = setTimeout(() => (theaterExiting.value = false), 850)
+  }
+})
+onBeforeUnmount(() => clearTimeout(exitTimer))
 </script>
 
 <template>
@@ -60,7 +80,7 @@ function pickStyle(id) {
       <p class="eyebrow">AI CORNER</p>
       <h2 class="wing-title">Composed live, for you</h2>
 
-      <!-- the ritual: three questions from CAM, one at a time -->
+      <!-- the ritual now lives in Boris: the zone keeps a compact summary -->
       <template v-if="state === 'idle'">
         <p class="cam-intro">
           Here the network composes a page only for you. Tell me who you are
@@ -70,68 +90,55 @@ function pickStyle(id) {
           That takes about a minute.
         </p>
 
-        <div class="step">
-          <p class="step-q">Who are you coming as?</p>
-          <div class="chip-row">
+        <div class="select-summary">
+          <div class="summary-chips">
             <button
-              v-for="(r, id) in ROLES"
-              :key="id"
               type="button"
-              class="pick-chip"
-              :class="{ on: selections.role === id }"
-              @click="pickRole(id)"
-            >{{ r.label }}</button>
+              class="sum-chip"
+              :class="{ filled: !!roleLabel }"
+              @click="reopen('role')"
+            ><span class="sum-k">role</span><span class="sum-v">{{ roleLabel || '—' }}</span></button>
+            <button
+              type="button"
+              class="sum-chip"
+              :class="{ filled: !!selections.role }"
+              @click="reopen('topics')"
+            ><span class="sum-k">topics</span><span class="sum-v">{{ topicsLabel }}</span></button>
+            <button
+              type="button"
+              class="sum-chip"
+              :class="{ filled: !!selections.role }"
+              @click="reopen('style')"
+            ><span class="sum-k">style</span><span class="sum-v">{{ styleLabel }}</span></button>
           </div>
         </div>
-
-        <template v-if="selections.role">
-          <div class="step">
-            <p class="step-q">What would you like to see?</p>
-            <div class="chip-row">
-              <button
-                v-for="t in ROLES[selections.role].topics"
-                :key="t"
-                type="button"
-                class="pick-chip"
-                :class="{ on: selections.topics.includes(t) }"
-                @click="toggleTopic(t)"
-              >{{ t }}</button>
-            </div>
-            <p class="step-hint">Pick as many as you like — pick none and I choose for you.</p>
-          </div>
-
-          <div class="step">
-            <p class="step-q">How should it feel?</p>
-            <div class="chip-row">
-              <button
-                v-for="s in STYLES"
-                :key="s.id"
-                type="button"
-                class="pick-chip"
-                :class="{ on: selections.style === s.id }"
-                @click="pickStyle(s.id)"
-              >{{ s.label }}</button>
-            </div>
-            <button type="button" class="plaza-btn solid compose-btn" @click="compose()">
-              Compose my page
-            </button>
-          </div>
-        </template>
       </template>
 
-      <!-- the canvas: empty in idle, theater while composing, result when ready -->
-      <div class="canvas-frame" :class="{ waiting: state === 'loading' }">
-        <div v-if="state === 'loading'" class="corner-theater">
-          <Theater :steps="theaterSteps" :cadence="14000" :active="true" :hues="hues" />
-          <p class="theater-note">the night side is listening — wander, it will wait for you</p>
+      <!-- the canvas: theater while composing, result when ready; it
+           flex-grows to claim the rest of the zone -->
+      <div class="canvas-frame">
+        <div
+          v-if="state === 'loading' || theaterExiting"
+          class="corner-theater"
+          :class="{ leaving: theaterExiting }"
+        >
+          <Theater
+            :steps="theaterSteps"
+            :cadence="14000"
+            :active="state === 'loading'"
+            :exiting="theaterExiting"
+            :dim="0"
+            :hues="hues"
+          />
+          <p class="theater-note">the night side listens — and composes what fits you</p>
         </div>
 
-        <div v-else-if="state === 'error'" class="error-card">
+        <div v-if="state === 'error'" class="error-card">
           <p>The corner could not compose: {{ errorMsg }}</p>
           <button type="button" class="plaza-btn" @click="compose()">Try again</button>
         </div>
 
-        <template v-else-if="state === 'ready'">
+        <template v-if="state === 'ready'">
           <div class="graph-panel on">
             <NetworkGraph />
           </div>
@@ -152,10 +159,6 @@ function pickStyle(id) {
             …or start again — choose another role
           </button>
         </template>
-
-        <div v-else class="empty-canvas">
-          <p>your page will be composed here</p>
-        </div>
       </div>
     </div>
   </section>
@@ -180,7 +183,6 @@ function pickStyle(id) {
    than the space we have, auto margins center it in that space; when it is
    taller, they collapse to zero and the wing scrolls as before */
 .north-copy > :first-child { margin-top: auto; }
-.north-copy > :last-child { margin-bottom: auto; }
 .eyebrow {
   font-size: 12px;
   letter-spacing: 0.34em;
@@ -206,77 +208,60 @@ function pickStyle(id) {
   text-align: center;
 }
 
-/* the three questions */
-.step {
+/* the compact selection summary — mono chips, one glance at the choices */
+.select-summary {
   width: min(720px, 94%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
-.step-q {
-  margin: 0;
-  color: rgba(174, 244, 252, 0.85);
-  font-size: 13px;
-  letter-spacing: 0.14em;
-}
-.step-hint {
-  margin: 0;
-  color: rgba(241, 237, 230, 0.45);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-}
-.chip-row {
+.summary-chips {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
-.pick-chip {
-  background: rgba(14, 26, 30, 0.68);
-  border: 1px solid rgba(241, 237, 230, 0.22);
-  border-radius: 999px;
-  padding: 10px 18px;
-  color: #f1ede6;
-  font: inherit;
-  font-size: 14px;
+.sum-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(14, 26, 30, 0.55);
+  border: 1px solid rgba(241, 237, 230, 0.16);
+  border-radius: 7px;
+  padding: 7px 12px;
+  color: rgba(241, 237, 230, 0.48);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: border-color 0.35s var(--ease), background 0.35s var(--ease),
-    box-shadow 0.35s var(--ease);
+  transition: border-color 0.35s var(--ease), color 0.35s var(--ease),
+    background 0.35s var(--ease);
 }
-.pick-chip:hover { border-color: rgba(127, 227, 240, 0.5); }
-.pick-chip.on {
-  border-color: rgba(127, 227, 240, 0.75);
-  background: rgba(32, 58, 66, 0.78);
-  box-shadow: inset 0 0 18px rgba(127, 227, 240, 0.16);
+.sum-k {
+  color: rgba(174, 244, 252, 0.5);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
-.compose-btn { margin-top: 6px; }
+.sum-chip:hover { border-color: rgba(127, 227, 240, 0.55); }
+.sum-chip.filled {
+  color: #f1ede6;
+  border-color: rgba(127, 227, 240, 0.45);
+  background: rgba(32, 58, 66, 0.5);
+}
 
-/* the canvas — owns most of the zone's space */
+/* the canvas — flex-grows to claim the rest of the zone; its min-height
+   stays stable across the loading→ready swap so nothing collapses */
 .canvas-frame {
   position: relative;
   width: min(1080px, 96%);
+  flex: 1;
+  min-height: clamp(240px, 52vh, 640px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 18px;
-}
-.canvas-frame.waiting { min-height: clamp(240px, 52vh, 640px); }
-.empty-canvas {
-  width: 100%;
-  min-height: clamp(240px, 42vh, 480px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed rgba(127, 227, 240, 0.18);
-  border-radius: 30px 34px 32px 28px;
-  background: rgba(14, 26, 30, 0.35);
-}
-.empty-canvas p {
-  margin: 0;
-  color: rgba(241, 237, 230, 0.32);
-  font-size: 13px;
-  letter-spacing: 0.18em;
 }
 
 /* the Theater scoped into the wing (it ships as a fixed full-viewport stage) */
@@ -285,6 +270,16 @@ function pickStyle(id) {
   width: 100%;
   height: clamp(240px, 52vh, 640px);
 }
+/* while dissolving over the freshly composed panels the theater floats
+   above them instead of holding its own row of layout space */
+.corner-theater.leaving {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  height: auto;
+  pointer-events: none;
+}
+.corner-theater.leaving .theater-note { opacity: 0; }
 .corner-theater :deep(.theater-stage) {
   position: absolute;
   inset: 0;
@@ -305,6 +300,7 @@ function pickStyle(id) {
   color: rgba(241, 237, 230, 0.6);
   font-size: 13px;
   letter-spacing: 0.1em;
+  transition: opacity 0.6s var(--ease);
 }
 
 .error-card {

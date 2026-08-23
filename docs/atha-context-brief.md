@@ -71,7 +71,7 @@ Each team examines the same five dimensions; a weakness in any one of them is a 
 
 ## Zone map (plaza)
 
-The Town Square shell: one place, six zones, a soft camera.
+The Town Square shell: one place, six zones, a soft camera — and Boris, the bear companion.
 - **Center** — the resting point: promise, grounding, belonging, two doors into the east wing.
 - **North** — the night side: everything composed live, for you (AI corner — rebuilt separately).
 - **West** — the quiet wing: essential facts, bright and clear, no decoration.
@@ -86,6 +86,7 @@ Inherited from the Hadora experience system; ATHA-specific values:
 - **Exploration modes (Q2):** understand what Atha is / essential details / into the atmosphere / explore my own way.
 - **Session values (canonical):** `athaVisitorState`, `athaExplorationMode`, `athaEntryRoute`, `atha.arrivalPlayed`, `atha.hasSeenEntrance`.
 - **Travel preference:** `atha.travelMs` (localStorage) — owner-dialed zone-transfer duration in ms; a preference, not gate state.
+- **Veil preference:** `atha.veil` (localStorage) — owner-dialed strength (0–100%) of the plaza's flat background-softening wash; a preference, not gate state.
 - **Lifecycle phases:** Before / During / After Atha — states, content, CTAs change by phase without rebuild.
 - **Essential-information rule:** personalization may reorder emphasis but must NEVER hide dates, location, registration, accessibility.
 
@@ -102,6 +103,14 @@ Q2 — "What would be most helpful now?"
 - "Show me the essential details"
 - "Guide me into the atmosphere"
 - "Let me explore in my own way"
+
+## The companion — Boris
+
+The plaza's assistant is **Boris**, Warwick's mascot — a small layered bear with antenna and tracking eyes (`frontend/src/components/Companion.vue`, generic companion component; "Boris" is the display name, not a hard-coded identity). Behavioral rules, unchanged from the previous assistant:
+- After arrival, Boris asks the gate questions Q1 then Q2, in his bubble, anywhere in the plaza.
+- On the closing line he names the lit path, then walks the visitor there (Plaza waits for his `said` event before traveling).
+- One context sentence per zone; poking him cycles atmospheric lines only — never program facts.
+- Honors `prefers-reduced-motion`: no bob/blink/pulse, pupils centered, lines appear instantly.
 
 ## Hard content rules
 

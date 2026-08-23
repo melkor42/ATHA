@@ -425,6 +425,7 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     persona = None
     allowed_ids: list[str] = []
     draft_schema = None
+    degraded_reason: str | None = None
     experience = DEFAULT_EXPERIENCE.model_dump()
     try:
         client = get_client()
@@ -456,12 +457,19 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         experience = verified.model_dump()
     except Exception as exc:  # noqa: BLE001 — DEFAULT_EXPERIENCE, never crash
         log.exception("pipeline failed -> DEFAULT_EXPERIENCE: %s", exc)
+        degraded_reason = f"{type(exc).__name__}: {exc}"
 
     payload = {"persona": persona, "experience": experience,
                "allowed_ids": allowed_ids}
-    _response_cache[key] = payload
-    while len(_response_cache) > CACHE_MAX:
-        _response_cache.popitem(last=False)
+    if degraded_reason is not None:
+        # surfaced as a console.error by the frontend — makes a paused or
+        # deleted Aura instance impossible to miss during development
+        payload["degraded"] = True
+        payload["degraded_reason"] = degraded_reason
+    else:
+        _response_cache[key] = payload
+        while len(_response_cache) > CACHE_MAX:
+            _response_cache.popitem(last=False)
 
     latency_ms = int((time.perf_counter() - started) * 1000)
     _append_trace({

@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { usePlaza } from './usePlaza.js'
 
 // AI Corner compose state — lifted out of the zone (module-level singleton)
@@ -49,6 +49,91 @@ const selections = ref({
   style: 'organic' // organic preselected — the dusk wing's home register
 })
 
+// Boris's sequential interview (spec: three questions, one after another,
+// asked by the companion in the north wing). Lazy: starts on the first
+// north visit of the session, pauses when the visitor wanders off (the
+// plaza's line priority simply hides the branch) and resumes on return.
+const step = ref('role') // role | topics | style | done
+const interviewStarted = ref(false)
+
+function beginInterview() {
+  interviewStarted.value = true
+}
+
+const interviewActive = computed(
+  () => interviewStarted.value && step.value !== 'done'
+)
+
+const interviewLine = computed(() => {
+  switch (step.value) {
+    case 'role':
+      return 'Who are you coming as?'
+    case 'topics':
+      return 'What would you like to see? Pick as many as you like — pick none and I choose.'
+    case 'style':
+      return 'How should it feel?'
+    default:
+      return ''
+  }
+})
+
+const interviewOptions = computed(() => {
+  if (step.value === 'role') {
+    return Object.entries(ROLES).map(([id, r]) => ({
+      id,
+      label: r.label,
+      selected: selections.value.role === id
+    }))
+  }
+  if (step.value === 'topics') {
+    const role = ROLES[selections.value.role]
+    const topics = (role?.topics ?? []).map((t) => ({
+      id: t,
+      label: t,
+      selected: selections.value.topics.includes(t)
+    }))
+    return [...topics, { id: 'continue', label: 'continue →', action: true }]
+  }
+  if (step.value === 'style') {
+    return STYLES.map((s) => ({
+      id: s.id,
+      label: s.label,
+      selected: selections.value.style === s.id
+    }))
+  }
+  return []
+})
+
+function answer(id) {
+  if (!interviewStarted.value || step.value === 'done') return
+  if (step.value === 'role') {
+    if (selections.value.role !== id) selections.value.topics = [] // new role, new topic pool
+    selections.value.role = id
+    step.value = 'topics'
+  } else if (step.value === 'topics') {
+    if (id === 'continue') {
+      step.value = 'style'
+      return
+    }
+    const t = selections.value.topics
+    selections.value.topics = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]
+  } else if (step.value === 'style') {
+    selections.value.style = id
+    step.value = 'done'
+    // compose starts the moment the last answer lands — compose() itself
+    // speaks the 'two models are out in the network' line
+    compose()
+  }
+}
+
+// a summary chip can pull the interview back to its question any time —
+// even after 'done', so selections stay editable until compose starts
+function reopen(s) {
+  if (!interviewStarted.value) return
+  if ((s === 'topics' || s === 'style') && !selections.value.role) return
+  step.value = s
+}
+
 async function loadFixture() {
   const mods = import.meta.glob('../fixtures/*.json', { eager: true })
   const mod = mods[`../fixtures/${fixtureName}.json`]
@@ -98,6 +183,14 @@ async function compose() {
     }
     schema.value = payload?.experience ?? payload
     persona.value = payload?.persona ?? null
+    if (payload?.degraded) {
+      // loud on purpose: a paused/deleted Aura instance must not hide
+      // behind the quiet fallback page
+      console.error(
+        '[AI Corner] compose degraded to the fallback page — Neo4j Aura is likely not connected.\n' +
+          (payload?.degraded_reason || 'backend reported no reason')
+      )
+    }
     state.value = 'ready'
     say('I composed this from who you told me you are. Poke me if you want to wander.')
     revealStagger() // soft panel assembly, one breath apart
@@ -118,8 +211,27 @@ function restart() {
   persona.value = null
   revealed.value = 0
   state.value = 'idle'
+  step.value = 'role'
 }
 
 export function useCompose() {
-  return { state, schema, persona, errorMsg, revealed, selections, compose, restart, fixtureName }
+  return {
+    state,
+    schema,
+    persona,
+    errorMsg,
+    revealed,
+    selections,
+    compose,
+    restart,
+    fixtureName,
+    // the Boris interview
+    step,
+    interviewActive,
+    interviewLine,
+    interviewOptions,
+    beginInterview,
+    answer,
+    reopen
+  }
 }

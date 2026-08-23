@@ -18,7 +18,7 @@ const current = ref('center')
 const traveling = ref(false)
 const pulse = ref(null) // zone whose light vein is invited/pulsing
 const slowVeins = ref(false) // AI Corner loading: veins breathe slower
-const note = ref(null) // transient CAM line any module can raise via say()
+const note = ref(null) // transient companion line any module can raise via say()
 const reduced = ref(
   typeof matchMedia !== 'undefined' &&
     matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -48,9 +48,37 @@ function setTravelMs(ms) {
   }
 }
 
+// veil: the flat viewport scrim that softens zone photography, uniform
+// across all tiles; strength is a percentage (0 = clear, 100 = full wash)
+const VEIL_MIN = 0
+const VEIL_MAX = 100
+const VEIL_DEFAULT = 45
+const clampVeil = (v) => Math.min(VEIL_MAX, Math.max(VEIL_MIN, Number(v) || 0))
+
+// owner-dialed veil strength, persisted; the slider IS the choice
+const userVeil = ref((() => {
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem('atha.veil')
+    if (stored !== null && !Number.isNaN(Number(stored))) return clampVeil(stored)
+  }
+  return VEIL_DEFAULT
+})())
+
+function setVeil(v) {
+  userVeil.value = clampVeil(v)
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('atha.veil', String(userVeil.value))
+    } catch {
+      /* storage unavailable — keep the in-memory value */
+    }
+  }
+}
+
 // singleton spatial state — the plaza is one place, one camera
 export function usePlaza() {
   const travelMs = computed(() => userTravelMs.value)
+  const veil = computed(() => userVeil.value)
 
   function goTo(zone, opts = {}) {
     if (!ZONE_POS[zone] || zone === current.value || traveling.value) return
@@ -78,5 +106,5 @@ export function usePlaza() {
     reduced.value = !reduced.value
   }
 
-  return { current, traveling, pulse, slowVeins, reduced, travelMs, userTravelMs, setTravelMs, goTo, setPulse, toggleReduced, note, say }
+  return { current, traveling, pulse, slowVeins, reduced, travelMs, userTravelMs, setTravelMs, veil, setVeil, goTo, setPulse, toggleReduced, note, say }
 }

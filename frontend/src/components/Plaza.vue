@@ -2,10 +2,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { usePlaza, ZONE_POS } from '../composables/usePlaza.js'
 import { useGate, Q1, Q2 } from '../composables/useGate.js'
+import { useCompose } from '../composables/useCompose.js'
 import { SESSION_KEYS } from '../config.js'
 import VeinsOverlay from './VeinsOverlay.vue'
 import Compass from './Compass.vue'
-import Cam from './Cam.vue'
+import Companion from './Companion.vue'
 import ArrivalOverlay from './ArrivalOverlay.vue'
 import CenterZone from './zones/CenterZone.vue'
 import StoryGateZone from './zones/StoryGateZone.vue'
@@ -17,15 +18,24 @@ import WisdomCornerZone from './zones/WisdomCornerZone.vue'
 // The Town Square shell (spec §2): one place, six zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
-const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, note } = usePlaza()
+const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, note } = usePlaza()
 const { step, seen, route, visibleQ1, start, answer1, answer2, finish } = useGate()
+const {
+  state: composeState,
+  step: composeStep,
+  interviewActive,
+  interviewLine,
+  interviewOptions,
+  beginInterview,
+  answer: composeAnswer
+} = useCompose()
 
 const arrived = ref(
   typeof sessionStorage !== 'undefined' &&
     sessionStorage.getItem(SESSION_KEYS.arrival) === '1'
 )
 
-// CAM context lines, one sentence per zone (spec §4)
+// Boris context lines, one sentence per zone (spec §4)
 const LINES = {
   center: 'Welcome to the plaza. Four paths, four intentions — I walk with you.',
   north: 'The night side of the plaza: everything here is composed live, for you.',
@@ -34,8 +44,8 @@ const LINES = {
   south: 'The story of Atha grows as you walk down.',
   wisdom: 'The still corner: how Atha works, and what makes a decision good.'
 }
-// CAM asks the gate questions himself, in any zone (spec §4)
-const camLine = computed(() => {
+// Boris asks the gate questions himself, in any zone (spec §4)
+const companionLine = computed(() => {
   if (!arrived.value) return ''
   if (note.value) return note.value
   if (step.value === 'q1') return Q1.question
@@ -43,24 +53,36 @@ const camLine = computed(() => {
   if (step.value === 'closing' && route.value) {
     return `Your way into Atha begins here. The ${route.value.zone} path is lit for you.`
   }
+  // the compose interview: Boris asks the AI Corner's three questions
+  // himself while standing in the north wing (gate branches stay first)
+  if (composeInterviewActive.value) return interviewLine.value
   return LINES[current.value]
 })
-const camProminent = computed(() => ['q1', 'q2', 'closing'].includes(step.value))
+const composeInterviewActive = computed(
+  () =>
+    current.value === 'north' &&
+    composeState.value === 'idle' &&
+    interviewActive.value
+)
+const companionProminent = computed(
+  () => ['q1', 'q2', 'closing'].includes(step.value) || composeInterviewActive.value
+)
 const gateOptions = computed(() => {
   if (step.value === 'q1') return visibleQ1.value
   if (step.value === 'q2') return Q2.options
+  if (composeInterviewActive.value) return interviewOptions.value
   return []
 })
 function onAnswer1(id) {
   answer1(id)
 }
-// answering Q2: CAM names the lit path, then walks you there once said
+// answering Q2: Boris names the lit path, then walks you there once said
 let pendingRoute = null
 function onAnswer2(id) {
   answer2(id)
   pendingRoute = route.value?.zone ?? null
 }
-function onCamSaid() {
+function onCompanionSaid() {
   if (step.value === 'closing' && pendingRoute) {
     const target = pendingRoute
     pendingRoute = null
@@ -69,7 +91,26 @@ function onCamSaid() {
   }
 }
 
-// first arrival: once the welcome overlay closes, CAM starts asking
+// answers reach the gate or the compose interview, depending on who asked
+function onCompanionAnswer(id) {
+  if (step.value === 'q1') {
+    answer1(id)
+    return
+  }
+  if (composeInterviewActive.value) {
+    composeAnswer(id)
+    return
+  }
+  onAnswer2(id)
+}
+
+// the compose interview is lazy: it starts on the visitor's first north
+// arrival of the session and pauses/resumes purely through line priority
+watch([current, arrived], ([zone, here]) => {
+  if (zone === 'north' && here) beginInterview()
+}, { immediate: true })
+
+// first arrival: once the welcome overlay closes, Boris starts asking
 watch(
   arrived,
   (v) => {
@@ -78,12 +119,13 @@ watch(
   { immediate: true }
 )
 
-// the closing pulse: CAM's recommendation lights the matching vein (spec §4)
+// the closing pulse: Boris's recommendation lights the matching vein (spec §4)
 watch(step, (s) => {
   if (s === 'closing' && route.value) setPulse(route.value.zone)
 })
 
-const cam = computed(() => {
+// the plaza's travel camera: shifts the world so the current zone fills the view
+const worldShift = computed(() => {
   const p = ZONE_POS[current.value]
   return `translate3d(${-p.x * 100}vw, ${-p.y * 100}vh, 0)`
 })
@@ -153,11 +195,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <div
     class="plaza"
     :class="{ reduced, arriving: !arrived }"
+    :style="{ '--veil-strength': veil / 100 }"
     @wheel.passive="onWheel"
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
   >
-    <div class="plaza-world" :style="{ transform: cam, transitionDuration: travelMs + 'ms' }">
+    <div class="plaza-world" :style="{ transform: worldShift, transitionDuration: travelMs + 'ms' }">
       <div
         class="plaza-zoom"
         :class="{ dip: traveling && !reduced }"
@@ -173,28 +216,41 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </div>
     </div>
 
-    <button type="button" class="essentials-pill" @click="goTo('west')">Essentials</button>
-    <label class="travel-pill">
-      <span>travel · {{ travelMs }}ms</span>
-      <input
-        type="range"
-        min="100"
-        max="1300"
-        step="25"
-        :value="travelMs"
-        @input="setTravelMs(Number($event.target.value))"
-      />
-    </label>
+    <div class="pill-bar">
+      <label class="travel-pill">
+        <span>travel · {{ travelMs }}ms</span>
+        <input
+          type="range"
+          min="100"
+          max="1300"
+          step="25"
+          :value="travelMs"
+          @input="setTravelMs(Number($event.target.value))"
+        />
+      </label>
+      <label class="travel-pill veil-pill">
+        <span>veil · {{ veil }}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          :value="veil"
+          @input="setVeil(Number($event.target.value))"
+        />
+      </label>
+    </div>
 
     <Compass />
-    <Cam
-      :line="camLine"
+    <Companion
+      name="Boris"
+      :line="companionLine"
       :zone="current"
-      :prominent="camProminent"
+      :prominent="companionProminent"
       :rolling="!arrived"
       :options="gateOptions"
-      @answer="step === 'q1' ? onAnswer1($event) : onAnswer2($event)"
-      @said="onCamSaid"
+      @answer="onCompanionAnswer"
+      @said="onCompanionSaid"
     />
     <ArrivalOverlay v-if="!arrived" @done="arrived = true" />
   </div>
@@ -234,11 +290,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   transition: transform 1.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 1.3s ease;
 }
 .plaza.reduced .plaza-zoom { transition: none; }
+/* the veil now lives inside each tile's own background (.zone's top
+   background-image layer in style.css): it washes the artwork only,
+   never the content — paint order per tile: photo < veil < dusk <
+   content (.zone > * z2); veins z1 ride above the tiles, chrome stays
+   outside the world entirely. */
+/* travel camera dip (zoom breath while moving between zones) */
 .plaza-zoom.dip {
-  animation: cam-dip both;
+  animation: travel-dip both;
   animation-timing-function: cubic-bezier(0.3, 0.8, 0.4, 1);
 }
-@keyframes cam-dip {
+@keyframes travel-dip {
   0% { transform: scale(1); }
   45% { transform: scale(1.045); }
   100% { transform: scale(1); }
@@ -251,10 +313,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   top: calc(var(--ty) * 100vh);
 }
 
-.essentials-pill,
-.travel-pill {
+/* one fixed flex row owns the top-left slot: pills flow inside it,
+   so the gap (12px) holds at any label width — overlap is impossible */
+.pill-bar {
   position: fixed;
   top: 18px;
+  left: 20px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.travel-pill {
   z-index: 40;
   border: 1px solid rgba(255, 251, 240, 0.7);
   background: rgba(244, 239, 231, 0.6);
@@ -269,9 +339,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   box-shadow: 0 8px 24px rgba(20, 30, 35, 0.16);
   transition: background 0.35s, transform 0.35s;
 }
-.essentials-pill { left: 20px; }
 .travel-pill {
-  left: 138px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -293,5 +361,4 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   accent-color: #3c352e;
   cursor: pointer;
 }
-.essentials-pill:hover { background: rgba(250, 247, 240, 0.85); transform: translateY(-1px); }
 </style>

@@ -713,29 +713,37 @@ body::after {
   position: absolute;
   inset: 0;
   background-color: #e9e2d4;
-  background-image: var(--bg);
+  /* the veil — a flat limestone wash painted as the TOP background layer
+     of the very element that carries the tile artwork: it can therefore
+     only ever soften the background, never the content.
+     Paint order: tile photo (2nd bg layer) < veil (1st bg layer) < dusk
+     (.zone-north::after) < content (.zone > * z2). Being part of the
+     element's background it shares the photo's attachment: it stays put
+     while north/south/wisdom scroll, identical alpha on every tile →
+     no seams at tile borders. Strength is owner-dialed via
+     --veil-strength on .plaza (persisted in 'atha.veil'); the wash is
+     flat, not a gradient effect, so wisdom's flat-chalk rule holds. */
+  background-image:
+    linear-gradient(rgba(233, 226, 212, var(--veil-strength, 0.45)), rgba(233, 226, 212, var(--veil-strength, 0.45))),
+    var(--bg);
   background-size: cover;
   background-position: center;
 }
-/* stacking: zone photo (own bg, z0) < veins overlay (z1) < content (z2) */
+/* stacking: zone bg (photo < veil) < veins overlay (z1) < content (z2) */
 .zone > * { z-index: 2; }
-.zone::after {
-  /* calm scrim so panels and type stay readable on photography */
+/* the per-zone limestone radial scrim moved up: one flat per-tile veil
+   (top background layer of .zone above) now softens all tiles uniformly —
+   full-bleed to every viewport corner, no seams at tile borders, and it
+   washes only the artwork: content (.zone > * z2) always paints above it.
+   The wash is flat, not a gradient, so wisdom's flat-chalk rule holds. */
+.zone-north::after {
+  /* dusk stays inside north (spec §1): atmosphere, not the softening veil */
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(115% 85% at 50% 45%, rgba(233, 226, 212, 0.28) 40%, rgba(233, 226, 212, 0.62) 100%);
-}
-.zone-north::after {
   background: radial-gradient(115% 85% at 50% 45%, rgba(8, 16, 20, 0.3) 40%, rgba(8, 16, 20, 0.66) 100%);
 }
-/* the south wing keeps its photography clean — no scrim, the story
-   type carries its own text-shadow */
-.zone-south::after { content: none; }
-/* wisdom corner is flat chalk (ATHA surface: no gradients) — opt out of
-   the shared limestone radial scrim */
-.zone-wisdom::after { content: none; }
 
 .plaza-btn {
   display: inline-block;
