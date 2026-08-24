@@ -93,17 +93,35 @@ const activeLine = computed(() => poke.value ?? props.line)
 // answer options only appear once the companion has finished speaking the question
 const said = ref(false)
 const optionsAreActive = computed(() => props.options.length > 0 && said.value)
+// chip options collapse into one wrapped multi-select group (chunking),
+// regular and action options stay as stacked rows
+const chipOptions = computed(() => props.options.filter((o) => o.chip && !o.action))
+const rowOptions = computed(() => props.options.filter((o) => !o.chip || o.action))
 
 // typewriter voice: the companion writes his lines, antenna pulses while talking
 const shown = ref('')
 const talking = ref(false)
 let typeTimer = 0
-let talkTimer = 0
+
+// finish the current line instantly — used when typing completes and when
+// the visitor clicks the bubble to skip the per-character animation
+function finishLine() {
+  clearInterval(typeTimer)
+  shown.value = activeLine.value
+  talking.value = false // the bubble's pulse stops the moment the line is said
+  if (!said.value) {
+    said.value = true
+    emit('said')
+  }
+}
+function onBubbleClick() {
+  if (talking.value) finishLine()
+  else onPoke()
+}
 watch(
   activeLine,
   (v) => {
     clearInterval(typeTimer)
-    clearTimeout(talkTimer)
     said.value = false
     if (!v) {
       shown.value = ''
@@ -112,10 +130,7 @@ watch(
     }
     talking.value = true
     if (reduced.value) {
-      shown.value = v
-      talkTimer = setTimeout(() => (talking.value = false), 1600)
-      said.value = true
-      emit('said')
+      finishLine()
       return
     }
     shown.value = ''
@@ -125,7 +140,7 @@ watch(
       shown.value = v.slice(0, i)
       if (i >= v.length) {
         clearInterval(typeTimer)
-        talkTimer = setTimeout(() => (talking.value = false), 1600)
+        talking.value = false
         said.value = true
         emit('said')
       }
@@ -135,7 +150,6 @@ watch(
 )
 onBeforeUnmount(() => {
   clearInterval(typeTimer)
-  clearTimeout(talkTimer)
   clearTimeout(happyTimer)
 })
 
@@ -154,11 +168,30 @@ watch(activeLine, (v) => {
     @click="onPoke"
     :title="`poke ${name}`"
   >
-    <div v-if="shown" class="companion-bubble" :class="{ talking, question: optionsAreActive }">
+    <div
+      v-if="shown"
+      class="companion-bubble"
+      :class="{ talking, question: optionsAreActive }"
+      :title="talking ? 'click to reveal the full line' : undefined"
+      @click.stop="onBubbleClick"
+    >
       {{ shown }}<span v-if="talking && !reduced" class="caret"></span>
       <div v-if="optionsAreActive" class="companion-options">
+        <div v-if="chipOptions.length" class="companion-chips" role="group">
+          <button
+            v-for="o in chipOptions"
+            :key="o.id"
+            type="button"
+            class="companion-option chip"
+            :class="{ selected: o.selected }"
+            :aria-pressed="o.selected || undefined"
+            @click.stop="emit('answer', o.id)"
+          >
+            {{ o.label }}
+          </button>
+        </div>
         <button
-          v-for="o in options"
+          v-for="o in rowOptions"
           :key="o.id"
           type="button"
           class="companion-option"
@@ -278,7 +311,7 @@ watch(activeLine, (v) => {
   box-shadow: 0 10px 30px rgba(20, 30, 35, 0.2);
   animation: bubble-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.companion-bubble.talking { animation: bubble-in 0.5s cubic-bezier(0.22, 1, 0.36, 1), bubble-talk 1.1s ease-in-out infinite; }
+.companion-bubble.talking { animation: bubble-in 0.5s cubic-bezier(0.22, 1, 0.36, 1), bubble-talk 1.1s ease-in-out infinite; cursor: pointer; }
 @keyframes bubble-in {
   from { opacity: 0; transform: translateY(8px) scale(0.92); }
 }
@@ -310,6 +343,20 @@ watch(activeLine, (v) => {
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
+}
+/* a framed multi-select group: chips wrap in one cluster instead of
+   stacking as competing full-width rows; the single action stays a row */
+.companion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.companion-option.chip {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  border-radius: 999px;
+  text-align: center;
 }
 .companion-option {
   text-align: left;

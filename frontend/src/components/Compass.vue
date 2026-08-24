@@ -63,4 +63,10 @@ const DOTS = [
   box-shadow: 0 0 10px rgba(242, 179, 97, 0.8);
   scale: 1.25;
 }
+/* narrow viewports: the compass shrinks into the corner so it stops
+   overlapping card content (zones carry matching bottom safe areas) */
+@media (max-width: 900px) {
+  .compass { width: 68px; height: 68px; left: 16px; bottom: 16px; }
+  .dot { width: 13px; height: 13px; }
+}
 </style>

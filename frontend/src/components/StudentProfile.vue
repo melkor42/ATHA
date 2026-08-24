@@ -20,7 +20,7 @@ const children = computed(() =>
 
 <template>
   <div class="card student-profile">
-    <div class="k">StudentProfile</div>
+    <div class="k">Student</div>
     <h3>{{ entity.name ?? node.title ?? '' }}</h3>
     <p v-if="entity.role" class="role">{{ entity.role }}</p>
     <p v-if="entity.story" class="story">{{ entity.story }}</p>

@@ -58,6 +58,17 @@ const styleLabel = computed(
   () => STYLES.find((s) => s.id === selections.value.style)?.label ?? ''
 )
 
+// the echo: the composed page says back what the visitor stated — role and
+// topics only, straight from their own selections; nothing invented
+const echoLine = computed(() => {
+  const role = ROLES[selections.value.role]?.label
+  if (!role) return ''
+  const topics = selections.value.topics
+  return topics.length
+    ? `For you — coming as ${role}, curious about ${topics.join(', ')}`
+    : `For you — coming as ${role}, with Boris choosing what fits`
+})
+
 // loading → ready choreography: the opaque dark Theater used to unmount in
 // one frame while panels faded in from zero — a hard flicker. Now it stays
 // mounted with exiting/dim and dissolves over ~0.8s WHILE the panels
@@ -147,6 +158,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
             :class="['spectrum-' + spectrum, 'mode-' + mode]"
             :style="{ '--accent': accentVar }"
           >
+            <p v-if="echoLine" class="echo">{{ echoLine }}</p>
             <UiRenderer
               v-for="(node, i) in sections"
               :key="i"
@@ -154,10 +166,10 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
               class="panel"
               :class="{ on: i < revealed }"
             />
+            <button type="button" class="link-btn" @click="restart()">
+              …or start again — choose another role
+            </button>
           </div>
-          <button type="button" class="link-btn" @click="restart()">
-            …or start again — choose another role
-          </button>
         </template>
       </div>
     </div>
@@ -346,19 +358,41 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
 }
 
 /* the composed canvas: spectrum × mode own the card styling now — the
-   selected style restyles this wing's canvas and nothing else */
+   selected style restyles this wing's canvas and nothing else.
+   The sheet carries its own full-height night background so the composed
+   content never renders light-on-light over the day plaza below the fold. */
 .composed {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background-color: #0b0a09;
+  background-image: var(--bg-tint, none);
+  border: 1px solid rgba(241, 237, 230, 0.09);
+  border-radius: 22px;
+  padding: clamp(20px, 3vw, 32px);
+  /* label tokens lifted for ≥4.5:1 contrast on the dark sheet */
+  --subtle: #948c80;
+}
+
+/* the echo line — mono eyebrow restating the visitor's own inputs */
+.echo {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--s-dimtext, rgba(241, 237, 230, 0.72));
 }
 
 .link-btn {
+  align-self: center;
+  margin-top: 6px;
   background: none;
   border: none;
   padding: 6px 10px;
-  color: rgba(241, 237, 230, 0.5);
+  color: rgba(241, 237, 230, 0.68);
   font: inherit;
   font-size: 13px;
   letter-spacing: 0.06em;
@@ -366,4 +400,27 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   transition: color 0.35s var(--ease);
 }
 .link-btn:hover { color: rgba(174, 244, 252, 0.9); }
+
+/* narrow viewports: keep the composed page readable and non-overlapping;
+   the desktop layout above stays untouched */
+@media (max-width: 900px) {
+  .north-copy {
+    padding-left: 5vw;
+    padding-right: 5vw;
+    /* safe area below the fixed compass widget */
+    padding-bottom: 120px;
+  }
+  .canvas-frame { width: 100%; min-height: 0; gap: 14px; }
+  .graph-panel {
+    --graph-h: clamp(200px, 40vh, 420px);
+    padding: 10px;
+    border-radius: 22px 24px 22px 20px;
+  }
+  .composed { padding: 18px 14px; border-radius: 18px; }
+}
+@media (max-width: 600px) {
+  .wing-title { font-size: 22px; }
+  .cam-intro { font-size: 13px; }
+  .sum-chip { font-size: 10px; padding: 6px 9px; }
+}
 </style>

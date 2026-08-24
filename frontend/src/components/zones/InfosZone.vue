@@ -8,7 +8,7 @@ const FACTS = [
   ['Format', 'A multi-day working experience — the duration is determined by the rhythm · Proposed'],
   ['When', 'Direction: around March 2027 · Not fixed'],
   ['Where', 'Warwick/Coventry as the core working location — initiated by OneMundi, co-hosted with Warwick Business School · Proposed'],
-  ['Access', '[PLACEHOLDER] · Open'],
+  ['Access', 'Open · Still forming — no partners, dates or funding confirmed'],
   ['Contact', 'hello@onemundi.one']
 ]
 </script>

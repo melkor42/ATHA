@@ -43,6 +43,11 @@ const persona = ref(null)
 const errorMsg = ref('')
 const revealed = ref(0) // staggered panel reveal, survives zone travel too
 
+// decision-load rule: never more than 4 visible options at once. The style
+// question shows 3 primaries + one expander that reveals the rest.
+const STYLES_PRIMARY = 3
+const stylesExpanded = ref(false)
+
 const selections = ref({
   role: null,
   topics: [],
@@ -87,19 +92,27 @@ const interviewOptions = computed(() => {
   }
   if (step.value === 'topics') {
     const role = ROLES[selections.value.role]
+    // one framed multi-select group (chip: true renders them as a wrapped
+    // chip set, not competing full-width rows) + a single continue action
     const topics = (role?.topics ?? []).map((t) => ({
       id: t,
       label: t,
-      selected: selections.value.topics.includes(t)
+      selected: selections.value.topics.includes(t),
+      chip: true
     }))
     return [...topics, { id: 'continue', label: 'continue →', action: true }]
   }
   if (step.value === 'style') {
-    return STYLES.map((s) => ({
+    const list = stylesExpanded.value ? STYLES : STYLES.slice(0, STYLES_PRIMARY)
+    const opts = list.map((s) => ({
       id: s.id,
       label: s.label,
       selected: selections.value.style === s.id
     }))
+    if (!stylesExpanded.value) {
+      opts.push({ id: 'more-styles', label: 'more moods ↓', action: true })
+    }
+    return opts
   }
   return []
 })
@@ -118,6 +131,10 @@ function answer(id) {
     const t = selections.value.topics
     selections.value.topics = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]
   } else if (step.value === 'style') {
+    if (id === 'more-styles') {
+      stylesExpanded.value = true
+      return
+    }
     selections.value.style = id
     step.value = 'done'
     // compose starts the moment the last answer lands — compose() itself
@@ -212,6 +229,7 @@ function restart() {
   revealed.value = 0
   state.value = 'idle'
   step.value = 'role'
+  stylesExpanded.value = false
 }
 
 export function useCompose() {

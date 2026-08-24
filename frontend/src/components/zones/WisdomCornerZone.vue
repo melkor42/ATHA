@@ -194,9 +194,9 @@ watch(instant, (v) => {
         </div>
 
         <div class="hub-foot">
-          <div class="paths">
-            <button type="button" class="btn" @click="goTo('east')">Bring a challenge</button>
-            <button type="button" class="btn btn--g" @click="goTo('east')">Take part</button>
+          <div class="paths paths--quiet">
+            <button type="button" class="btn btn--q" @click="goTo('east')">Bring a challenge</button>
+            <button type="button" class="btn btn--q" @click="goTo('east')">Take part</button>
           </div>
           <div class="meta hub-meta">
             Edition 001 · Forming · No partners, dates or funding confirmed<br />
@@ -640,6 +640,14 @@ watch(instant, (v) => {
 .btn:hover { background: var(--atha-ferrous); }
 .btn--g { background: none; color: var(--atha-clay); padding: 14px 0; border-bottom: 1px solid var(--atha-clay); }
 .btn--g:hover { background: none; color: var(--atha-ferrous); border-color: var(--atha-ferrous); }
+/* the hub's own job is the seven directions; the east-gate CTAs sit below
+   as quiet mono links rather than competing solid buttons */
+.paths--quiet { gap: clamp(18px, 3vw, 30px); margin-top: clamp(28px, 4vw, 44px); }
+.btn--q {
+  background: none; color: var(--muted); padding: 2px 0;
+  border-bottom: 1px solid transparent;
+}
+.btn--q:hover { background: none; color: var(--atha-ferrous); border-color: var(--atha-ferrous); }
 .btn--inv { background: var(--atha-chalk); color: var(--atha-clay); }
 .btn--inv:hover { background: var(--atha-rind); }
 .hub-foot { margin-top: auto; padding-top: clamp(36px, 5vw, 56px); }
@@ -803,10 +811,14 @@ watch(instant, (v) => {
 .side button { position: relative; display: block; width: 16px; padding: 2px 0; }
 .side button i {
   display: block; background: var(--atha-clay); opacity: 0.26; width: 16px;
-  transition: opacity 0.3s var(--atha-ease), background 0.3s var(--atha-ease), width 0.3s var(--atha-ease);
+  /* grow via transform, not width — same visual result, compositor-friendly.
+     Origin left center mirrors the old width animation: the bar grows
+     rightward from its left-anchored edge. */
+  transform: scaleX(1); transform-origin: left center;
+  transition: opacity 0.3s var(--atha-ease), background 0.3s var(--atha-ease), transform 0.3s var(--atha-ease);
 }
 .side button:hover i { opacity: 0.7; }
-.side button.on i { opacity: 1; background: var(--atha-ferrous); width: 22px; }
+.side button.on i { opacity: 1; background: var(--atha-ferrous); transform: scaleX(1.375); }
 .side button span {
   position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
   white-space: nowrap; font-family: var(--atha-font-mono); font-size: 0.625rem;
@@ -814,6 +826,13 @@ watch(instant, (v) => {
   opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
 }
 .side button:hover span, .side button:focus-visible span { opacity: 1; }
+
+/* narrow viewports: bottom safe area below the fixed compass widget,
+   which otherwise overlaps the last rows of hub and direction views */
+@media (max-width: 900px) {
+  .hub { padding-bottom: 104px; }
+  .cfoot { padding-bottom: 104px; }
+}
 
 /* reveal (opacity/transform only) */
 .rv {

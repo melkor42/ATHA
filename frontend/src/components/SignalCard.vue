@@ -30,7 +30,7 @@ const contactLabel = computed(() =>
 
 <template>
   <div class="card signal-card">
-    <div class="k">SignalCard</div>
+    <div class="k">Signal</div>
     <h3>{{ entity.name ?? node.title ?? '' }}</h3>
     <p v-if="entity.school">{{ entity.school }}</p>
     <div v-if="score !== null" class="score"><i :style="{ width: score + '%' }"></i></div>

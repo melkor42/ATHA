@@ -178,11 +178,15 @@ body::after {
 }
 @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-/* ---------- composed page ---------- */
+/* ---------- composed page ----------
+   the composed page is a night-world surface: dark soil carries it for
+   its full height so every text token stays readable, independent of
+   whatever world (plaza tiles, veil wash) lies underneath */
 .wow-page {
   padding: 26px 22px;
   border-radius: 22px;
-  background: var(--bg-tint);
+  background-color: #0b0a09;
+  background-image: var(--bg-tint);
   display: flex;
   flex-direction: column;
   gap: var(--gap);
@@ -251,6 +255,14 @@ body::after {
 /* ---------- EnterpriseCard ---------- */
 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin-top: 10px; }
 .seeks { margin-top: 10px; }
+/* narrow widths: the two-column meta grid dislocates into disconnected
+   label/value pairs — stack it into readable rows instead */
+@media (max-width: 900px) {
+  .meta { grid-template-columns: 1fr; gap: 2px; }
+  /* scoped to composed-page cards: the generic .row class also exists in
+     the Wisdom Corner's fixed-height strata, which must not wrap */
+  .card .row { flex-wrap: wrap; }
+}
 
 /* ---------- EventBanner ---------- */
 .banner { border-left: 3px solid var(--accent); }
@@ -423,7 +435,7 @@ body::after {
   font-family: 'VT323', ui-monospace, monospace;
   font-size: 17px;
   /* stepped/dithered glow bands instead of the soft radial wash */
-  background: repeating-linear-gradient(to top,
+  background-image: repeating-linear-gradient(to top,
     color-mix(in srgb, var(--s-accent) 4%, transparent) 0 2px, transparent 2px 6px);
 }
 /* CRT atmosphere — scanlines + vignette, scoped to the retro world */
@@ -487,7 +499,7 @@ body::after {
 }
 /* greener thickening: mix the spectral wash toward moss regardless of spectrum */
 .mode-organic.wow-page {
-  background: radial-gradient(900px 420px at 50% -80px,
+  background-image: radial-gradient(900px 420px at 50% -80px,
     color-mix(in srgb, var(--s-glow1) 60%, rgba(143, 169, 110, 0.14)), transparent);
 }
 .mode-organic .card {
@@ -534,7 +546,7 @@ body::after {
   --e-pig: color-mix(in srgb, var(--s-accent) 72%, #7A5A38);
 }
 .mode-earth.wow-page {
-  background: radial-gradient(900px 380px at 50% -80px,
+  background-image: radial-gradient(900px 380px at 50% -80px,
     color-mix(in srgb, var(--s-glow1) 70%, rgba(120, 90, 60, 0.08)), transparent);
 }
 /* pressed-fiber: grain pushed ~3× over the composition */
@@ -599,7 +611,7 @@ body::after {
 }
 /* brass glow warms the spectral wash */
 .mode-steampunk.wow-page {
-  background: radial-gradient(900px 380px at 50% -70px,
+  background-image: radial-gradient(900px 380px at 50% -70px,
     color-mix(in srgb, var(--s-glow1) 35%, rgba(192, 138, 62, 0.13)), transparent);
 }
 /* conduit hairlines linking the sections — the pipes of the network */
@@ -695,6 +707,8 @@ body::after {
 
 @media (max-width: 720px) {
   .wow-page.grid { grid-template-columns: 1fr; }
+  .wow-page { padding: 20px 14px; }
+  .card { padding: calc(var(--pad) * 0.8); }
 }
 
 /* ---------- print — the ambient/theater layers never reach paper ---------- */

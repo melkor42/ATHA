@@ -35,6 +35,10 @@ const arrived = ref(
     sessionStorage.getItem(SESSION_KEYS.arrival) === '1'
 )
 
+// owner mode: the travel/veil tune sliders are debug controls, not visitor
+// surface — read once from the URL (?tune), hidden by default
+const tuneMode = new URLSearchParams(window.location.search).has('tune')
+
 // Boris context lines, one sentence per zone (spec §4)
 const LINES = {
   center: 'Welcome to the plaza. Four paths, four intentions — I walk with you.',
@@ -216,7 +220,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </div>
     </div>
 
-    <div class="pill-bar">
+    <div v-if="tuneMode" class="pill-bar">
       <label class="travel-pill">
         <span>travel · {{ travelMs }}ms</span>
         <input
@@ -313,12 +317,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   top: calc(var(--ty) * 100vh);
 }
 
-/* one fixed flex row owns the top-left slot: pills flow inside it,
-   so the gap (12px) holds at any label width — overlap is impossible */
+/* one fixed flex row owns the top-right slot: pills flow inside it,
+   so the gap (12px) holds at any label width — overlap is impossible.
+   Top-right keeps the owner tools clear of centered zone headings. */
 .pill-bar {
   position: fixed;
   top: 18px;
-  left: 20px;
+  right: 20px;
   z-index: 40;
   display: flex;
   align-items: center;

@@ -32,7 +32,7 @@ const metadata = computed(() => {
 
 <template>
   <div class="card enterprise-card">
-    <div class="k">EnterpriseCard</div>
+    <div class="k">Enterprise</div>
     <h3>{{ entity.name ?? node.title ?? '' }}</h3>
     <div class="meta">
       <div v-if="entity.sector" class="row"><span>sector</span><b>{{ entity.sector }}</b></div>
