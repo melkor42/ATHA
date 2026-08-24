@@ -452,8 +452,13 @@ watch(activeLine, (v) => {
 }
 /* the action option (e.g. 'continue →'): the plaza's amber action material,
    mirroring .plaza-btn.solid — solid, dark text, hover lift; it is never
-   'selected', so the cyan multi-select state cannot collide with it */
+   'selected', so the cyan multi-select state cannot collide with it.
+   Shrink-wraps to its text and centers instead of stretching full-width
+   like the regular answer rows (which carry no .action class). */
 .companion-option.action {
+  flex: 0 0 auto;
+  align-self: center;
+  text-align: center;
   background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.8)), rgba(226, 120, 78, var(--boris-alpha, 0.8)));
   border-color: transparent;
   color: #241f1b;

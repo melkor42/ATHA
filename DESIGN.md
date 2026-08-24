@@ -232,4 +232,6 @@ Every composed page is the product of two orthogonal axes: **Spectrum** (`myceli
 - **Don't** let the legacy SIGNAL ColorToken palette and the `--atha-*` ceramic palette mix in one surface.
 - **Don't** rename or drift domain terms (Signal, Spectrum, StyleMode, PersonaModel) — the wire contract depends on them.
 - **Don't** use `v-html` to render composed content; the UiRenderer registry is the only path.
+  Machine check (from the repo root, python only, exit 0 = rule holds):
+  `python -c "import pathlib,sys;hits=[str(p) for p in pathlib.Path('frontend/src').rglob('*') if p.suffix in {'.vue','.js'} and 'v-html=' in p.read_text(encoding='utf-8',errors='ignore')];print('v-html violations:',hits) if hits else print('ok: no v-html directive in frontend/src');sys.exit(1 if hits else 0)"`
 - **Don't** fabricate people, companies, or testimonials; all content beyond ATHA 001 is fictional synthetic data.

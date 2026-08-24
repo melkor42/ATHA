@@ -173,6 +173,8 @@ async def _chat_json(
                             "giving up", schema_name, LLM_TOTAL_BUDGET, model)
                 break
             try:
+                log.info("%s: attempt %d on %s", schema_name, attempt, model)
+                attempt_started = time.perf_counter()
                 response = await asyncio.wait_for(
                     client.chat.completions.create(
                         model=model,
@@ -211,16 +213,25 @@ async def _chat_json(
                     ),
                     timeout=min(LLM_TIMEOUT, remaining),
                 )
-                return parse_json(response.choices[0].message.content)
+                raw = response.choices[0].message.content
+                log.info("%s: attempt %d on %s succeeded in %d ms "
+                         "(output=%d chars)", schema_name, attempt, model,
+                         int((time.perf_counter() - attempt_started) * 1000),
+                         len(raw or ""))
+                return parse_json(raw)
             except asyncio.TimeoutError as exc:
                 last_error = exc
                 log.warning("LLM attempt timed out (%s, attempt %d on %s) "
-                            "after %.0fs cap", schema_name, attempt, model,
-                            min(LLM_TIMEOUT, remaining))
+                            "after %.0fs cap (%.0f ms elapsed)", schema_name,
+                            attempt, model, min(LLM_TIMEOUT, remaining),
+                            (time.perf_counter() - attempt_started) * 1000)
             except (APIConnectionError, APITimeoutError, RateLimitError) as exc:
                 last_error = exc
-                log.warning("LLM transport error (%s, attempt %d on %s): %s",
-                            schema_name, attempt, model, exc)
+                log.warning("LLM transport error (%s, attempt %d on %s, "
+                            "%.0f ms elapsed): %s", schema_name, attempt,
+                            model,
+                            (time.perf_counter() - attempt_started) * 1000,
+                            exc)
                 if isinstance(exc, RateLimitError):
                     # Provider-pool 429: waiting out the Retry-After would blow
                     # the sub-10s target — fall through FAST to the fallback
@@ -236,8 +247,11 @@ async def _chat_json(
                     break
             except (APIError, ValidationError, ValueError) as exc:
                 last_error = exc
-                log.warning("LLM/parse error (%s, attempt %d on %s): %s",
-                            schema_name, attempt, model, exc)
+                log.warning("LLM/parse error (%s, attempt %d on %s, "
+                            "%.0f ms elapsed): %s", schema_name, attempt,
+                            model,
+                            (time.perf_counter() - attempt_started) * 1000,
+                            exc)
     raise RuntimeError(
         f"{schema_name}: all attempts failed, last error: {last_error}"
     )

@@ -109,6 +109,7 @@ export function usePlaza() {
 
   function goTo(zone, opts = {}) {
     if (!ZONE_POS[zone] || zone === current.value || traveling.value) return
+    console.info('[atha:plaza] goTo', { from: current.value, to: zone })
     traveling.value = true
     pulse.value = zone
     current.value = zone

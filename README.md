@@ -33,6 +33,12 @@ Type one sentence about yourself and the page composes itself. Mock mode without
 
 Repeats are cached server-side — the same input costs no LLM call. Fresh compositions call OpenRouter free models; when the free quota is exhausted the backend retries with backoff and finally degrades to the welcome page (never crashes).
 
+## Verification
+
+- Live gate: with the backend running, `cd backend; python eval_loop.py` — exit 0 = all three roles valid.
+- Offline contract (instant, no backend, no credentials): `python backend/test_experience_schema.py`.
+- Pre-commit habit: after changes to `backend/main.py`, `backend/agents.py`, or `frontend/src/composables/useCompose.js`, run the live gate; after frontend changes, open fixture mode once.
+
 ## Status
 
 Tracked on the wayfinder map. Demo target: 2026-08-24, Warwick Business School.

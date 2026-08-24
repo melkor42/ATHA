@@ -52,19 +52,20 @@ const LINES = {
 const companionLine = computed(() => {
   if (!arrived.value) return ''
   if (note.value) return note.value
+  // the compose pin: Boris holds the composing line until it is ready
+  // (the interview is inactive while loading, so this keeps winning here)
+  if (composeState.value === 'loading') return COMPOSING_LINE
+  // the compose interview: at the AI Corner with compose idle, the
+  // role/topics/style questions win over unanswered gate intro questions
+  if (composeInterviewActive.value) return interviewLine.value
   if (step.value === 'q1') return Q1.question
   if (step.value === 'q2') return Q2.question
   if (step.value === 'closing' && route.value) {
     return `Your way into Atha begins here. The ${route.value.zone} path is lit for you.`
   }
-  // the compose pin: Boris holds the composing line until it is ready
-  if (composeState.value === 'loading') return COMPOSING_LINE
   if (composeState.value === 'ready' && pickup.value && current.value !== 'north') {
     return 'Your compose is finished — shall I bring you to the AI Corner to show you the result?'
   }
-  // the compose interview: Boris asks the AI Corner's three questions
-  // himself while standing in the north wing (gate branches stay first)
-  if (composeInterviewActive.value) return interviewLine.value
   return LINES[current.value]
 })
 const composeInterviewActive = computed(
@@ -77,9 +78,10 @@ const companionProminent = computed(
   () => ['q1', 'q2', 'closing'].includes(step.value) || composeInterviewActive.value
 )
 const gateOptions = computed(() => {
+  // the compose interview's options win over the gate questions at north
+  if (composeInterviewActive.value) return interviewOptions.value
   if (step.value === 'q1') return visibleQ1.value
   if (step.value === 'q2') return Q2.options
-  if (composeInterviewActive.value) return interviewOptions.value
   // the pickup question waits until the travel note has cleared — mirroring
   // companionLine's note priority, so options never surface before the line
   if (note.value) return []
@@ -123,12 +125,14 @@ function onCompanionAnswer(id) {
     clearPickup()
     return
   }
-  if (step.value === 'q1') {
-    answer1(id)
-    return
-  }
+  // interview answers first — role ids must never fall through into
+  // answer1() (they would be written to the athaVisitorState session key)
   if (composeInterviewActive.value) {
     composeAnswer(id)
+    return
+  }
+  if (step.value === 'q1') {
+    answer1(id)
     return
   }
   onAnswer2(id)

@@ -96,9 +96,9 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
         <p class="cam-intro">
           Here the network composes a page only for you. Tell me who you are
           and where you are coming from, pick what you would like to see and
-          how it should feel — two models then retrieve the most fitting
-          pieces of the network and build your page in the style you chose.
-          That takes about a minute.
+          how it should feel — one model then retrieves the most fitting
+          pieces of the network and builds your page in the style you chose.
+          That takes only a few seconds.
         </p>
 
         <div class="select-summary">
@@ -135,7 +135,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
         >
           <Theater
             :steps="theaterSteps"
-            :cadence="14000"
+            :cadence="1600"
             :active="state === 'loading'"
             :exiting="theaterExiting"
             :dim="0"

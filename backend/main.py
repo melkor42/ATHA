@@ -393,6 +393,7 @@ async def health() -> dict:
 async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     ip = _client_ip(request)
     if not _check_rate_limit(ip):
+        log.warning("rate limit exceeded for %s -> returning 429", ip)
         raise HTTPException(status_code=429,
                             detail=f"Rate limit: {RATE_LIMIT_PER_DAY} requests/day.")
 
@@ -404,6 +405,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         )
     topics = resolve_topics(role, body.topics)
     style = body.style  # StyleMode | None, pydantic-validated
+    log.info("experience request: role=%s topics=%s style=%s",
+             role, topics, style.value if style else None)
 
     key = hashlib.sha256(
         f"{role}|{'.'.join(topics)}|{style.value if style else ''}".encode("utf-8")
@@ -411,6 +414,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     started = time.perf_counter()
     cached = _response_cache.get(key)
     if cached is not None:
+        log.info("cache hit for role=%s style=%s", role,
+                 style.value if style else None)
         _response_cache.move_to_end(key)
         _append_trace({
             "ts": time.time(), "role": role, "topics": topics,
@@ -421,6 +426,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
             "cache_hit": True,
         })
         return cached
+    log.info("cache miss for role=%s style=%s", role,
+             style.value if style else None)
 
     persona = None
     allowed_ids: list[str] = []
@@ -433,16 +440,24 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         persona = persona_model.model_dump()
 
         query_text = " ".join(persona_model.interests)
+        retrieval_started = time.perf_counter()
         rows, allowed = await hybrid_retrieve(
             query_text, top_k=TOP_K, limit=LIMIT, driver=get_app_driver()
         )
         rows = await enrich_persons_async(rows)
         events = await fetch_events()
+        log.info("retrieval finished in %d ms (rows=%d, events=%d)",
+                 int((time.perf_counter() - retrieval_started) * 1000),
+                 len(rows), len(events))
         ids = set(allowed) | {ev["id"] for ev in events}
         allowed_ids = sorted(ids)
 
         pool_text = render_pool(rows, events)
+        log.info("llm compose starting (model handled in agents.py)")
+        llm_started = time.perf_counter()
         draft = await experience_agent(persona_model, pool_text, ids, client)
+        log.info("llm compose finished in %d ms",
+                 int((time.perf_counter() - llm_started) * 1000))
         # the visitor's style pick wins over the agent's temperament choice —
         # server-side, deterministic, prompt untouched. No style chosen:
         # keep the agent's mode (the diversity rule).

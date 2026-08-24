@@ -61,6 +61,7 @@ export function useGate() {
   }
 
   function answer1(id) {
+    console.info('[atha:gate] Q1 answered', { answer: id })
     a1.value = id
     step.value = 'q2'
     // canonical session keys per docs/atha-context-brief.md
@@ -68,6 +69,7 @@ export function useGate() {
   }
 
   function answer2(id) {
+    console.info('[atha:gate] Q2 answered', { answer: id, route: ROUTE[id]?.zone ?? null })
     a2.value = id
     step.value = 'closing'
     seen.value = true
@@ -85,6 +87,7 @@ export function useGate() {
   }
 
   function finish() {
+    console.info('[atha:gate] gate complete')
     step.value = 'done'
   }
 

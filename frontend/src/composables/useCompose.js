@@ -2,7 +2,7 @@ import { computed, ref, watch } from 'vue'
 import { usePlaza } from './usePlaza.js'
 
 // AI Corner compose state — lifted out of the zone (module-level singleton)
-// so an honest ~1-minute compose survives the visitor leaving the north wing:
+// so a fast single-model compose survives the visitor leaving the north wing:
 // they can wander, and the result waits for them. Mirrors the usePlaza /
 // useGate pattern: one visitor, one shared state.
 
@@ -43,9 +43,9 @@ const persona = ref(null)
 const errorMsg = ref('')
 const revealed = ref(0) // staggered panel reveal, survives zone travel too
 
-// Boris stays pinned to the composing line while the models are out
+// Boris stays pinned to the composing line while the model is out
 export const COMPOSING_LINE =
-  'Two models are out in the network now, retrieving and composing your page. Ten heartbeats, perhaps fewer — stay close, it is already taking shape.'
+  'One model is out in the network now, retrieving and composing your page. A few heartbeats — stay close, it is already taking shape.'
 
 // pickup notice: the compose finished while the visitor wandered elsewhere
 const pickup = ref(false)
@@ -123,21 +123,29 @@ const interviewOptions = computed(() => {
 function answer(id) {
   if (!interviewStarted.value || step.value === 'done') return
   if (step.value === 'role') {
+    console.info('[atha:compose] role picked', { role: id })
     if (selections.value.role !== id) selections.value.topics = [] // new role, new topic pool
     selections.value.role = id
     step.value = 'topics'
   } else if (step.value === 'topics') {
     if (id === 'continue') {
+      console.info('[atha:compose] continue pressed', { topics: selections.value.topics })
       step.value = 'style'
       return
     }
     const t = selections.value.topics
     selections.value.topics = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]
+    console.info('[atha:compose] topic toggled', {
+      topic: id,
+      selected: selections.value.topics.includes(id),
+      topics: selections.value.topics
+    })
   } else if (step.value === 'style') {
     selections.value.style = id
     step.value = 'done'
     // compose starts the moment the last answer lands — compose() itself
-    // speaks the 'two models are out in the network' line
+    // speaks the 'one model is out in the network' line
+    console.info('[atha:compose] style picked — compose triggered', { style: id })
     compose()
   }
 }
@@ -180,15 +188,20 @@ async function compose() {
   try {
     let payload
     if (fixtureName) {
+      console.info('[atha:compose] fixture branch', { fixture: fixtureName })
       payload = await loadFixture()
     } else {
       const body = { role, topics }
       if (style && style !== 'surprise') body.style = style
+      console.info('[atha:compose] request', body)
+      const t0 = performance.now()
       payload = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       }).then((r) => {
+        const ms = Math.round(performance.now() - t0)
+        console.info('[atha:compose] response', { status: r.status, ms })
         if (!r.ok) throw new Error(`backend responded HTTP ${r.status}`)
         return r.json()
       })
@@ -198,6 +211,7 @@ async function compose() {
     if (payload?.degraded) {
       // loud on purpose: a paused/deleted Aura instance must not hide
       // behind the quiet fallback page
+      console.info('[atha:compose] degraded branch', { reason: payload?.degraded_reason || 'none' })
       console.error(
         '[AI Corner] compose degraded to the fallback page — Neo4j Aura is likely not connected.\n' +
           (payload?.degraded_reason || 'backend reported no reason')
@@ -208,6 +222,7 @@ async function compose() {
     say('I composed this from who you told me you are. Poke me if you want to wander.')
     revealStagger() // soft panel assembly, one breath apart
   } catch (e) {
+    console.error('[atha:compose] failed', e)
     errorMsg.value = e?.message || String(e)
     state.value = 'error'
     say('The corner could not compose this time — it stays patient.')
