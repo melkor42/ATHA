@@ -71,13 +71,12 @@ Each team examines the same five dimensions; a weakness in any one of them is a 
 
 ## Zone map (plaza)
 
-The Town Square shell: one place, six zones, a soft camera — and Boris, the bear companion.
+The Town Square shell: one place, five zones, a soft camera — and Boris, the bear companion.
 - **Center** — the resting point: promise, grounding, belonging, two doors into the east wing.
 - **North** — the AI Corner: everything composed live, for you.
-- **West** — the quiet wing: essential facts, bright and clear, no decoration.
+- **West** — the quiet wing: how ATHA works and what makes a decision good — the seven directions (question, method, finding, conditions, rhythm, Edition 001, layers) as tablet cards with expandable articles (ATHA design tokens).
 - **East** — where you join: bring a challenge, or bring your talent.
 - **South** — the story: the seven-stage rhythm, revealed on scroll; the entrance gate.
-- **South-East** — the still corner: how ATHA works and what makes a decision good (Wisdom Corner, ATHA design tokens, compass-only entry).
 
 ## Adaptive entrance (the layer this product must deliver)
 

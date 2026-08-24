@@ -45,9 +45,9 @@
   --s-dimtext: #A3ABA6;         /* spectrum-owned body-text tint */
 
   /* ATHA tokens — authority: .scratch/ATHA_Design-Direction.html.
-     Consumed only by the new Wisdom Corner zone; all legacy tokens above
-     are untouched. Usage rules: no gradients, no drop shadows, no rounded
-     containers; --atha-ferrous appears at most once per view;
+     Consumed by the ATHA surfaces in the quiet wing; all legacy tokens
+     above are untouched. Usage rules: no gradients, no drop shadows, no
+     rounded containers; --atha-ferrous appears at most once per view;
      --atha-rind covers ≤5% of a view and never carries text. */
   --atha-clay: #2A2622;
   --atha-chalk: #F2EDE4;
@@ -260,8 +260,8 @@ body::after {
    label/value pairs — stack it into readable rows instead */
 @media (max-width: 900px) {
   .meta { grid-template-columns: 1fr; gap: 2px; }
-  /* scoped to composed-page cards: the generic .row class also exists in
-     the Wisdom Corner's fixed-height strata, which must not wrap */
+  /* scoped to composed-page cards: keep the wrap opt-in so other .row
+     uses elsewhere stay single-line */
   .card .row { flex-wrap: wrap; }
 }
 
@@ -737,10 +737,10 @@ body::after {
      Paint order: tile photo (2nd bg layer) < veil (1st bg layer) < content
      (.zone > * z2). Being part of the
      element's background it shares the photo's attachment: it stays put
-     while north/south/wisdom scroll, identical alpha on every tile →
+     while north/south scroll, identical alpha on every tile →
      no seams at tile borders. Strength is owner-dialed via
      --veil-strength on .plaza (persisted in 'atha.veil'); the wash is
-     flat, not a gradient effect, so wisdom's flat-chalk rule holds. */
+     flat, not a gradient effect, so the flat-chalk rule holds. */
   background-image:
     linear-gradient(rgba(233, 226, 212, var(--veil-strength, 0.45)), rgba(233, 226, 212, var(--veil-strength, 0.45))),
     var(--bg);
@@ -753,7 +753,7 @@ body::after {
    (top background layer of .zone above) now softens all tiles uniformly —
    full-bleed to every viewport corner, no seams at tile borders, and it
    washes only the artwork: content (.zone > * z2) always paints above it.
-   The wash is flat, not a gradient, so wisdom's flat-chalk rule holds. */
+   The wash is flat, not a gradient, so the flat-chalk rule holds. */
 
 .plaza-btn {
   display: inline-block;

@@ -1,15 +1,14 @@
 import { ref, computed } from 'vue'
 
-// Plus-shaped world: a 3x3 grid of viewport tiles, six of them inhabited.
-// center = anchor, north = AI Corner, south = Story+Gate, west = Wisdom (the quiet wing),
-// east = Anmeldung (spec §2), wisdom = southeast corner (compass-only entry).
+// Plus-shaped world: a 3x3 grid of viewport tiles, five of them inhabited.
+// center = anchor, north = AI Corner, south = Story+Gate, west = the quiet wing,
+// east = Anmeldung (spec §2).
 export const ZONE_POS = {
   center: { x: 1, y: 1 },
   north: { x: 1, y: 0 },
   south: { x: 1, y: 2 },
   west: { x: 0, y: 1 },
-  east: { x: 2, y: 1 },
-  wisdom: { x: 2, y: 2 }
+  east: { x: 2, y: 1 }
 }
 
 export const OPPOSITE = { north: 'south', south: 'north', west: 'east', east: 'west' }

@@ -45,7 +45,7 @@ const revealed = ref(0) // staggered panel reveal, survives zone travel too
 
 // Boris stays pinned to the composing line while the models are out
 export const COMPOSING_LINE =
-  'Two models are out in the network now, retrieving and composing your page. That takes about a minute — wander, and I will have it ready when you are back.'
+  'Two models are out in the network now, retrieving and composing your page. Ten heartbeats, perhaps fewer — stay close, it is already taking shape.'
 
 // pickup notice: the compose finished while the visitor wandered elsewhere
 const pickup = ref(false)

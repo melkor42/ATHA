@@ -13,9 +13,8 @@ import StoryGateZone from './zones/StoryGateZone.vue'
 import AiCornerZone from './zones/AiCornerZone.vue'
 import InfosZone from './zones/InfosZone.vue'
 import RegisterZone from './zones/RegisterZone.vue'
-import WisdomCornerZone from './zones/WisdomCornerZone.vue'
 
-// The Town Square shell (spec §2): one place, six zones, a soft camera.
+// The Town Square shell (spec §2): one place, five zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
 const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, borisOpacity, setBorisOpacity, note } = usePlaza()
@@ -45,10 +44,9 @@ const tuneMode = new URLSearchParams(window.location.search).has('tune')
 const LINES = {
   center: 'Welcome to the plaza. Four paths, four intentions — I walk with you.',
   north: 'The AI Corner: everything here is composed live, for you.',
-  west: 'The quiet wing. Facts, bright and clear — no decoration.',
+  west: 'The quiet wing — seven directions on how Atha works, and what makes a decision good.',
   east: 'Where you join: bring a challenge, or bring your talent.',
-  south: 'The story of Atha grows as you walk down.',
-  wisdom: 'The still corner: how Atha works, and what makes a decision good.'
+  south: 'The story of Atha grows as you walk down.'
 }
 // Boris asks the gate questions himself, in any zone (spec §4)
 const companionLine = computed(() => {
@@ -246,7 +244,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div class="tile" :style="{ '--tx': 1, '--ty': 1 }"><CenterZone /></div>
         <div class="tile" :style="{ '--tx': 2, '--ty': 1 }"><RegisterZone /></div>
         <div class="tile" :style="{ '--tx': 1, '--ty': 2 }"><StoryGateZone /></div>
-        <div class="tile" :style="{ '--tx': 2, '--ty': 2 }"><WisdomCornerZone /></div>
         <VeinsOverlay />
       </div>
     </div>

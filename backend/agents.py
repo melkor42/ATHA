@@ -3,12 +3,23 @@
 experience_builder: PersonaModel (synthesized server-side from the visitor's
 role selection) + retrieved data pool -> ExperienceSchema.
 
-Plain async OpenAI client against OpenRouter's OpenAI-compatible endpoint
-(ticket 13: nvidia/nemotron-3-super-120b-a12b:free — the only large free model
-that accepts response_format/json_schema; fallback openai/gpt-oss-20b:free).
-Strategy: json_schema response_format -> robust parse -> one retry on the same
-model -> two attempts on the fallback model. System prompts are loaded ONCE at
-startup from prompts/*.md, so prompt iteration never needs a code change.
+Plain async OpenAI client against an OpenAI-compatible LLM provider.
+Provider-aware: the base URL decides the quirks. Groq (current default via
+.env: PRIMARY_MODEL=openai/gpt-oss-120b, FALLBACK_MODEL=openai/gpt-oss-20b,
+both sub-2s in probing) gets json_schema WITHOUT the strict flag (Groq
+rejects strict's full-schema rules but honors json_schema structure — the
+client-side parse_json stays as the safety net) and no OpenRouter provider
+routing block. OpenRouter (LLM_BASE_URL override) keeps strict json_schema
+plus require_parameters/allow_fallbacks provider routing.
+Strategy: json_schema response_format -> robust parse -> one retry on the
+same model -> fast fallthrough to the fallback model on 429, all bounded by
+a hard total wall-clock budget (each attempt wrapped in asyncio.wait_for so
+a single hung call can never blow the budget).
+Models, caps and timing are env-overridable (LLM_BASE_URL, LLM_API_KEY,
+PRIMARY_MODEL, FALLBACK_MODEL, LLM_MAX_TOKENS, LLM_TIMEOUT, LLM_TOTAL_BUDGET)
+so provider/model A/B runs need no code change. System prompts are loaded
+ONCE at startup from prompts/*.md, so prompt iteration never needs a code
+change.
 """
 
 from __future__ import annotations
@@ -16,10 +27,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
+import time
 from pathlib import Path
 from typing import TypeVar
 
+from dotenv import load_dotenv
 from openai import AsyncOpenAI, APIConnectionError, APIError, APITimeoutError, RateLimitError
 from pydantic import TypeAdapter, ValidationError
 
@@ -31,10 +45,28 @@ log = logging.getLogger("signal.agents")
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROMPTS_DIR = REPO_ROOT / "prompts"
 
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-PRIMARY_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
-FALLBACK_MODEL = "openai/gpt-oss-20b:free"
+# Load the repo-root .env into os.environ WITHOUT overriding platform env
+# (default load_dotenv behavior) — same precedence as load_env(): platform
+# env wins on conflict, local .env fills the gaps.
+load_dotenv(REPO_ROOT / ".env")
+
+# Model routing + caps — env-overridable for A/B testing without code changes.
+# Defaults target OpenRouter; the shipped .env points at Groq instead.
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+# OpenRouter-only provider routing is active exactly when the base URL is
+# OpenRouter's; other providers (Groq) reject/ignore the provider block.
+_IS_OPENROUTER = "openrouter.ai" in LLM_BASE_URL
+PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "z-ai/glm-5.2:free")
+# OpenRouter fallback must live on a DIFFERENT provider pool than the
+# primary: glm-5.2 is served by Decart and 429s ~9/10 in its shared pool,
+# while nemotron is served by Nvidia's own pool (smoke-tested ~4s).
+FALLBACK_MODEL = os.getenv("FALLBACK_MODEL",
+                           "nvidia/nemotron-3-super-120b-a12b:free")
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1400"))
+LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "15"))
+LLM_TOTAL_BUDGET = float(os.getenv("LLM_TOTAL_BUDGET", "20"))
 MAX_ATTEMPTS_PER_MODEL = 2  # initial + one retry
+RATE_LIMIT_BACKOFF = 3.0  # seconds of 429 backoff between attempts
 
 T = TypeVar("T")
 
@@ -44,11 +76,15 @@ EXPERIENCE_SYSTEM = (PROMPTS_DIR / "experience_builder.md").read_text(encoding="
 
 
 def _client() -> AsyncOpenAI:
-    env = load_env()
+    # LLM_API_KEY wins; OPENROUTER_API_KEY stays as the legacy fallback so
+    # the old OpenRouter-only setup keeps working untouched.
+    api_key = os.getenv("LLM_API_KEY") or load_env().get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("neither LLM_API_KEY nor OPENROUTER_API_KEY is set")
     return AsyncOpenAI(
-        base_url=OPENROUTER_BASE_URL,
-        api_key=env["OPENROUTER_API_KEY"],
-        timeout=90.0,
+        base_url=LLM_BASE_URL,
+        api_key=api_key,
+        timeout=LLM_TIMEOUT,
         max_retries=0,  # we own the retry policy (model fallback below)
     )
 
@@ -121,38 +157,83 @@ async def _chat_json(
 ) -> dict:
     """Primary model x MAX_ATTEMPTS_PER_MODEL, then fallback model x same.
 
-    Returns the parsed JSON dict; raises on total failure so the caller can
-    degrade gracefully.
+    A hard total wall-clock budget (LLM_TOTAL_BUDGET) is the real governor:
+    every attempt is wrapped in asyncio.wait_for bounded by the remaining
+    budget, so a single hung call can never blow past it; once the deadline
+    passes we stop retrying and raise. Returns the parsed JSON dict; raises
+    on total failure so the caller can degrade gracefully.
     """
     last_error: Exception | None = None
+    deadline = time.monotonic() + LLM_TOTAL_BUDGET
     for model in (PRIMARY_MODEL, FALLBACK_MODEL):
         for attempt in range(1, MAX_ATTEMPTS_PER_MODEL + 1):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                log.warning("%s: total budget (%.0fs) exhausted on %s — "
+                            "giving up", schema_name, LLM_TOTAL_BUDGET, model)
+                break
             try:
-                response = await client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                    response_format={
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": schema_name,
-                            "strict": False,
-                            "schema": json_schema,
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": user},
+                        ],
+                        response_format={
+                            "type": "json_schema",
+                            "json_schema": {
+                                "name": schema_name,
+                                # Groq rejects strict's full-schema rules
+                                # (additionalProperties + all-required) but
+                                # honors json_schema without the flag
+                                # (probed: valid JSON, ~1.5s); OpenRouter
+                                # keeps strict=True as before.
+                                **({"strict": True} if _IS_OPENROUTER else {}),
+                                "schema": json_schema,
+                            },
                         },
-                    },
-                    temperature=temperature,
+                        temperature=temperature,
+                        max_tokens=LLM_MAX_TOKENS,
+                        # OpenRouter-only extras: require_parameters keeps us
+                        # on provider endpoints that honor json_schema (no
+                        # prose-instead-of-JSON); allow_fallbacks lets
+                        # OpenRouter try other providers of the same model
+                        # when one 429s. No "sort: latency" — that pinned us
+                        # to the throttled Decart endpoint. Groq (and any
+                        # non-OpenRouter base) gets no extra_body at all.
+                        **({"extra_body": {
+                            "provider": {
+                                "require_parameters": True,
+                                "allow_fallbacks": True,
+                            }
+                        }} if _IS_OPENROUTER else {}),
+                    ),
+                    timeout=min(LLM_TIMEOUT, remaining),
                 )
                 return parse_json(response.choices[0].message.content)
+            except asyncio.TimeoutError as exc:
+                last_error = exc
+                log.warning("LLM attempt timed out (%s, attempt %d on %s) "
+                            "after %.0fs cap", schema_name, attempt, model,
+                            min(LLM_TIMEOUT, remaining))
             except (APIConnectionError, APITimeoutError, RateLimitError) as exc:
                 last_error = exc
                 log.warning("LLM transport error (%s, attempt %d on %s): %s",
                             schema_name, attempt, model, exc)
                 if isinstance(exc, RateLimitError):
-                    # free-tier 429: wait out the window instead of degrading
-                    # instantly — the frontend theater covers this wait
-                    await asyncio.sleep(15)
+                    # Provider-pool 429: waiting out the Retry-After would blow
+                    # the sub-10s target — fall through FAST to the fallback
+                    # model (different provider pool). A short backoff only if
+                    # it fits comfortably inside the remaining budget.
+                    retry_after = exc.response.headers.get("retry-after") \
+                        if exc.response is not None else None
+                    log.warning("%s: 429 on %s (retry-after=%s) — falling "
+                                "through to the fallback pool", schema_name,
+                                model, retry_after)
+                    if deadline - time.monotonic() > RATE_LIMIT_BACKOFF * 2:
+                        await asyncio.sleep(RATE_LIMIT_BACKOFF)
+                    break
             except (APIError, ValidationError, ValueError) as exc:
                 last_error = exc
                 log.warning("LLM/parse error (%s, attempt %d on %s): %s",

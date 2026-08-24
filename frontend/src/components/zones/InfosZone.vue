@@ -1,16 +1,10 @@
 <script setup>
 import bg from '../../assets/plaza/west.png'
+import SevenDirections from './SevenDirections.vue'
 
-// S4 West — Essential Infos (spec §3): calm, bright, maximum readability.
-// Values from docs/atha-context-brief.md (approved copy only);
-// unconfirmed facts carry their status per the brief's content rules.
-const FACTS = [
-  ['Format', 'A multi-day working experience — the duration is determined by the rhythm · Proposed'],
-  ['When', 'Direction: around March 2027 · Not fixed'],
-  ['Where', 'Warwick/Coventry as the core working location — initiated by OneMundi, co-hosted with Warwick Business School · Proposed'],
-  ['Access', 'Open · Still forming — no partners, dates or funding confirmed'],
-  ['Contact', 'hello@onemundi.one']
-]
+// S4 West — the quiet wing (spec §3): calm, bright, maximum readability.
+// The wing's knowledge content lives in SevenDirections (approved copy
+// only; unconfirmed facts carry their status per the brief's content rules).
 </script>
 
 <template>
@@ -18,12 +12,7 @@ const FACTS = [
     <div class="west-copy">
       <p class="eyebrow">WISDOM</p>
       <h2 class="wing-title">The quiet wing</h2>
-      <dl class="tablets">
-        <div v-for="[k, v] in FACTS" :key="k" class="tablet">
-          <dt>{{ k }}</dt>
-          <dd>{{ v }}</dd>
-        </div>
-      </dl>
+      <SevenDirections />
     </div>
   </section>
 </template>
@@ -36,7 +25,7 @@ const FACTS = [
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
   padding: 6vh 8vw;
 }
 .eyebrow {
@@ -50,32 +39,5 @@ const FACTS = [
   font-size: clamp(24px, 3vw, 40px);
   color: #241f1b;
   margin: 0;
-}
-.tablets {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  width: min(880px, 92%);
-  margin: 0;
-}
-.tablet {
-  background: rgba(250, 247, 240, 0.93);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 251, 240, 0.9);
-  border-radius: 22px 26px 24px 20px;
-  padding: 16px 20px;
-  box-shadow: 0 10px 30px rgba(30, 40, 45, 0.14);
-}
-.tablet dt {
-  font-size: 11.5px;
-  letter-spacing: 0.22em;
-  color: rgba(43, 38, 34, 0.55);
-  text-transform: uppercase;
-}
-.tablet dd {
-  margin: 6px 0 0;
-  color: #241f1b;
-  font-size: 16px;
-  line-height: 1.5;
 }
 </style>

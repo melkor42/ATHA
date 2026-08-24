@@ -120,7 +120,7 @@ The experience is a journey from underground to daylight. The composed page live
 
 Above ground sits the Plaza: a bright limestone town square (#e9e2d4) with photographic tile zones softened by a flat veil wash, glassy plaza buttons, and one warm ember gradient reserved for the primary action. The two worlds share one grammar of restraint: flat washes over filter blur, compositor-friendly motion, and accent color used sparingly enough that its rarity carries meaning.
 
-Two vocabularies coexist and must not bleed into each other: the legacy SIGNAL tokens (`--primary`, `--accent-tok`, ...) drive the composed page, while the newer ATHA Wisdom Corner tokens (`--atha-*`, Fraunces/Instrument Sans/IBM Plex Mono) follow a strict flat doctrine — no gradients, no drop shadows, no rounded containers.
+Two vocabularies coexist and must not bleed into each other: the legacy SIGNAL tokens (`--primary`, `--accent-tok`, ...) drive the composed page, while the newer ATHA tokens of the quiet wing (West) (`--atha-*`, Fraunces/Instrument Sans/IBM Plex Mono) follow a strict flat doctrine — no gradients, no drop shadows, no rounded containers.
 
 **Key Characteristics:**
 - Dark bioluminescent soil for the composed page; bright limestone for the Plaza.
@@ -151,12 +151,12 @@ The palette is soil and glow: near-black warm neutrals holding persona-tinted sp
 - **Stone Muted / Subtle** (#9C948A / #6A635B): secondary text and placeholders; spectra carry their own `--s-dimtext`.
 - **Plaza Limestone** (#e9e2d4): the light world's base tile color and the veil wash.
 - **Plaza Ink** (#2b2622): text on limestone surfaces.
-- **ATHA ceramics** (clay #2A2622, chalk #F2EDE4, slip #E0D8C9, field #4C5A3E, ferrous #8A3B26, rind #C9D34A, rule #A39C90, deep #1E2419): the Wisdom Corner's flat ceramic palette.
+- **ATHA ceramics** (clay #2A2622, chalk #F2EDE4, slip #E0D8C9, field #4C5A3E, ferrous #8A3B26, rind #C9D34A, rule #A39C90, deep #1E2419): the quiet wing's flat ceramic palette.
 
 ### Named Rules
 **The One Glow Rule.** The ambient aura is a radial gradient pair at ≤12% alpha, breathing over `--breathe-dur` (calm 26s / direct 16s / playful 9s). Glow is atmosphere, not decoration — never add a third source.
 **The Ferrous Rule.** In ATHA ceramic surfaces, `--atha-ferrous` appears at most once per view; `--atha-rind` covers ≤5% of a view and never carries text.
-**The Flat Chalk Rule.** The Wisdom Corner admits no gradients, no drop shadows, no rounded containers — the veil wash in the Plaza stays flat for the same reason.
+**The Flat Chalk Rule.** The quiet wing admits no gradients, no drop shadows, no rounded containers — the veil wash in the Plaza stays flat for the same reason.
 
 ## Typography
 
@@ -223,7 +223,7 @@ Every composed page is the product of two orthogonal axes: **Spectrum** (`myceli
 - **Do** derive new surfaces, borders, and glows from the Spectrum's `--s-*` tokens via `color-mix()`; the spectrum owns the hue family.
 - **Do** animate opacity/transform only for ambient motion; softness comes from gradient stops, never `filter: blur()` on animated layers.
 - **Do** keep reveal choreography sequential (`.section.on`) and give each StyleMode its own entrance character; honor `prefers-reduced-motion`.
-- **Do** keep the Wisdom Corner's flat ceramic doctrine: Fraunces/Instrument Sans/IBM Plex Mono, no gradients, no shadows, no rounding.
+- **Do** keep the quiet wing's flat ceramic doctrine: Fraunces/Instrument Sans/IBM Plex Mono, no gradients, no shadows, no rounding.
 - **Do** persist user-tuned atmosphere (e.g. veil strength under the `atha.veil` key) rather than resetting it.
 
 ### Don't:
