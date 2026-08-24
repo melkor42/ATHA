@@ -28,7 +28,7 @@
   --font-display: var(--font-ui);
   --bg-tint: transparent;
   /* ambient field (Phase B) — bioluminescent aura over dark soil.
-     Spectra set --aura as their glow pair; WowPage mirrors the persona
+     Spectra set --aura as their glow pair; the composed page mirrors the persona
      accent aura and breathing tempo onto the document root. */
   --aura: rgba(230, 190, 112, 0.10);
   --breathe-dur: 16s;
@@ -119,7 +119,8 @@ body::after {
 }
 
 /* content stacks above the ambient field and the Theater substrate */
-.shell, .onboarding, .wow-page, .error { position: relative; z-index: 2; }
+.shell, .onboarding, .error { position: relative; z-index: 2; }
+.zone-north .composed { position: relative; z-index: 2; }
 
 /* ---------- brand shell ---------- */
 .shell h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4px; }
@@ -182,7 +183,7 @@ body::after {
    the composed page is a night-world surface: dark soil carries it for
    its full height so every text token stays readable, independent of
    whatever world (plaza tiles, veil wash) lies underneath */
-.wow-page {
+.zone-north .composed {
   padding: 26px 22px;
   border-radius: 22px;
   background-color: #0b0a09;
@@ -191,14 +192,14 @@ body::after {
   flex-direction: column;
   gap: var(--gap);
 }
-.wow-page.grid {
+.zone-north .composed.grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--gap);
   align-items: start;
 }
-.wow-page.grid .section.wide { grid-column: 1 / -1; }
-.wow-page .again { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px; }
+.zone-north .composed.grid .section.wide { grid-column: 1 / -1; }
+.zone-north .composed .again { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px; }
 
 .section { opacity: 0; transform: translateY(14px); transition: all 0.7s var(--ease); }
 .section.on { opacity: 1; transform: none; }
@@ -388,8 +389,8 @@ body::after {
   --m-dim: #8E8B86;
   --m-ink: color-mix(in srgb, var(--text) 92%, transparent);
 }
-.mode-minimal.wow-page { padding: 26px 8px; max-width: 720px; margin: 0 auto; }
-.mode-minimal.wow-page.grid { grid-template-columns: 1fr; }
+.zone-north .mode-minimal.composed { padding: 26px 8px; max-width: 720px; margin: 0 auto; }
+.zone-north .mode-minimal.composed.grid { grid-template-columns: 1fr; }
 .mode-minimal .card {
   background: transparent;
   border: 0;
@@ -431,18 +432,21 @@ body::after {
   --shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.65);
   --font-display: 'VT323', ui-monospace, monospace;
 }
-.mode-retro.wow-page {
+.zone-north .mode-retro.composed {
   font-family: 'VT323', ui-monospace, monospace;
   font-size: 17px;
+  overflow: hidden;
   /* stepped/dithered glow bands instead of the soft radial wash */
   background-image: repeating-linear-gradient(to top,
     color-mix(in srgb, var(--s-accent) 4%, transparent) 0 2px, transparent 2px 6px);
 }
-/* CRT atmosphere — scanlines + vignette, scoped to the retro world */
-.mode-retro.wow-page::before { content: ""; position: fixed; inset: 0; z-index: 40;
+/* CRT atmosphere — scanlines + vignette, scoped to the retro sheet only:
+   .plaza-world's translate3d would turn fixed positioning world-relative,
+   so the overlays sit absolute inside the (overflow-hidden) sheet */
+.zone-north .mode-retro.composed::before { content: ""; position: absolute; inset: 0; z-index: 2;
   pointer-events: none; opacity: 0.05;
   background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0 1px, transparent 1px 3px); }
-.mode-retro.wow-page::after { content: ""; position: fixed; inset: 0; z-index: 39;
+.zone-north .mode-retro.composed::after { content: ""; position: absolute; inset: 0; z-index: 1;
   pointer-events: none;
   background: radial-gradient(120% 95% at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.55) 100%); }
 .mode-retro .card {
@@ -498,7 +502,7 @@ body::after {
   --font-display: 'Cormorant Garamond', Georgia, serif;
 }
 /* greener thickening: mix the spectral wash toward moss regardless of spectrum */
-.mode-organic.wow-page {
+.zone-north .mode-organic.composed {
   background-image: radial-gradient(900px 420px at 50% -80px,
     color-mix(in srgb, var(--s-glow1) 60%, rgba(143, 169, 110, 0.14)), transparent);
 }
@@ -545,12 +549,12 @@ body::after {
   --e-soil: color-mix(in srgb, var(--s-accent) 34%, #57493A);
   --e-pig: color-mix(in srgb, var(--s-accent) 72%, #7A5A38);
 }
-.mode-earth.wow-page {
+.zone-north .mode-earth.composed {
   background-image: radial-gradient(900px 380px at 50% -80px,
     color-mix(in srgb, var(--s-glow1) 70%, rgba(120, 90, 60, 0.08)), transparent);
 }
 /* pressed-fiber: grain pushed ~3× over the composition */
-.mode-earth.wow-page::before { content: ""; position: absolute; inset: 0; z-index: 0;
+.zone-north .mode-earth.composed::before { content: ""; position: absolute; inset: 0; z-index: 0;
   pointer-events: none; opacity: 0.085; border-radius: inherit;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
   background-size: 180px 180px; }
@@ -610,7 +614,7 @@ body::after {
   --sp-iron: #15130F;
 }
 /* brass glow warms the spectral wash */
-.mode-steampunk.wow-page {
+.zone-north .mode-steampunk.composed {
   background-image: radial-gradient(900px 380px at 50% -70px,
     color-mix(in srgb, var(--s-glow1) 35%, rgba(192, 138, 62, 0.13)), transparent);
 }
@@ -706,8 +710,8 @@ body::after {
 .error .pill { align-self: flex-start; }
 
 @media (max-width: 720px) {
-  .wow-page.grid { grid-template-columns: 1fr; }
-  .wow-page { padding: 20px 14px; }
+  .zone-north .composed.grid { grid-template-columns: 1fr; }
+  .zone-north .composed { padding: 20px 14px; }
   .card { padding: calc(var(--pad) * 0.8); }
 }
 
@@ -716,13 +720,13 @@ body::after {
   .theater-stage,
   body::before,
   body::after { display: none; }
-  .mode-retro.wow-page::before,
-  .mode-retro.wow-page::after { content: none; }
+  .zone-north .mode-retro.composed::before,
+  .zone-north .mode-retro.composed::after { content: none; }
 }
 
 /* ============ Plaza (Town Square) — shared layer ============
    Clean natural futuristic / flowy organic (spec §1).
-   Bright limestone base; dusk lives only inside .zone-north. */
+   Bright limestone base. */
 .zone {
   position: absolute;
   inset: 0;
@@ -730,8 +734,8 @@ body::after {
   /* the veil — a flat limestone wash painted as the TOP background layer
      of the very element that carries the tile artwork: it can therefore
      only ever soften the background, never the content.
-     Paint order: tile photo (2nd bg layer) < veil (1st bg layer) < dusk
-     (.zone-north::after) < content (.zone > * z2). Being part of the
+     Paint order: tile photo (2nd bg layer) < veil (1st bg layer) < content
+     (.zone > * z2). Being part of the
      element's background it shares the photo's attachment: it stays put
      while north/south/wisdom scroll, identical alpha on every tile →
      no seams at tile borders. Strength is owner-dialed via
@@ -750,14 +754,6 @@ body::after {
    full-bleed to every viewport corner, no seams at tile borders, and it
    washes only the artwork: content (.zone > * z2) always paints above it.
    The wash is flat, not a gradient, so wisdom's flat-chalk rule holds. */
-.zone-north::after {
-  /* dusk stays inside north (spec §1): atmosphere, not the softening veil */
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(115% 85% at 50% 45%, rgba(8, 16, 20, 0.3) 40%, rgba(8, 16, 20, 0.66) 100%);
-}
 
 .plaza-btn {
   display: inline-block;

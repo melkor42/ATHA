@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { usePlaza, ZONE_POS } from '../composables/usePlaza.js'
 import { useGate, Q1, Q2 } from '../composables/useGate.js'
-import { useCompose } from '../composables/useCompose.js'
+import { useCompose, COMPOSING_LINE } from '../composables/useCompose.js'
 import { SESSION_KEYS } from '../config.js'
 import VeinsOverlay from './VeinsOverlay.vue'
 import Compass from './Compass.vue'
@@ -18,7 +18,7 @@ import WisdomCornerZone from './zones/WisdomCornerZone.vue'
 // The Town Square shell (spec §2): one place, six zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
-const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, note } = usePlaza()
+const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, borisOpacity, setBorisOpacity, note } = usePlaza()
 const { step, seen, route, visibleQ1, start, answer1, answer2, finish } = useGate()
 const {
   state: composeState,
@@ -27,7 +27,9 @@ const {
   interviewLine,
   interviewOptions,
   beginInterview,
-  answer: composeAnswer
+  answer: composeAnswer,
+  pickup,
+  clearPickup
 } = useCompose()
 
 const arrived = ref(
@@ -42,7 +44,7 @@ const tuneMode = new URLSearchParams(window.location.search).has('tune')
 // Boris context lines, one sentence per zone (spec §4)
 const LINES = {
   center: 'Welcome to the plaza. Four paths, four intentions — I walk with you.',
-  north: 'The night side of the plaza: everything here is composed live, for you.',
+  north: 'The AI Corner: everything here is composed live, for you.',
   west: 'The quiet wing. Facts, bright and clear — no decoration.',
   east: 'Where you join: bring a challenge, or bring your talent.',
   south: 'The story of Atha grows as you walk down.',
@@ -56,6 +58,11 @@ const companionLine = computed(() => {
   if (step.value === 'q2') return Q2.question
   if (step.value === 'closing' && route.value) {
     return `Your way into Atha begins here. The ${route.value.zone} path is lit for you.`
+  }
+  // the compose pin: Boris holds the composing line until it is ready
+  if (composeState.value === 'loading') return COMPOSING_LINE
+  if (composeState.value === 'ready' && pickup.value && current.value !== 'north') {
+    return 'Your compose is finished — shall I bring you to the AI Corner to show you the result?'
   }
   // the compose interview: Boris asks the AI Corner's three questions
   // himself while standing in the north wing (gate branches stay first)
@@ -75,6 +82,15 @@ const gateOptions = computed(() => {
   if (step.value === 'q1') return visibleQ1.value
   if (step.value === 'q2') return Q2.options
   if (composeInterviewActive.value) return interviewOptions.value
+  // the pickup question waits until the travel note has cleared — mirroring
+  // companionLine's note priority, so options never surface before the line
+  if (note.value) return []
+  if (composeState.value === 'ready' && pickup.value && current.value !== 'north') {
+    return [
+      { id: 'pickup-go', label: 'Yes — show me the result', action: true },
+      { id: 'pickup-stay', label: 'Not yet' }
+    ]
+  }
   return []
 })
 function onAnswer1(id) {
@@ -97,6 +113,18 @@ function onCompanionSaid() {
 
 // answers reach the gate or the compose interview, depending on who asked
 function onCompanionAnswer(id) {
+  if (id === 'pickup-go') {
+    // mid-travel clicks would clear the notice and no-op goTo() — ignore
+    // them until the camera arrives so the offer stays answerable
+    if (traveling.value) return
+    clearPickup()
+    goTo('north')
+    return
+  }
+  if (id === 'pickup-stay') {
+    clearPickup()
+    return
+  }
   if (step.value === 'q1') {
     answer1(id)
     return
@@ -111,7 +139,10 @@ function onCompanionAnswer(id) {
 // the compose interview is lazy: it starts on the visitor's first north
 // arrival of the session and pauses/resumes purely through line priority
 watch([current, arrived], ([zone, here]) => {
-  if (zone === 'north' && here) beginInterview()
+  if (zone === 'north' && here) {
+    beginInterview()
+    clearPickup()
+  }
 }, { immediate: true })
 
 // first arrival: once the welcome overlay closes, Boris starts asking
@@ -199,7 +230,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <div
     class="plaza"
     :class="{ reduced, arriving: !arrived }"
-    :style="{ '--veil-strength': veil / 100 }"
+    :style="{ '--veil-strength': veil / 100, '--boris-alpha': borisOpacity / 100 }"
     @wheel.passive="onWheel"
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
@@ -243,6 +274,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           @input="setVeil(Number($event.target.value))"
         />
       </label>
+      <label class="travel-pill boris-pill">
+        <span>boris bubble · {{ borisOpacity }}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          :value="borisOpacity"
+          @input="setBorisOpacity(Number($event.target.value))"
+        />
+      </label>
     </div>
 
     <Compass />
@@ -251,6 +293,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       :line="companionLine"
       :zone="current"
       :prominent="companionProminent"
+      :locked="composeState === 'loading'"
       :rolling="!arrived"
       :options="gateOptions"
       @answer="onCompanionAnswer"
@@ -296,8 +339,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .plaza.reduced .plaza-zoom { transition: none; }
 /* the veil now lives inside each tile's own background (.zone's top
    background-image layer in style.css): it washes the artwork only,
-   never the content — paint order per tile: photo < veil < dusk <
-   content (.zone > * z2); veins z1 ride above the tiles, chrome stays
+   never the content — paint order per tile: photo < veil < content
+   (.zone > * z2); veins z1 ride above the tiles, chrome stays
    outside the world entirely. */
 /* travel camera dip (zoom breath while moving between zones) */
 .plaza-zoom.dip {

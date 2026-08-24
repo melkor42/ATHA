@@ -16,7 +16,7 @@ const FACTS = [
 <template>
   <section class="zone zone-west" :style="{ '--bg': `url(${bg})` }">
     <div class="west-copy">
-      <p class="eyebrow">ESSENTIALS</p>
+      <p class="eyebrow">WISDOM</p>
       <h2 class="wing-title">The quiet wing</h2>
       <dl class="tablets">
         <div v-for="[k, v] in FACTS" :key="k" class="tablet">

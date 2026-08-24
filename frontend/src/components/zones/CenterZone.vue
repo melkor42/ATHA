@@ -31,6 +31,12 @@ const { goTo } = usePlaza()
         </button>
       </div>
     </div>
+    <nav class="signpost" aria-label="Plaza directions">
+      <button type="button" class="arm-north" @click="goTo('north')">↑ AI Compose</button>
+      <button type="button" class="arm-east" @click="goTo('east')">Events →</button>
+      <button type="button" class="arm-south" @click="goTo('south')">↓ Explore</button>
+      <button type="button" class="arm-west" @click="goTo('west')">← Wisdom</button>
+    </nav>
   </section>
 </template>
 
@@ -96,4 +102,53 @@ const { goTo } = usePlaza()
   justify-content: center;
   margin-top: 10px;
 }
+.signpost {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.signpost button {
+  pointer-events: auto;
+  position: absolute;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 22px;
+  font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(43, 38, 34, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 251, 240, 0.65);
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+/* the halo rests visible and fades away on hover/focus so the label
+   alone points the way — transitions stay opacity-only, per the
+   signpost's discreet contract */
+.signpost button::before {
+  content: '';
+  position: absolute;
+  inset: -18px -36px;
+  background: radial-gradient(closest-side, rgba(224, 216, 201, 0.35), rgba(224, 216, 201, 0) 100%);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.signpost button:hover,
+.signpost button:focus-visible {
+  opacity: 1;
+  color: rgba(43, 38, 34, 0.9);
+}
+.signpost button:hover::before,
+.signpost button:focus-visible::before {
+  opacity: 0;
+}
+/* 14px inset compensates the 12px halo padding, so the labels sit at the
+   same visual position as before the aura was added */
+.signpost .arm-north { top: 14px; left: 50%; transform: translateX(-50%); padding-top: 0; }
+.signpost .arm-east { right: 14px; top: 50%; transform: translateY(-50%); padding-right: 0; }
+.signpost .arm-south { bottom: 14px; left: 50%; transform: translateX(-50%); padding-bottom: 0; }
+.signpost .arm-west { left: 14px; top: 50%; transform: translateY(-50%); padding-left: 0; }
 </style>

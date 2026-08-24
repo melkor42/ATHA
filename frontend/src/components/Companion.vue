@@ -9,6 +9,7 @@ const props = defineProps({
   line: { type: String, default: '' },
   zone: { type: String, default: 'center' },
   prominent: { type: Boolean, default: false },
+  locked: { type: Boolean, default: false },
   rolling: { type: Boolean, default: false },
   // while the companion asks a gate question, the bubble grows answer options
   options: { type: Array, default: () => [] },
@@ -62,7 +63,7 @@ const EXTRA = {
     'The veins remember every visitor.'
   ],
   north: [
-    'The night side composes; I just watch.',
+    'The AI Corner composes; I just watch.',
     'Panels breathe while you wait — no spinners here.'
   ],
   south: ['Stories grow slower than pages.', 'Take the long way down sometime.'],
@@ -75,6 +76,7 @@ const happy = ref(false)
 let happyTimer = 0
 
 function onPoke() {
+  if (props.locked) return
   const pool = EXTRA[props.zone] ?? []
   if (!pool.length) return
   pokeIdx.value = (pokeIdx.value + 1) % pool.length
@@ -195,7 +197,7 @@ watch(activeLine, (v) => {
           :key="o.id"
           type="button"
           class="companion-option"
-          :class="{ selected: o.selected, action: o.action }"
+          :class="[o.theme ? 'theme-' + o.theme : '', { selected: o.selected, action: o.action }]"
           :aria-pressed="o.selected || undefined"
           @click.stop="emit('answer', o.id)"
         >
@@ -301,7 +303,9 @@ watch(activeLine, (v) => {
   right: 8px;
   width: 230px;
   padding: 12px 16px;
-  background: rgba(248, 244, 236, 0.93);
+  /* bubble translucency is tunable: --boris-alpha is bound on the plaza
+     root (owner ?tune slider), the fallback keeps 20% transparency */
+  background: rgba(248, 244, 236, var(--boris-alpha, 0.8));
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 251, 240, 0.7);
   border-radius: 26px 22px 6px 24px;
@@ -372,6 +376,59 @@ watch(activeLine, (v) => {
   animation: option-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
 }
+/* self-preview: each style option previews its own world's material —
+   identities mirror the .mode-* worlds in style.css. Bg/color/font/border
+   only, so the hover/selected/action states below keep winning. */
+.companion-option.theme-organic {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 14px;
+  background: rgba(244, 236, 214, 0.95);
+  color: #3d4a2f;
+  border-color: rgba(107, 128, 76, 0.5);
+}
+.companion-option.theme-minimal {
+  font-family: 'Inter', sans-serif;
+  background: rgba(255, 255, 255, var(--boris-alpha, 0.8));
+  color: #2b2926;
+  border-color: rgba(150, 146, 140, 0.4);
+}
+.companion-option.theme-retro {
+  font-family: 'VT323', ui-monospace, monospace;
+  font-size: 15px;
+  background: rgba(12, 15, 10, var(--boris-alpha, 0.8));
+  color: #7dff9e;
+  border-color: rgba(64, 255, 200, 0.5);
+}
+.companion-option.theme-earth {
+  background: rgba(201, 154, 91, var(--boris-alpha, 0.8));
+  color: #332414;
+  border: 2px solid #57493a;
+}
+.companion-option.theme-steampunk {
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  background: linear-gradient(180deg, rgba(217, 169, 95, var(--boris-alpha, 0.8)), rgba(192, 138, 62, var(--boris-alpha, 0.8)));
+  color: #16110a;
+  border-color: #5a4020;
+}
+.companion-option.theme-surprise {
+  border-style: dashed;
+}
+/* retro keeps a dark ground on hover — the generic hover wash would
+   bleach the phosphor text unreadable */
+.companion-option.theme-retro:hover {
+  background: rgba(22, 34, 26, var(--boris-alpha, 0.8));
+  color: #a8ffc4;
+}
+/* compact + centered: six moods fit the bubble without towering over it */
+.companion-option.theme-organic,
+.companion-option.theme-minimal,
+.companion-option.theme-retro,
+.companion-option.theme-earth,
+.companion-option.theme-steampunk,
+.companion-option.theme-surprise {
+  text-align: center;
+  padding: 8px 12px;
+}
 .companion-option:nth-child(2) { animation-delay: 0.08s; }
 .companion-option:nth-child(3) { animation-delay: 0.16s; }
 .companion-option:nth-child(4) { animation-delay: 0.24s; }
@@ -397,14 +454,14 @@ watch(activeLine, (v) => {
    mirroring .plaza-btn.solid — solid, dark text, hover lift; it is never
    'selected', so the cyan multi-select state cannot collide with it */
 .companion-option.action {
-  background: linear-gradient(135deg, #f2b361, #e2784e);
+  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.8)), rgba(226, 120, 78, var(--boris-alpha, 0.8)));
   border-color: transparent;
   color: #241f1b;
   font-weight: 600;
   box-shadow: 0 8px 22px rgba(226, 120, 78, 0.35);
 }
 .companion-option.action:hover {
-  background: linear-gradient(135deg, #f2b361, #e2784e);
+  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.8)), rgba(226, 120, 78, var(--boris-alpha, 0.8)));
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(226, 120, 78, 0.45);
 }

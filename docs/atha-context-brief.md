@@ -23,7 +23,7 @@ ATHA is built to recur: every relationship formed in an edition persists into th
 ## Naming discipline
 
 - **Atha** = the brand (the experience itself).
-- **Signal** survives as a *domain term only*: a derived Person↔Enterprise match in the wow-page graph (`SignalCard`, `save_signal`, `SIGNAL_CARD`). Never use it for the brand again.
+- **Signal** survives as a *domain term only*: a derived Person↔Enterprise match in the composed-page graph (`SignalCard`, `save_signal`, `SIGNAL_CARD`). Never use it for the brand again.
 
 ## Edition 001 — current working direction
 
@@ -73,7 +73,7 @@ Each team examines the same five dimensions; a weakness in any one of them is a 
 
 The Town Square shell: one place, six zones, a soft camera — and Boris, the bear companion.
 - **Center** — the resting point: promise, grounding, belonging, two doors into the east wing.
-- **North** — the night side: everything composed live, for you (AI corner — rebuilt separately).
+- **North** — the AI Corner: everything composed live, for you.
 - **West** — the quiet wing: essential facts, bright and clear, no decoration.
 - **East** — where you join: bring a challenge, or bring your talent.
 - **South** — the story: the seven-stage rhythm, revealed on scroll; the entrance gate.
@@ -126,7 +126,7 @@ Authority: `.scratch/ATHA_Design-Direction.html`; tokens live in `frontend/src/a
 - Rules: no gradients, no drop shadows, no rounded containers. Ferrous appears at most once per view. Rind covers ≤5% of a view and never carries text.
 - Type: Fraunces (display, 300 + italics), Instrument Sans (body 400/500), IBM Plex Mono (labels, uppercase, letter-spaced) — scale `--atha-s0`…`--atha-s7` (12/13/14/16/20/28/44/72).
 - Motion: `--atha-ease: cubic-bezier(.2,.7,.25,1)`; scroll-reveal (opacity+translate); honor `prefers-reduced-motion`.
-- Legacy (pre-rebrand) tokens in the same `:root` stay untouched for the existing wow-page/plaza surfaces.
+- Legacy (pre-rebrand) tokens in the same `:root` stay untouched for the existing composed-page/plaza surfaces.
 
 ## Graph shape coming next (do not build data yet)
 

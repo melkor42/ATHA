@@ -7,7 +7,7 @@ import { useCompose, ROLES, STYLES } from '../../composables/useCompose.js'
 import { ACCENT_HUES, DEFAULT_HUES } from '../../theme.js'
 import bg from '../../assets/plaza/north.png'
 
-// S3 North — AI Corner (spec §3): the only dusk-tonality zone. Everything
+// S3 North — AI Corner (spec §3): the plaza's composed-live zone. Everything
 // here is composed live from the existing backend. The ritual is three
 // questions from CAM — role, topics, style — asked sequentially by Boris
 // himself (useCompose step machine); the zone shows a compact summary of
@@ -28,7 +28,7 @@ const {
 provide('entities', computed(() => schema.value?.entities ?? {}))
 const sections = computed(() => (Array.isArray(schema.value?.sections) ? schema.value.sections : []))
 
-// allowlists — mirror WowPage: spectrum × mode drive the canvas restyle,
+// allowlists — spectrum × mode drive the canvas restyle,
 // scoped to this wing only (the rest of the plaza stays untouched)
 const SPECTRA = new Set(['mycelium', 'terra', 'aurora', 'neon', 'void'])
 const MODES = new Set(['none', 'minimal', 'retro', 'organic', 'earth', 'steampunk'])
@@ -141,7 +141,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
             :dim="0"
             :hues="hues"
           />
-          <p class="theater-note">the night side listens — and composes what fits you</p>
+          <p class="theater-note">the corner listens — and composes what fits you</p>
         </div>
 
         <div v-if="state === 'error'" class="error-card">
@@ -200,6 +200,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   letter-spacing: 0.34em;
   color: rgba(174, 244, 252, 0.75);
   margin: 0;
+  text-shadow: 0 1px 8px rgba(8, 16, 20, 0.55);
 }
 .wing-title {
   font-weight: 300;
@@ -218,6 +219,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   line-height: 1.65;
   letter-spacing: 0.02em;
   text-align: center;
+  text-shadow: 0 1px 8px rgba(8, 16, 20, 0.55);
 }
 
 /* the compact selection summary — mono chips, one glance at the choices */

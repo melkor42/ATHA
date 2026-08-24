@@ -1,5 +1,5 @@
 ---
-name: Atha Wow Page
+name: Atha
 description: The personal front door to ATHA — a page composed only for you.
 colors:
   soil: "#0B0A09"
@@ -110,15 +110,15 @@ components:
     padding: "12px 22px"
 ---
 
-# Design System: Atha Wow Page
+# Design System: ATHA - A HADORA EXPERIENCE
 
 ## Overview
 
 **Creative North Star: "The Clearing"**
 
-The experience is a journey from underground to daylight. The composed Wow Page lives in the dark: near-black soil (#0B0A09) under a slow-breathing bioluminescent aura, film grain, and hairline-bordered cards that read as objects found in the dark rather than UI panels laid on top of it. Depth comes from glow and tonal layering, never from stacked shadows. The page composes itself section by section — revelation is choreography, not loading.
+The experience is a journey from underground to daylight. The composed page lives in the dark: near-black soil (#0B0A09) under a slow-breathing bioluminescent aura, film grain, and hairline-bordered cards that read as objects found in the dark rather than UI panels laid on top of it. Depth comes from glow and tonal layering, never from stacked shadows. The page composes itself section by section — revelation is choreography, not loading.
 
-Above ground sits the Plaza: a bright limestone town square (#e9e2d4) with photographic tile zones softened by a flat veil wash, glassy plaza buttons, and one warm ember gradient reserved for the primary action. Dusk exists in exactly one place — the north zone's radial scrim. The two worlds share one grammar of restraint: flat washes over filter blur, compositor-friendly motion, and accent color used sparingly enough that its rarity carries meaning.
+Above ground sits the Plaza: a bright limestone town square (#e9e2d4) with photographic tile zones softened by a flat veil wash, glassy plaza buttons, and one warm ember gradient reserved for the primary action. The two worlds share one grammar of restraint: flat washes over filter blur, compositor-friendly motion, and accent color used sparingly enough that its rarity carries meaning.
 
 Two vocabularies coexist and must not bleed into each other: the legacy SIGNAL tokens (`--primary`, `--accent-tok`, ...) drive the composed page, while the newer ATHA Wisdom Corner tokens (`--atha-*`, Fraunces/Instrument Sans/IBM Plex Mono) follow a strict flat doctrine — no gradients, no drop shadows, no rounded containers.
 
@@ -177,7 +177,7 @@ The palette is soil and glow: near-black warm neutrals holding persona-tinted sp
 
 ## Layout
 
-`#app` is a centered column, max-width 1080px with 32px shell padding. The composed page (`.wow-page`) is a vertical stack with 16px gap, optionally a two-column grid (`.section.wide` spans both); below 720px it collapses to one column. Minimal mode narrows to 720px single-column. The Plaza is a full-viewport horizontal world of absolutely positioned zones panned by transform — no document scroll for travel. Spacing rhythm is mode-owned: `--gap` ranges 0px (minimal, hairline-divided) to 34px (steampunk, conduit-linked).
+`#app` is a centered column, max-width 1080px with 32px shell padding. The composed page (`.composed`; the composed sheet exists only inside the north wing, so its selectors in style.css are anchored as `.zone-north .composed…`) is a vertical stack with 16px gap, optionally a two-column grid (`.section.wide` spans both); below 720px it collapses to one column. Minimal mode narrows to 720px single-column. The Plaza is a full-viewport horizontal world of absolutely positioned zones panned by transform — no document scroll for travel. Spacing rhythm is mode-owned: `--gap` ranges 0px (minimal, hairline-divided) to 34px (steampunk, conduit-linked).
 
 ## Elevation & Depth
 

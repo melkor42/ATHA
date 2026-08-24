@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 
 // Plus-shaped world: a 3x3 grid of viewport tiles, six of them inhabited.
-// center = anchor, north = AI Corner, south = Story+Gate, west = Essentials,
+// center = anchor, north = AI Corner, south = Story+Gate, west = Wisdom (the quiet wing),
 // east = Anmeldung (spec §2), wisdom = southeast corner (compass-only entry).
 export const ZONE_POS = {
   center: { x: 1, y: 1 },
@@ -75,10 +75,38 @@ function setVeil(v) {
   }
 }
 
+// boris bubble translucency: percentage of surface opacity (0 = ghost,
+// 100 = fully opaque); consumed by Companion via the --boris-alpha var
+const BORIS_MIN = 0
+const BORIS_MAX = 100
+const BORIS_DEFAULT = 80
+const clampBoris = (v) => Math.min(BORIS_MAX, Math.max(BORIS_MIN, Number(v) || 0))
+
+// owner-dialed bubble opacity, persisted; the slider IS the choice
+const userBorisOpacity = ref((() => {
+  if (typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem('atha.borisOpacity')
+    if (stored !== null && !Number.isNaN(Number(stored))) return clampBoris(stored)
+  }
+  return BORIS_DEFAULT
+})())
+
+function setBorisOpacity(v) {
+  userBorisOpacity.value = clampBoris(v)
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('atha.borisOpacity', String(userBorisOpacity.value))
+    } catch {
+      /* storage unavailable — keep the in-memory value */
+    }
+  }
+}
+
 // singleton spatial state — the plaza is one place, one camera
 export function usePlaza() {
   const travelMs = computed(() => userTravelMs.value)
   const veil = computed(() => userVeil.value)
+  const borisOpacity = computed(() => userBorisOpacity.value)
 
   function goTo(zone, opts = {}) {
     if (!ZONE_POS[zone] || zone === current.value || traveling.value) return
@@ -106,5 +134,5 @@ export function usePlaza() {
     reduced.value = !reduced.value
   }
 
-  return { current, traveling, pulse, slowVeins, reduced, travelMs, userTravelMs, setTravelMs, veil, setVeil, goTo, setPulse, toggleReduced, note, say }
+  return { current, traveling, pulse, slowVeins, reduced, travelMs, userTravelMs, setTravelMs, veil, setVeil, borisOpacity, userBorisOpacity, setBorisOpacity, goTo, setPulse, toggleReduced, note, say }
 }

@@ -16,7 +16,7 @@ export const ACCENT_HUES = {
 export const DEFAULT_HUES = ['#5FD9CB', '#6FC7F2', '#8FE8DC', '#9DBDF7', '#4FE3C1']
 
 // Persona signature (Phase A): tone → ambient breathing tempo (--breathe-dur).
-// WowPage matches persona.tone against these tiers: calm/warm → '26s',
+// the composed page matches persona.tone against these tiers: calm/warm → '26s',
 // direct → '16s', playful → '9s', default '16s'.
 export const TEMPO = {
   calm: '26s',

@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { usePlaza } from './usePlaza.js'
 
 // AI Corner compose state — lifted out of the zone (module-level singleton)
@@ -43,15 +43,27 @@ const persona = ref(null)
 const errorMsg = ref('')
 const revealed = ref(0) // staggered panel reveal, survives zone travel too
 
-// decision-load rule: never more than 4 visible options at once. The style
-// question shows 3 primaries + one expander that reveals the rest.
-const STYLES_PRIMARY = 3
-const stylesExpanded = ref(false)
+// Boris stays pinned to the composing line while the models are out
+export const COMPOSING_LINE =
+  'Two models are out in the network now, retrieving and composing your page. That takes about a minute — wander, and I will have it ready when you are back.'
+
+// pickup notice: the compose finished while the visitor wandered elsewhere
+const pickup = ref(false)
+const { current: plazaZone } = usePlaza()
+watch(plazaZone, (z) => {
+  if (z === 'north') pickup.value = false
+})
+
+function clearPickup() {
+  pickup.value = false
+}
+
+// owner decision: all moods visible at once — the style pick is low-stakes, no decision-load cap.
 
 const selections = ref({
   role: null,
   topics: [],
-  style: 'organic' // organic preselected — the dusk wing's home register
+  style: 'organic' // organic preselected — the AI Corner's home register
 })
 
 // Boris's sequential interview (spec: three questions, one after another,
@@ -103,16 +115,7 @@ const interviewOptions = computed(() => {
     return [...topics, { id: 'continue', label: 'continue →', action: true }]
   }
   if (step.value === 'style') {
-    const list = stylesExpanded.value ? STYLES : STYLES.slice(0, STYLES_PRIMARY)
-    const opts = list.map((s) => ({
-      id: s.id,
-      label: s.label,
-      selected: selections.value.style === s.id
-    }))
-    if (!stylesExpanded.value) {
-      opts.push({ id: 'more-styles', label: 'more moods ↓', action: true })
-    }
-    return opts
+    return STYLES.map((s) => ({ id: s.id, label: s.label, selected: selections.value.style === s.id, theme: s.id }))
   }
   return []
 })
@@ -131,10 +134,6 @@ function answer(id) {
     const t = selections.value.topics
     selections.value.topics = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]
   } else if (step.value === 'style') {
-    if (id === 'more-styles') {
-      stylesExpanded.value = true
-      return
-    }
     selections.value.style = id
     step.value = 'done'
     // compose starts the moment the last answer lands — compose() itself
@@ -177,11 +176,7 @@ async function compose() {
   revealed.value = 0
   const { slowVeins, say } = usePlaza()
   slowVeins.value = true
-  say(
-    'Two models are out in the network now, retrieving and composing your page. ' +
-      'That takes about a minute — wander, and I will have it ready when you are back.',
-    9000
-  )
+  say(COMPOSING_LINE, 9000)
   try {
     let payload
     if (fixtureName) {
@@ -209,12 +204,13 @@ async function compose() {
       )
     }
     state.value = 'ready'
+    pickup.value = plazaZone.value !== 'north'
     say('I composed this from who you told me you are. Poke me if you want to wander.')
     revealStagger() // soft panel assembly, one breath apart
   } catch (e) {
     errorMsg.value = e?.message || String(e)
     state.value = 'error'
-    say('The corner could not compose this time — the night side stays patient.')
+    say('The corner could not compose this time — it stays patient.')
   } finally {
     slowVeins.value = false
   }
@@ -229,7 +225,7 @@ function restart() {
   revealed.value = 0
   state.value = 'idle'
   step.value = 'role'
-  stylesExpanded.value = false
+  pickup.value = false
 }
 
 export function useCompose() {
@@ -242,6 +238,8 @@ export function useCompose() {
     selections,
     compose,
     restart,
+    pickup,
+    clearPickup,
     fixtureName,
     // the Boris interview
     step,
