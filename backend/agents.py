@@ -10,13 +10,19 @@ both sub-2s in probing) gets json_schema WITHOUT the strict flag (Groq
 rejects strict's full-schema rules but honors json_schema structure — the
 client-side parse_json stays as the safety net) and no OpenRouter provider
 routing block. OpenRouter (LLM_BASE_URL override) keeps strict json_schema
-plus require_parameters/allow_fallbacks provider routing.
+plus require_parameters/allow_fallbacks provider routing. NVIDIA NIM is the
+cross-provider fallback rung (NVIDIA_BASE_URL / NVIDIA_API_KEY /
+NVIDIA_MODEL): probed to HANG on response_format json_schema, so that rung
+sends json_object with the schema embedded in the prompt and leans on
+parse_json + pydantic validation.
 Strategy: json_schema response_format -> robust parse -> one retry on the
-same model -> fast fallthrough to the fallback model on 429, all bounded by
-a hard total wall-clock budget (each attempt wrapped in asyncio.wait_for so
-a single hung call can never blow the budget).
+same model -> fast fallthrough to the next endpoint on 429 (same-provider
+fallback first, then the NVIDIA pool), all bounded by a hard total
+wall-clock budget (each attempt wrapped in asyncio.wait_for so a single
+hung call can never blow the budget).
 Models, caps and timing are env-overridable (LLM_BASE_URL, LLM_API_KEY,
-PRIMARY_MODEL, FALLBACK_MODEL, LLM_MAX_TOKENS, LLM_TIMEOUT, LLM_TOTAL_BUDGET)
+PRIMARY_MODEL, FALLBACK_MODEL, NVIDIA_BASE_URL, NVIDIA_API_KEY,
+NVIDIA_MODEL, LLM_MAX_TOKENS, LLM_TIMEOUT, LLM_TOTAL_BUDGET)
 so provider/model A/B runs need no code change. System prompts are loaded
 ONCE at startup from prompts/*.md, so prompt iteration never needs a code
 change.
@@ -66,7 +72,15 @@ LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1400"))
 LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "15"))
 LLM_TOTAL_BUDGET = float(os.getenv("LLM_TOTAL_BUDGET", "20"))
 MAX_ATTEMPTS_PER_MODEL = 2  # initial + one retry
-RATE_LIMIT_BACKOFF = 3.0  # seconds of 429 backoff between attempts
+
+# NVIDIA NIM — cross-provider fallback rung behind the primary provider: a
+# genuinely DIFFERENT capacity pool for when Groq's free TPM (~1-2
+# composes/min) 429s. Key or model unset -> the rung is skipped entirely and
+# the ladder stays exactly as before.
+NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL",
+                            "https://integrate.api.nvidia.com/v1")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "")
 
 T = TypeVar("T")
 
@@ -97,6 +111,24 @@ def get_client() -> AsyncOpenAI:
     if _CLIENT is None:
         _CLIENT = _client()
     return _CLIENT
+
+
+_NVIDIA_CLIENT: AsyncOpenAI | None = None
+
+
+def get_nvidia_client() -> AsyncOpenAI | None:
+    """Dedicated NVIDIA NIM client for the fallback rung; None if unconfigured."""
+    global _NVIDIA_CLIENT
+    if not (NVIDIA_API_KEY and NVIDIA_MODEL):
+        return None
+    if _NVIDIA_CLIENT is None:
+        _NVIDIA_CLIENT = AsyncOpenAI(
+            base_url=NVIDIA_BASE_URL,
+            api_key=NVIDIA_API_KEY,
+            timeout=LLM_TIMEOUT,
+            max_retries=0,  # we own the retry policy (endpoint ladder below)
+        )
+    return _NVIDIA_CLIENT
 
 
 # --- json schema + parsing -------------------------------------------------------
@@ -155,46 +187,83 @@ async def _chat_json(
     schema_name: str,
     temperature: float = 0.2,
 ) -> dict:
-    """Primary model x MAX_ATTEMPTS_PER_MODEL, then fallback model x same.
+    """Ordered endpoint ladder: [PRIMARY_MODEL] -> [FALLBACK_MODEL] -> [NVIDIA].
+
+    Each rung is (endpoint name, client, model) and gets up to
+    MAX_ATTEMPTS_PER_MODEL attempts; a 429 breaks out of the rung IMMEDIATELY
+    so we fall through fast to the next pool (waiting out a Retry-After would
+    blow the sub-10s target — the NVIDIA rung exists precisely as the
+    different-capacity-pool hop). The NVIDIA rung is only present when
+    NVIDIA_API_KEY + NVIDIA_MODEL are configured.
 
     A hard total wall-clock budget (LLM_TOTAL_BUDGET) is the real governor:
     every attempt is wrapped in asyncio.wait_for bounded by the remaining
     budget, so a single hung call can never blow past it; once the deadline
     passes we stop retrying and raise. Returns the parsed JSON dict; raises
     on total failure so the caller can degrade gracefully.
+
+    NVIDIA quirk (probed): response_format json_schema HANGS on NIM, so the
+    NVIDIA rung sends response_format json_object with the schema embedded in
+    the user prompt and relies on parse_json + the caller's pydantic gate.
+    No strict flag, no OpenRouter provider block ever reaches NVIDIA.
     """
+    endpoints: list[tuple[str, AsyncOpenAI, str]] = [
+        ("primary", client, PRIMARY_MODEL),
+        ("fallback", client, FALLBACK_MODEL),
+    ]
+    nvidia_client = get_nvidia_client()
+    if nvidia_client is not None:
+        endpoints.append(("nvidia", nvidia_client, NVIDIA_MODEL))
+
     last_error: Exception | None = None
     deadline = time.monotonic() + LLM_TOTAL_BUDGET
-    for model in (PRIMARY_MODEL, FALLBACK_MODEL):
+    for endpoint, ep_client, model in endpoints:
+        is_nvidia = endpoint == "nvidia"
+        ep_user = user
+        if is_nvidia:
+            # NIM's supported structured mode is json_object: hand the model
+            # the schema in the prompt instead of via response_format.
+            ep_user = (
+                user
+                + "\n\nThe JSON you return MUST conform to this JSON Schema:\n"
+                + json.dumps(json_schema, ensure_ascii=False)
+            )
         for attempt in range(1, MAX_ATTEMPTS_PER_MODEL + 1):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                log.warning("%s: total budget (%.0fs) exhausted on %s — "
-                            "giving up", schema_name, LLM_TOTAL_BUDGET, model)
+                log.warning("%s: total budget (%.0fs) exhausted on %s [%s] — "
+                            "giving up", schema_name, LLM_TOTAL_BUDGET, model,
+                            endpoint)
                 break
             try:
-                log.info("%s: attempt %d on %s", schema_name, attempt, model)
+                log.info("%s: attempt %d on %s [%s endpoint]", schema_name,
+                         attempt, model, endpoint)
                 attempt_started = time.perf_counter()
                 response = await asyncio.wait_for(
-                    client.chat.completions.create(
+                    ep_client.chat.completions.create(
                         model=model,
                         messages=[
                             {"role": "system", "content": system},
-                            {"role": "user", "content": user},
+                            {"role": "user", "content": ep_user},
                         ],
-                        response_format={
-                            "type": "json_schema",
-                            "json_schema": {
-                                "name": schema_name,
-                                # Groq rejects strict's full-schema rules
-                                # (additionalProperties + all-required) but
-                                # honors json_schema without the flag
-                                # (probed: valid JSON, ~1.5s); OpenRouter
-                                # keeps strict=True as before.
-                                **({"strict": True} if _IS_OPENROUTER else {}),
-                                "schema": json_schema,
-                            },
-                        },
+                        response_format=(
+                            # NVIDIA: json_object only (json_schema hangs)
+                            {"type": "json_object"}
+                            if is_nvidia else
+                            {
+                                "type": "json_schema",
+                                "json_schema": {
+                                    "name": schema_name,
+                                    # Groq rejects strict's full-schema rules
+                                    # (additionalProperties + all-required) but
+                                    # honors json_schema without the flag
+                                    # (probed: valid JSON, ~1.5s); OpenRouter
+                                    # keeps strict=True as before.
+                                    **({"strict": True} if _IS_OPENROUTER else {}),
+                                    "schema": json_schema,
+                                },
+                            }
+                        ),
                         temperature=temperature,
                         max_tokens=LLM_MAX_TOKENS,
                         # OpenRouter-only extras: require_parameters keeps us
@@ -202,54 +271,58 @@ async def _chat_json(
                         # prose-instead-of-JSON); allow_fallbacks lets
                         # OpenRouter try other providers of the same model
                         # when one 429s. No "sort: latency" — that pinned us
-                        # to the throttled Decart endpoint. Groq (and any
-                        # non-OpenRouter base) gets no extra_body at all.
+                        # to the throttled Decart endpoint. The NVIDIA rung
+                        # instead gets thinking OFF (nemotron-lightning leaks
+                        # reasoning tokens otherwise — probed); Groq gets no
+                        # extra_body at all.
                         **({"extra_body": {
                             "provider": {
                                 "require_parameters": True,
                                 "allow_fallbacks": True,
                             }
-                        }} if _IS_OPENROUTER else {}),
+                        }} if (_IS_OPENROUTER and not is_nvidia)
+                        else {"extra_body": {
+                            "chat_template_kwargs": {"thinking": False}
+                        }} if is_nvidia else {}),
                     ),
                     timeout=min(LLM_TIMEOUT, remaining),
                 )
                 raw = response.choices[0].message.content
-                log.info("%s: attempt %d on %s succeeded in %d ms "
-                         "(output=%d chars)", schema_name, attempt, model,
+                log.info("%s: attempt %d on %s [%s endpoint] succeeded in "
+                         "%d ms (output=%d chars)", schema_name, attempt,
+                         model, endpoint,
                          int((time.perf_counter() - attempt_started) * 1000),
                          len(raw or ""))
                 return parse_json(raw)
             except asyncio.TimeoutError as exc:
                 last_error = exc
-                log.warning("LLM attempt timed out (%s, attempt %d on %s) "
-                            "after %.0fs cap (%.0f ms elapsed)", schema_name,
-                            attempt, model, min(LLM_TIMEOUT, remaining),
+                log.warning("LLM attempt timed out (%s, attempt %d on %s "
+                            "[%s endpoint]) after %.0fs cap (%.0f ms elapsed)",
+                            schema_name, attempt, model, endpoint,
+                            min(LLM_TIMEOUT, remaining),
                             (time.perf_counter() - attempt_started) * 1000)
             except (APIConnectionError, APITimeoutError, RateLimitError) as exc:
                 last_error = exc
-                log.warning("LLM transport error (%s, attempt %d on %s, "
-                            "%.0f ms elapsed): %s", schema_name, attempt,
-                            model,
+                log.warning("LLM transport error (%s, attempt %d on %s "
+                            "[%s endpoint], %.0f ms elapsed): %s",
+                            schema_name, attempt, model, endpoint,
                             (time.perf_counter() - attempt_started) * 1000,
                             exc)
                 if isinstance(exc, RateLimitError):
                     # Provider-pool 429: waiting out the Retry-After would blow
-                    # the sub-10s target — fall through FAST to the fallback
-                    # model (different provider pool). A short backoff only if
-                    # it fits comfortably inside the remaining budget.
+                    # the sub-10s target — fall through FAST to the next rung
+                    # (different capacity pool; ultimately NVIDIA's).
                     retry_after = exc.response.headers.get("retry-after") \
                         if exc.response is not None else None
-                    log.warning("%s: 429 on %s (retry-after=%s) — falling "
-                                "through to the fallback pool", schema_name,
-                                model, retry_after)
-                    if deadline - time.monotonic() > RATE_LIMIT_BACKOFF * 2:
-                        await asyncio.sleep(RATE_LIMIT_BACKOFF)
+                    log.warning("%s: 429 on %s [%s endpoint] (retry-after=%s) — "
+                                "falling through to the next endpoint",
+                                schema_name, model, endpoint, retry_after)
                     break
             except (APIError, ValidationError, ValueError) as exc:
                 last_error = exc
-                log.warning("LLM/parse error (%s, attempt %d on %s, "
-                            "%.0f ms elapsed): %s", schema_name, attempt,
-                            model,
+                log.warning("LLM/parse error (%s, attempt %d on %s "
+                            "[%s endpoint], %.0f ms elapsed): %s",
+                            schema_name, attempt, model, endpoint,
                             (time.perf_counter() - attempt_started) * 1000,
                             exc)
     raise RuntimeError(

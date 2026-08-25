@@ -446,7 +446,7 @@ watch(expanded, (v) => {
   -webkit-font-smoothing: antialiased;
 }
 .seven ::selection { background: var(--atha-rind); color: var(--atha-clay); }
-.seven button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.seven :where(button) { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .seven :focus-visible { outline: 2px solid var(--atha-ferrous); outline-offset: 3px; }
 
 /* ============ LAYER 1 — tablet cards (InfosZone tablet optics) ============ */
@@ -465,46 +465,47 @@ watch(expanded, (v) => {
 }
 .dirs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  width: min(920px, 94%);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: min(1240px, 97%);
 }
 .dir {
-  background: rgba(250, 247, 240, 0.93);
+  background: rgba(250, 247, 240, 0.7);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 251, 240, 0.9);
   border-radius: 22px 26px 24px 20px;
-  padding: 18px 20px;
+  padding: 20px 34px;
   box-shadow: 0 10px 30px rgba(30, 40, 45, 0.14);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   text-align: left;
   color: #241f1b;
   transition: transform 0.35s var(--atha-ease), box-shadow 0.35s var(--atha-ease), background 0.35s ease;
 }
 .dir:hover {
   transform: translateY(-4px);
-  background: rgba(252, 250, 244, 0.97);
+  background: rgba(252, 250, 244, 0.8);
   box-shadow: 0 16px 38px rgba(30, 40, 45, 0.2);
 }
 .dir-no {
   font-family: var(--atha-font-mono);
-  font-size: 11.5px;
+  font-size: 12px;
   letter-spacing: 0.22em;
-  color: rgba(43, 38, 34, 0.55);
+  color: #3b3530;
 }
 .dir-name {
   font-family: var(--atha-font-display);
   font-weight: 400;
   font-variation-settings: "opsz" 40;
-  font-size: 19px;
+  font-size: 26px;
   line-height: 1.2;
 }
 .dir-teaser {
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.7;
+  letter-spacing: normal;
+  color: #55504a;
 }
 
 /* ============ LAYER 2 — overlay + panel ============ */

@@ -41,6 +41,36 @@ const { goTo } = usePlaza()
 </template>
 
 <style scoped>
+/* white readability halo behind the copy column: sits at z0 so the
+   veins blossom (VeinsOverlay z1, painted above the tiles) stays
+   visible ABOVE it, while the copy (.zone > * z2) stays above both —
+   paint order: halo < flower < text */
+.zone-center::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* the drawn ring around the copy is the veins blossom (VeinsOverlay
+     .blossom): petal tips sit at 292 SVG units * 0.6 scale = 175.2 units,
+     and the 3000-unit viewBox spans 300vw/300vh (10 units = 1vw/1vh), so
+     the ring's box is 35.04vw x 35.04vh on the tile center. The halo sits
+     ~3% inside that box so the fade completes just before the ring edge
+     and nothing washes outside the circle anymore. */
+  /* size is owner-dialed live via --halo-size (tune bar, default 66): the
+     raw number scales 1:1 into vw/vh so the halo stays a circle in viewport
+     terms at any dial */
+  width: calc(var(--halo-size, 66) * 1vw);
+  height: calc(var(--halo-size, 66) * 1vh);
+  transform: translate(-50%, -50%);
+  /* holds its strength across the text area, fades only near the rim;
+     core alpha is owner-dialed via --halo-alpha (tune bar, 100% default) */
+  background: radial-gradient(closest-side,
+    rgba(255, 255, 255, var(--halo-alpha, 1)) 0%,
+    rgba(255, 255, 255, var(--halo-alpha, 1)) 55%,
+    rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
 .zone-copy {
   position: absolute;
   inset: 0;
@@ -111,15 +141,19 @@ const { goTo } = usePlaza()
 .signpost button {
   pointer-events: auto;
   position: absolute;
+  /* z0 owns a stacking context so the halo (::before z-1) paints
+     behind the label text but never escapes under the tile background */
+  z-index: 0;
   background: none;
   border: none;
   cursor: pointer;
   padding: 12px 22px;
   font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
   font-size: 12px;
+  font-weight: 600;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: rgba(43, 38, 34, 0.7);
+  color: rgba(43, 38, 34, 0.9);
   text-shadow: 0 1px 0 rgba(255, 251, 240, 0.65);
   opacity: 0.75;
   transition: opacity 0.3s ease;
@@ -130,11 +164,22 @@ const { goTo } = usePlaza()
 .signpost button::before {
   content: '';
   position: absolute;
+  /* tucks the halo behind the button's own text node (see z-index: 0 above) */
+  z-index: -1;
   inset: -18px -36px;
-  background: radial-gradient(closest-side, rgba(224, 216, 201, 0.35), rgba(224, 216, 201, 0) 100%);
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 100%);
   opacity: 1;
   transition: opacity 0.3s ease;
+  /* breathing pulse so the arm reads as alive/clickable; hover
+     kills the animation so its opacity: 0 fade-out wins (below) */
+  animation: signpost-breathe 2.5s ease-in-out infinite alternate;
   pointer-events: none;
+}
+@keyframes signpost-breathe {
+  /* var() resolves per element: the tune bar's --signpost-pulse sets the
+     dark end of the breath, so the slider dials the pulse depth live */
+  from { opacity: var(--signpost-pulse, 0); }
+  to { opacity: 1; }
 }
 .signpost button:hover,
 .signpost button:focus-visible {
@@ -143,7 +188,11 @@ const { goTo } = usePlaza()
 }
 .signpost button:hover::before,
 .signpost button:focus-visible::before {
+  animation: none;
   opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signpost button::before { animation: none; }
 }
 /* 14px inset compensates the 12px halo padding, so the labels sit at the
    same visual position as before the aura was added */

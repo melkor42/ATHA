@@ -91,14 +91,14 @@ Inherited from the Hadora experience system; ATHA-specific values:
 
 ### Gate copy — EXACT, must match `frontend/src/composables/useGate.js`
 
-Q1 — "How are you meeting Atha today?"
-- "I am discovering Atha for the first time"
+Q1 — "How are you meeting ATHA today?"
+- "I am discovering ATHA for the first time"
 - "I am deciding whether to attend"
 - "I am preparing to come"
-- "I have already experienced Atha" (after the event only)
+- "I have already experienced ATHA" (after the event only)
 
 Q2 — "What would be most helpful now?"
-- "Help me understand what Atha is"
+- "Help me understand what ATHA is"
 - "Show me the essential details"
 - "Guide me into the atmosphere"
 - "Let me explore in my own way"

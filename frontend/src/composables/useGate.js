@@ -25,10 +25,11 @@ export const Q2 = {
 
 // Q2 answer → recommended direction (spec §4)
 export const ROUTE = {
-  understand: { zone: 'south', slow: false },
-  essential: { zone: 'west', slow: false },
-  atmosphere: { zone: 'south', slow: true },
-  explore: { zone: 'north', slow: false }
+  understand: { zone: 'west', slow: false },
+  essential: { zone: 'south', slow: false },
+  atmosphere: { zone: 'north', slow: true },
+  // routeless by spec: explore closes the gate without a lit path
+  explore: { zone: null, slow: false }
 }
 
 const step = ref('idle') // idle | q1 | q2 | closing | done
@@ -71,7 +72,9 @@ export function useGate() {
   function answer2(id) {
     console.info('[atha:gate] Q2 answered', { answer: id, route: ROUTE[id]?.zone ?? null })
     a2.value = id
-    step.value = 'closing'
+    // a routeless answer (explore) skips the closing step entirely:
+    // no lit path, no closing line, no travel — the gate simply closes
+    step.value = ROUTE[id]?.zone ? 'closing' : 'done'
     seen.value = true
     try {
       sessionStorage.setItem('athaExplorationMode', id)

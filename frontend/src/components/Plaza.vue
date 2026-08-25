@@ -17,7 +17,7 @@ import RegisterZone from './zones/RegisterZone.vue'
 // The Town Square shell (spec §2): one place, five zones, a soft camera.
 // Wheel/touch/keys/veins/compass all resolve to goTo(); from a wing, any
 // direction first steps back onto the center — spatially honest.
-const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, borisOpacity, setBorisOpacity, note } = usePlaza()
+const { current, traveling, reduced, travelMs, goTo, setPulse, setTravelMs, veil, setVeil, borisOpacity, setBorisOpacity, haloOpacity, setHaloOpacity, haloSize, setHaloSize, signpostPulse, setSignpostPulse, note } = usePlaza()
 const { step, seen, route, visibleQ1, start, answer1, answer2, finish } = useGate()
 const {
   state: composeState,
@@ -232,7 +232,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   <div
     class="plaza"
     :class="{ reduced, arriving: !arrived }"
-    :style="{ '--veil-strength': veil / 100, '--boris-alpha': borisOpacity / 100 }"
+    :style="{ '--veil-strength': veil / 100, '--boris-alpha': borisOpacity / 100, '--halo-alpha': haloOpacity / 100, '--halo-size': haloSize, '--signpost-pulse': signpostPulse / 100 }"
     @wheel.passive="onWheel"
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
@@ -284,6 +284,39 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           step="1"
           :value="borisOpacity"
           @input="setBorisOpacity(Number($event.target.value))"
+        />
+      </label>
+      <label class="travel-pill halo-pill">
+        <span>center halo · {{ haloOpacity }}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          :value="haloOpacity"
+          @input="setHaloOpacity(Number($event.target.value))"
+        />
+      </label>
+      <label class="travel-pill halo-size-pill">
+        <span>halo size · {{ haloSize }}</span>
+        <input
+          type="range"
+          min="20"
+          max="80"
+          step="1"
+          :value="haloSize"
+          @input="setHaloSize(Number($event.target.value))"
+        />
+      </label>
+      <label class="travel-pill pulse-pill">
+        <span>signpost pulse · {{ signpostPulse }}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          :value="signpostPulse"
+          @input="setSignpostPulse(Number($event.target.value))"
         />
       </label>
     </div>

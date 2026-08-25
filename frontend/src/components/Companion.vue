@@ -304,8 +304,8 @@ watch(activeLine, (v) => {
   width: 230px;
   padding: 12px 16px;
   /* bubble translucency is tunable: --boris-alpha is bound on the plaza
-     root (owner ?tune slider), the fallback keeps 20% transparency */
-  background: rgba(248, 244, 236, var(--boris-alpha, 0.8));
+     root (owner ?tune slider), the fallback keeps 27% transparency */
+  background: rgba(248, 244, 236, var(--boris-alpha, 0.73));
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 251, 240, 0.7);
   border-radius: 26px 22px 6px 24px;
@@ -388,25 +388,25 @@ watch(activeLine, (v) => {
 }
 .companion-option.theme-minimal {
   font-family: 'Inter', sans-serif;
-  background: rgba(255, 255, 255, var(--boris-alpha, 0.8));
+  background: rgba(255, 255, 255, var(--boris-alpha, 0.73));
   color: #2b2926;
   border-color: rgba(150, 146, 140, 0.4);
 }
 .companion-option.theme-retro {
   font-family: 'VT323', ui-monospace, monospace;
   font-size: 15px;
-  background: rgba(12, 15, 10, var(--boris-alpha, 0.8));
+  background: rgba(12, 15, 10, var(--boris-alpha, 0.73));
   color: #7dff9e;
   border-color: rgba(64, 255, 200, 0.5);
 }
 .companion-option.theme-earth {
-  background: rgba(201, 154, 91, var(--boris-alpha, 0.8));
+  background: rgba(201, 154, 91, var(--boris-alpha, 0.73));
   color: #332414;
   border: 2px solid #57493a;
 }
 .companion-option.theme-steampunk {
   font-family: 'Oswald', 'Arial Narrow', sans-serif;
-  background: linear-gradient(180deg, rgba(217, 169, 95, var(--boris-alpha, 0.8)), rgba(192, 138, 62, var(--boris-alpha, 0.8)));
+  background: linear-gradient(180deg, rgba(217, 169, 95, var(--boris-alpha, 0.73)), rgba(192, 138, 62, var(--boris-alpha, 0.73)));
   color: #16110a;
   border-color: #5a4020;
 }
@@ -416,7 +416,7 @@ watch(activeLine, (v) => {
 /* retro keeps a dark ground on hover — the generic hover wash would
    bleach the phosphor text unreadable */
 .companion-option.theme-retro:hover {
-  background: rgba(22, 34, 26, var(--boris-alpha, 0.8));
+  background: rgba(22, 34, 26, var(--boris-alpha, 0.73));
   color: #a8ffc4;
 }
 /* compact + centered: six moods fit the bubble without towering over it */
@@ -459,14 +459,14 @@ watch(activeLine, (v) => {
   flex: 0 0 auto;
   align-self: center;
   text-align: center;
-  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.8)), rgba(226, 120, 78, var(--boris-alpha, 0.8)));
+  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.73)), rgba(226, 120, 78, var(--boris-alpha, 0.73)));
   border-color: transparent;
   color: #241f1b;
   font-weight: 600;
   box-shadow: 0 8px 22px rgba(226, 120, 78, 0.35);
 }
 .companion-option.action:hover {
-  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.8)), rgba(226, 120, 78, var(--boris-alpha, 0.8)));
+  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.73)), rgba(226, 120, 78, var(--boris-alpha, 0.73)));
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(226, 120, 78, 0.45);
 }
