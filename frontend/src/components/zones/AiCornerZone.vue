@@ -210,10 +210,16 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   text-shadow: 0 0 24px rgba(127, 227, 240, 0.35);
 }
 
-/* CAM's explanation of what happens here */
+/* CAM's explanation of what happens here — a dark card surface so the
+   light text never washes out over the photo, in the wisdom-corner card
+   language but in this wing's night material */
 .cam-intro {
   width: min(720px, 94%);
   margin: 0;
+  background: rgba(10, 18, 22, 0.85);
+  border: 1px solid rgba(127, 227, 240, 0.16);
+  border-radius: 22px;
+  padding: 28px 36px;
   color: rgba(241, 237, 230, 0.72);
   font-size: 14px;
   line-height: 1.65;
