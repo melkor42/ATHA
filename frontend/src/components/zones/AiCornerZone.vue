@@ -5,7 +5,7 @@ import NetworkGraph from '../NetworkGraph.vue'
 import Theater from '../Theater.vue'
 import { useCompose, ROLES, STYLES } from '../../composables/useCompose.js'
 import { ACCENT_HUES, DEFAULT_HUES } from '../../theme.js'
-import bg from '../../assets/plaza/north.png'
+import bg from '../../assets/plaza/north.jpg'
 
 // S3 North — AI Corner (spec §3): the plaza's composed-live zone. Everything
 // here is composed live from the existing backend. The ritual is three
