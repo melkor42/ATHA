@@ -360,23 +360,53 @@ def render_pool(rows: list[dict], events: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def render_knowledge_bundle(bundle: dict | None) -> str:
+    """Render a knowledge_for() bundle for the compose prompt: the visitor's
+    most important questions plus the grounded passages answering them."""
+    if not bundle or not bundle.get("questions"):
+        return ""
+    lines = ["Visitor's most important questions — answer these with "
+             "TextBlocks, in order:"]
+    for i, q in enumerate(bundle["questions"], 1):
+        lines.append(f"Q{i}. {q['text']}")
+        for a in q["answers"]:
+            heading = " › ".join(a.get("heading_path") or [])
+            text = " ".join((a.get("text") or "").split())
+            if len(text) > 300:
+                text = text[:297] + "..."
+            lines.append(f"  [{a.get('status', '?')}] ({heading}): {text}")
+    if bundle.get("supporting"):
+        lines.append("")
+        lines.append("Supporting knowledge (optional extra grounding):")
+        for s in bundle["supporting"]:
+            text = " ".join((s.get("text") or "").split())
+            if len(text) > 150:
+                text = text[:147] + "..."
+            lines.append(f"- [{s.get('score', 0):.2f}] {text}")
+    return "\n".join(lines)
+
+
 async def experience_agent(
     persona: PersonaModel,
     pool_text: str,
     allowed_ids: set[str],
     client: AsyncOpenAI | None = None,
+    knowledge_text: str = "",
 ) -> ExperienceSchema:
-    """PersonaModel + data pool -> ExperienceSchema draft (entities left empty)."""
+    """PersonaModel + data pool (+ optional knowledge bundle) -> ExperienceSchema
+    draft (entities left empty)."""
     client = client or get_client()
     user = (
         "PersonaModel of the visitor:\n"
         f"{json.dumps(persona.model_dump(), ensure_ascii=False)}\n\n"
         "Allowed entity ids (entity_ids may ONLY contain ids from this list):\n"
         f"{json.dumps(sorted(allowed_ids), ensure_ascii=False)}\n\n"
-        f"Data pool retrieved from the SIGNAL network graph:\n{pool_text}\n\n"
+        f"Data pool retrieved from the ATHA network graph:\n{pool_text}\n\n"
         "Compose the ExperienceSchema JSON now. Leave \"entities\" empty — the "
         "server hydrates it. Respond with JSON only."
     )
+    if knowledge_text:
+        user += f"\n\n{knowledge_text}"
     data = await _chat_json(
         client,
         system=EXPERIENCE_SYSTEM,

@@ -1,0 +1,289 @@
+{
+  "cluster": "methodology",
+  "documents": [
+    {
+      "file": "Assessment Framework.md",
+      "perspective": "joint",
+      "default_status": "proposed",
+      "default_roles": ["student", "warwick", "business"],
+      "default_visitor_states": ["deciding", "preparing"],
+      "default_supports": ["lens-desirability", "lens-feasibility", "lens-viability", "lens-scalability", "lens-responsibility"],
+      "default_answered_questions": ["q05-how-judged", "q09-challenge-evaluated"],
+      "section_overrides": [
+        {
+          "match_hint": "Opening: three overlapping rubric versions, reconciliation proposal",
+          "match_any": ["not yet one approved", "three overlapping versions"],
+          "supports": [],
+          "answered_questions": ["q05-how-judged"],
+          "note": "Frames the rubric-variant conflict honestly before any lens detail"
+        },
+        {
+          "match_hint": "1. Assessment objective — quality of viability judgement",
+          "match_any": ["1. Assessment objective"],
+          "status": "confirmed",
+          "answered_questions": ["q05-how-judged", "q09-challenge-evaluated"],
+          "note": "Core assessment philosophy: judging the verdict, not the pitch; do-not-proceed can score highest"
+        },
+        {
+          "match_hint": "2. Scoring structure — weight table 15/20/20/15/20/10",
+          "match_any": ["2. Scoring structure"],
+          "supports": ["area-desirability-v1", "area-feasibility-v1", "area-viability-v1", "area-scalability-v1", "area-responsibility-v1", "area-decision-integrity-v1"],
+          "note": "assessment_doc_v1 weights — versioned variant, never the single truth"
+        },
+        {
+          "match_hint": "3. Desirability — 15 points",
+          "match_any": ["3. Desirability"],
+          "supports": ["area-desirability-v1", "lens-desirability"],
+          "note": "Judge sub-questions for desirability"
+        },
+        {
+          "match_hint": "4. Feasibility — 20 points",
+          "match_any": ["4. Feasibility"],
+          "supports": ["area-feasibility-v1", "lens-feasibility"],
+          "note": "Judge sub-questions for feasibility"
+        },
+        {
+          "match_hint": "5. Viability — 20 points",
+          "match_any": ["5. Viability"],
+          "supports": ["area-viability-v1", "lens-viability"],
+          "answered_questions": ["q05-how-judged", "q09-challenge-evaluated", "q08-partner-receives"],
+          "note": "Business-case reasoning also shows partners the decision quality they receive"
+        },
+        {
+          "match_hint": "6. Scalability — 15 points",
+          "match_any": ["6. Scalability"],
+          "supports": ["area-scalability-v1", "lens-scalability"],
+          "note": "Judge sub-questions for scalability"
+        },
+        {
+          "match_hint": "7. Responsibility — 20 points",
+          "match_any": ["7. Responsibility"],
+          "supports": ["area-responsibility-v1", "lens-responsibility"],
+          "note": "Serious responsibility issue blocks deployment regardless of score"
+        },
+        {
+          "match_hint": "8. Decision integrity and transparency — 10 points",
+          "match_any": ["8. Decision integrity"],
+          "supports": ["area-decision-integrity-v1"],
+          "note": "Evidence quality, AI audit log, defence and communication"
+        },
+        {
+          "match_hint": "9. Scoring scale — five levels",
+          "match_any": ["9. Scoring scale"],
+          "answered_questions": ["q05-how-judged"],
+          "note": "Shared five-level scale with justification requirement"
+        },
+        {
+          "match_hint": "10. Final recommendation categories",
+          "match_any": ["10. Final recommendation"],
+          "supports": ["rec-proceed", "rec-conditional-pilot", "rec-reframe", "rec-do-not-proceed"],
+          "note": "assessment_doc_v1 categories — distinct from product's four verdict states; both stored as variants"
+        },
+        {
+          "match_hint": "11. Assessment safeguards",
+          "match_any": ["11. Assessment safeguards"],
+          "roles": ["warwick", "business"],
+          "answered_questions": ["q09-challenge-evaluated"],
+          "note": "Calibration, independent scoring, audit-log eligibility — process detail for judges/partners"
+        }
+      ]
+    },
+    {
+      "file": "Judge Setup.md",
+      "perspective": "operational",
+      "default_status": "open",
+      "default_roles": [],
+      "default_visitor_states": [],
+      "default_supports": [],
+      "default_answered_questions": [],
+      "internal": true,
+      "section_overrides": []
+    },
+    {
+      "file": "Team Setup.md",
+      "perspective": "joint",
+      "default_status": "proposed",
+      "default_roles": ["student", "warwick"],
+      "default_visitor_states": ["deciding", "preparing"],
+      "default_supports": ["func-domain-expert", "func-ai-workflow-lead", "func-responsible-ai-risk", "func-business-viability-coordinator", "func-pitch-design-lead"],
+      "default_answered_questions": ["q03-role-fits-me", "q04-teams-formed"],
+      "section_overrides": [
+        {
+          "match_hint": "Opening principle: deliberately constructed unit",
+          "match_any": ["deliberately constructed unit"],
+          "status": "confirmed",
+          "note": "The team-design principle: a unit built to reach a board-ready decision"
+        },
+        {
+          "match_hint": "The strongest setup: five functions list",
+          "match_any": ["The strongest setup is"],
+          "status": "confirmed",
+          "answered_questions": ["q03-role-fits-me"],
+          "note": "The five functions a visitor maps themselves against"
+        },
+        {
+          "match_hint": "Individual registration, skills over degree titles",
+          "match_any": ["Participants should register individually"],
+          "answered_questions": ["q04-teams-formed", "q03-role-fits-me"],
+          "note": "Skills-first matching; degree titles alone never decide"
+        },
+        {
+          "match_hint": "Formation process steps 1-5",
+          "match_any": ["A good formation process combines"],
+          "answered_questions": ["q04-teams-formed"],
+          "note": "Algorithmic structure plus human judgement, transparent placement"
+        },
+        {
+          "match_hint": "Size configurations table 4/5/6",
+          "match_any": ["The practical configurations"],
+          "visitor_states": ["preparing"],
+          "answered_questions": ["q04-teams-formed"],
+          "note": "Operational detail for people preparing to attend"
+        },
+        {
+          "match_hint": "Sixth participant guidance",
+          "match_any": ["A sixth participant should not"],
+          "visitor_states": ["preparing"],
+          "answered_questions": ["q04-teams-formed"],
+          "note": "Sixth role dictated by challenge and pool, never automatic"
+        },
+        {
+          "match_hint": "Diversity soft preferences + unresolved questions",
+          "match_any": ["Diversity should be encouraged", "main unresolved questions"],
+          "status": "open",
+          "answered_questions": ["q04-teams-formed"],
+          "note": "Explicitly open: skill verification, AI shortages, allocation order"
+        }
+      ]
+    },
+    {
+      "file": "Team Recruiting & Channels.md",
+      "perspective": "operational",
+      "default_status": "proposed",
+      "default_roles": ["student", "warwick"],
+      "default_visitor_states": ["deciding", "preparing"],
+      "default_supports": ["func-domain-expert", "func-ai-workflow-lead", "func-responsible-ai-risk", "func-business-viability-coordinator", "func-pitch-design-lead"],
+      "default_answered_questions": ["q03-role-fits-me"],
+      "section_overrides": [
+        {
+          "match_hint": "Opening principle + function-to-subjects table",
+          "match_any": ["The strongest recruitment approach", "Team function|Suitable subjects"],
+          "status": "confirmed",
+          "note": "Function -> subjects map is exactly what answers 'which role fits me'"
+        },
+        {
+          "match_hint": "Recommended channel mix 1-7",
+          "match_any": ["Recommended channel mix", "The best channels are likely"],
+          "roles": ["warwick"],
+          "answered_questions": [],
+          "note": "Channel operations matter to the institution, not the visitor"
+        },
+        {
+          "match_hint": "Recruitment priorities and dynamic shifting",
+          "match_any": ["Recruitment priorities"],
+          "answered_questions": ["q03-role-fits-me"],
+          "note": "Priority shifts as registrations arrive"
+        },
+        {
+          "match_hint": "Not a coding-only hackathon positioning",
+          "match_any": ["not a coding-only hackathon"],
+          "answered_questions": ["q02-why-different", "q03-role-fits-me"],
+          "note": "Multidisciplinary positioning — a differentiator visitors care about"
+        }
+      ]
+    },
+    {
+      "file": "Event Format.md",
+      "perspective": "operational",
+      "default_status": "proposed",
+      "default_roles": ["student", "warwick"],
+      "default_visitor_states": ["preparing"],
+      "default_supports": [],
+      "default_answered_questions": ["q06-day-to-day"],
+      "section_overrides": [
+        {
+          "match_hint": "Opening: 48h Warwick Standard, planning model not confirmed",
+          "match_any": ["clearest working design"],
+          "answered_questions": ["q06-day-to-day"],
+          "note": "Conflicts with Edition 001 direction (45/9); stays framed as planning model"
+        },
+        {
+          "match_hint": "Overall format",
+          "match_any": ["^Overall format$"],
+          "answered_questions": ["q06-day-to-day"],
+          "note": "30 students, six teams, three challenges, viability verdicts"
+        },
+        {
+          "match_hint": "Location and spaces",
+          "match_any": ["Location and spaces"],
+          "status": "open",
+          "supports": ["org-wbs"],
+          "answered_questions": ["q06-day-to-day"],
+          "note": "Venue availability unconfirmed"
+        },
+        {
+          "match_hint": "Working schedule Fri/Sat/Sun",
+          "match_any": ["^Working schedule$", "Friday\n- 5:00", "7:30–8:30am — Breakfast"],
+          "supports": ["stage-arrive-settle", "stage-open-sense", "stage-connect", "stage-create", "stage-discern", "stage-celebrate", "stage-integrate-return"],
+          "answered_questions": ["q06-day-to-day"],
+          "note": "The daily rhythm — the concrete answer to day-to-day life"
+        },
+        {
+          "match_hint": "Food and refreshments",
+          "match_any": ["Food and refreshments"],
+          "supports": ["hadora-design-conditions"],
+          "answered_questions": ["q06-day-to-day"],
+          "note": "Food as part of performance and wellbeing — conditions design"
+        },
+        {
+          "match_hint": "Accommodation and rest",
+          "match_any": ["Accommodation and rest"],
+          "status": "open",
+          "answered_questions": ["q06-day-to-day"],
+          "note": "Eligibility, booking and overnight security still open"
+        },
+        {
+          "match_hint": "Travel",
+          "match_any": ["^Travel$", "No organised group transport"],
+          "status": "open",
+          "answered_questions": ["q06-day-to-day"],
+          "note": "Shard finale conditional on funding and transport"
+        },
+        {
+          "match_hint": "People and support staffing",
+          "match_any": ["People and support"],
+          "roles": ["warwick"],
+          "answered_questions": [],
+          "note": "Staffing model is institutional detail"
+        },
+        {
+          "match_hint": "Budget position",
+          "match_any": ["Budget position"],
+          "status": "open",
+          "roles": ["warwick", "business"],
+          "answered_questions": [],
+          "note": "Planning allowance, not validated total — institutional/partner-facing"
+        },
+        {
+          "match_hint": "What remains unresolved",
+          "match_any": ["What remains unresolved"],
+          "status": "open",
+          "roles": ["warwick", "business"],
+          "answered_questions": [],
+          "note": "Honest open-decisions list"
+        }
+      ]
+    },
+    {
+      "file": "WBS focused network.md",
+      "perspective": "operational",
+      "default_status": "proposed",
+      "default_roles": [],
+      "default_visitor_states": [],
+      "default_supports": ["org-wbs"],
+      "default_answered_questions": [],
+      "internal": true,
+      "section_overrides": []
+    }
+  ]
+}

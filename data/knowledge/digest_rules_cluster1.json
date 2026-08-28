@@ -1,0 +1,1093 @@
+{
+  "cluster": "identity",
+  "documents": [
+    {
+      "file": "ATHA vision & Mission.md",
+      "perspective": "joint",
+      "default_status": "proposed",
+      "default_roles": [
+        "student",
+        "warwick",
+        "business"
+      ],
+      "default_visitor_states": [
+        "discovering",
+        "deciding"
+      ],
+      "default_supports": [
+        "org-onemundi"
+      ],
+      "default_answered_questions": [
+        "q02-why-different"
+      ],
+      "section_overrides": [
+        {
+          "match_hint": "Core formulation heading and vision/mission short lines",
+          "match_any": [
+            "Core formulation"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q01-what-is-atha",
+            "q02-why-different"
+          ],
+          "note": "The canonical one-line vision and mission are settled definitional passages."
+        },
+        {
+          "match_hint": "Expanded vision of ATHA with bullet list",
+          "match_any": [
+            "The vision of ATHA"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q01-what-is-atha",
+            "q02-why-different"
+          ],
+          "note": "Expanded vision adds contextual intelligence, holistic assessment, and human flourishing detail."
+        },
+        {
+          "match_hint": "Expanded mission of ATHA with bullet list",
+          "match_any": [
+            "The mission of ATHA"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q01-what-is-atha",
+            "q02-why-different"
+          ],
+          "note": "Expanded mission enumerates the eight capacities ATHA enables."
+        },
+        {
+          "match_hint": "What ATHA brings together — partner roles",
+          "match_any": [
+            "What ATHA brings together"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q14-wbs-role"
+          ],
+          "note": "Defines each principal partner contribution including WBS educational role."
+        },
+        {
+          "match_hint": "Mission in practice — five commitments",
+          "match_any": [
+            "The mission in practice"
+          ],
+          "supports": [
+            "hadora-design-conditions",
+            "lens-desirability",
+            "lens-scalability",
+            "lens-responsibility",
+            "verdict-proceed",
+            "verdict-redirect",
+            "verdict-pause",
+            "verdict-reject"
+          ],
+          "answered_questions": [
+            "q06-day-to-day",
+            "q08-partner-receives",
+            "q13-education-research"
+          ],
+          "note": "Five commitments are aspirational programme design; experience conditions map to hadora-design-conditions."
+        },
+        {
+          "match_hint": "Ambition beyond the first ATHA",
+          "match_any": [
+            "The ambition beyond"
+          ],
+          "answered_questions": [
+            "q12-after-experience"
+          ],
+          "note": "Future ecosystem ambition is clearly flagged as larger aspiration beyond Edition 001."
+        },
+        {
+          "match_hint": "Success criteria bullets",
+          "match_any": [
+            "What success looks like"
+          ],
+          "answered_questions": [
+            "q07-takeaway",
+            "q08-partner-receives"
+          ],
+          "note": "Success criteria describe intended outcomes that no edition has yet demonstrated."
+        },
+        {
+          "match_hint": "Final synthesis restating Vision/Mission/Ultimate ambition",
+          "match_any": [
+            "Final synthesis"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q01-what-is-atha",
+            "q02-why-different"
+          ],
+          "note": "Restates the core confirmed formulation in three lines."
+        }
+      ]
+    },
+    {
+      "file": "Why ATHA exists.md",
+      "perspective": "om",
+      "default_status": "confirmed",
+      "default_roles": [
+        "student",
+        "warwick",
+        "business"
+      ],
+      "default_visitor_states": [
+        "discovering",
+        "deciding"
+      ],
+      "default_supports": [],
+      "default_answered_questions": [
+        "q02-why-different"
+      ],
+      "section_overrides": [
+        {
+          "match_hint": "Short answer — concise statement of why ATHA exists",
+          "match_any": [
+            "Short answer"
+          ],
+          "answered_questions": [
+            "q01-what-is-atha",
+            "q02-why-different"
+          ],
+          "note": "Most concise statement of why ATHA exists; high-value for discovering visitors."
+        },
+        {
+          "match_hint": "AI understood too narrowly — contextual intelligence framing",
+          "match_any": [
+            "AI is being understood too narrowly"
+          ],
+          "supports": [
+            "org-onemundi",
+            "lens-desirability",
+            "lens-feasibility",
+            "lens-viability",
+            "lens-scalability",
+            "lens-responsibility"
+          ],
+          "answered_questions": [
+            "q09-challenge-evaluated"
+          ],
+          "note": "Introduces contextual intelligence and five-lens assessment contrast with narrow AI."
+        },
+        {
+          "match_hint": "Wrong first question — verdict before build",
+          "match_any": [
+            "wrong first question"
+          ],
+          "supports": [
+            "verdict-proceed",
+            "verdict-redirect",
+            "verdict-pause",
+            "verdict-reject"
+          ],
+          "answered_questions": [
+            "q05-how-judged",
+            "q09-challenge-evaluated"
+          ],
+          "note": "Contrasts ATHA with prototype-first events; introduces verdict-before-build philosophy."
+        },
+        {
+          "match_hint": "Outstanding work should not require exhaustion",
+          "match_any": [
+            "should not require exhaustion"
+          ],
+          "supports": [
+            "hadora-design-conditions",
+            "hadora-life-love-laughs",
+            "hadora-ambition-without-depletion"
+          ],
+          "answered_questions": [
+            "q06-day-to-day",
+            "q07-takeaway"
+          ],
+          "note": "Describes daily rhythm elements participants will experience; HADORA-flavoured reason."
+        },
+        {
+          "match_hint": "OneMundi philosophy must be experienced",
+          "match_any": [
+            "philosophy must be experienced"
+          ],
+          "supports": [
+            "org-onemundi"
+          ],
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "visitor_states": [
+            "deciding"
+          ],
+          "roles": [
+            "business"
+          ],
+          "note": "Partner-facing passage explaining why the experience itself is evidence."
+        },
+        {
+          "match_hint": "Education and industry too disconnected",
+          "match_any": [
+            "education and industry are too disconnected"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research",
+            "q14-wbs-role"
+          ],
+          "note": "Articulates the education-industry bridge; names WBS and student access to real challenges."
+        },
+        {
+          "match_hint": "AI-native era needs different changemakers",
+          "match_any": [
+            "needs different changemakers"
+          ],
+          "supports": [
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q07-takeaway",
+            "q13-education-research",
+            "q14-wbs-role"
+          ],
+          "note": "Changemaker development rationale with explicit WBS educational interest."
+        },
+        {
+          "match_hint": "OneMundi needs a living methodology",
+          "match_any": [
+            "OneMundi needs a living methodology"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research"
+          ],
+          "note": "Methodology co-ownership between OM and WBS; each activation strengthens the next."
+        },
+        {
+          "match_hint": "OneMundi thesis requires evidence",
+          "match_any": [
+            "thesis requires evidence"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research"
+          ],
+          "note": "Research programme rationale; explicitly frames ATHA as beginning of evidence, not instant validation."
+        },
+        {
+          "match_hint": "Innovation needs an ecosystem, not another event",
+          "match_any": [
+            "ecosystem, not another event"
+          ],
+          "answered_questions": [
+            "q12-after-experience"
+          ],
+          "note": "Ecosystem continuity argument; the event activates, the ecosystem compounds."
+        },
+        {
+          "match_hint": "Safer entry into transformation",
+          "match_any": [
+            "safer entry into transformation"
+          ],
+          "supports": [
+            "org-onemundi"
+          ],
+          "answered_questions": [
+            "q08-partner-receives",
+            "q12-after-experience"
+          ],
+          "roles": [
+            "business"
+          ],
+          "visitor_states": [
+            "deciding"
+          ],
+          "note": "Lower-risk entry point for enterprise partners; pathway into longer OM transformation."
+        },
+        {
+          "match_hint": "Business innovation should be joyful",
+          "match_any": [
+            "innovation should be joyful"
+          ],
+          "supports": [
+            "hadora-life-love-laughs",
+            "hadora-ambition-without-depletion"
+          ],
+          "answered_questions": [
+            "q07-takeaway"
+          ],
+          "note": "Human conviction that building the future should feel alive; joy as energy source."
+        },
+        {
+          "match_hint": "What ATHA ultimately wants to prove",
+          "match_any": [
+            "ultimately wants to prove"
+          ],
+          "note": "Synthesises the proof goals across all reasons."
+        }
+      ]
+    },
+    {
+      "file": "Why ATHA exists (HADORA view).md",
+      "perspective": "hadora",
+      "default_status": "confirmed",
+      "default_roles": [
+        "student",
+        "warwick",
+        "business"
+      ],
+      "default_visitor_states": [
+        "discovering"
+      ],
+      "default_supports": [],
+      "default_answered_questions": [],
+      "section_overrides": [
+        {
+          "match_hint": "New model of ambition — challenges pressure/depletion assumption",
+          "match_any": [
+            "new model of ambition"
+          ],
+          "supports": [
+            "hadora-ambition-without-depletion",
+            "hadora-design-conditions"
+          ],
+          "answered_questions": [
+            "q07-takeaway"
+          ],
+          "note": "Core HADORA principle: ambitious work from presence, trust, balance rather than exhaustion."
+        },
+        {
+          "match_hint": "Make the future of work tangible — temporary culture",
+          "match_any": [
+            "future of work tangible"
+          ],
+          "supports": [
+            "hadora-temporary-culture",
+            "hadora-design-conditions"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Participants do not discuss a different culture; they inhabit one temporarily."
+        },
+        {
+          "match_hint": "AI expands rather than diminishes humanity",
+          "match_any": [
+            "expands rather than diminishes"
+          ],
+          "supports": [
+            "hadora-ai-serving-humanity"
+          ],
+          "note": "AI should augment human potential while remaining accountable to broader values."
+        },
+        {
+          "match_hint": "Restore wholeness to innovation",
+          "match_any": [
+            "restore wholeness"
+          ],
+          "supports": [
+            "hadora-design-conditions"
+          ],
+          "note": "Moves from fragmentation towards wholeness, consumption towards contribution."
+        },
+        {
+          "match_hint": "Create conditions, not control people",
+          "match_any": [
+            "conditions, not control"
+          ],
+          "supports": [
+            "hadora-design-conditions",
+            "hadora-stewardship"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "HADORA's foundational design principle applied to ATHA's environment."
+        },
+        {
+          "match_hint": "Reintroduce discernment into innovation",
+          "match_any": [
+            "reintroduce discernment"
+          ],
+          "supports": [
+            "stage-discern"
+          ],
+          "answered_questions": [
+            "q05-how-judged"
+          ],
+          "note": "Discernment as a human capacity; defines the question beyond technical feasibility."
+        },
+        {
+          "match_hint": "Lived proof that another way is possible",
+          "match_any": [
+            "lived proof"
+          ],
+          "supports": [
+            "hadora-transformation-through-work"
+          ],
+          "answered_questions": [
+            "q07-takeaway",
+            "q12-after-experience"
+          ],
+          "note": "Participants carry a memory that influences how they lead and collaborate afterwards."
+        },
+        {
+          "match_hint": "Essential reason — humanity should not enter AI era using exhausted cultures",
+          "match_any": [
+            "essential reason"
+          ],
+          "supports": [
+            "hadora-ai-serving-humanity",
+            "hadora-ambition-without-depletion"
+          ],
+          "note": "Ultimate HADORA rationale: the way we create the future must be worthy of that future."
+        }
+      ]
+    },
+    {
+      "file": "What is ATHA (OM view).md",
+      "perspective": "om",
+      "default_status": "proposed",
+      "default_roles": [
+        "business",
+        "warwick",
+        "student"
+      ],
+      "default_visitor_states": [
+        "deciding",
+        "preparing"
+      ],
+      "default_supports": [],
+      "default_answered_questions": [
+        "q01-what-is-atha"
+      ],
+      "section_overrides": [
+        {
+          "match_hint": "Short answer — canonical definition, two ambitions",
+          "match_any": [
+            "Short answer"
+          ],
+          "status": "confirmed",
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q01-what-is-atha"
+          ],
+          "note": "The canonical OM-perspective definition of what ATHA is."
+        },
+        {
+          "match_hint": "Honest reality today — emerging concept, still need to be developed",
+          "match_any": [
+            "honest reality today"
+          ],
+          "status": "open",
+          "note": "Explicitly states format, methodology, commercial model, IP structure still need development."
+        },
+        {
+          "match_hint": "Challenge format — holistic framework questions and verdict options",
+          "match_any": [
+            "challenge format"
+          ],
+          "supports": [
+            "lens-desirability",
+            "lens-feasibility",
+            "lens-viability",
+            "lens-scalability",
+            "lens-responsibility",
+            "verdict-proceed",
+            "verdict-redirect",
+            "verdict-pause",
+            "verdict-reject"
+          ],
+          "answered_questions": [
+            "q09-challenge-evaluated",
+            "q05-how-judged"
+          ],
+          "note": "Describes the assessment framework and verdict philosophy before building."
+        },
+        {
+          "match_hint": "ATHA experience section including Transformative experience without coercion",
+          "match_any": [
+            "Transformative experience without coercion"
+          ],
+          "supports": [
+            "hadora-design-conditions",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Day-to-day experience elements; voluntary practices boundary expressed as design condition."
+        },
+        {
+          "match_hint": "Three principal partners — OneMundi / WBS / Hadora roles",
+          "match_any": [
+            "three principal partners"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q13-education-research",
+            "q14-wbs-role"
+          ],
+          "note": "Defines each partner's distinct contribution; WBS as institutional and educational enabler."
+        },
+        {
+          "match_hint": "Industry partner receives — Experience value form",
+          "match_any": [
+            "1. Experience"
+          ],
+          "supports": [
+            "value-experience"
+          ],
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "note": "First of five partner value forms: experiencing a different way of working."
+        },
+        {
+          "match_hint": "Industry partner receives — Perspective value form",
+          "match_any": [
+            "2. Perspective"
+          ],
+          "supports": [
+            "value-perspective"
+          ],
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "note": "Second value form: wider understanding of AI as contextual intelligence."
+        },
+        {
+          "match_hint": "Industry partner receives — Decision value form",
+          "match_any": [
+            "3. Decision"
+          ],
+          "supports": [
+            "value-decision"
+          ],
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "note": "Third value form: concrete insight into whether and how to pursue the challenge."
+        },
+        {
+          "match_hint": "Industry partner receives — Belonging value form",
+          "match_any": [
+            "4. Belonging"
+          ],
+          "supports": [
+            "value-belonging"
+          ],
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "note": "Fourth value form: entering a community connecting education, research, industry."
+        },
+        {
+          "match_hint": "Industry partner receives — Continuity value form",
+          "match_any": [
+            "5. Continuity"
+          ],
+          "supports": [
+            "value-continuity"
+          ],
+          "answered_questions": [
+            "q08-partner-receives",
+            "q12-after-experience"
+          ],
+          "note": "Fifth value form: relationship continues through digital platform and future experiences."
+        },
+        {
+          "match_hint": "CEO value test — two wow effects",
+          "match_any": [
+            "CEO value test"
+          ],
+          "answered_questions": [
+            "q08-partner-receives",
+            "q10-partner-brings"
+          ],
+          "note": "Describes intended commercial success criteria requiring senior decision-maker participation."
+        },
+        {
+          "match_hint": "Rights and intellectual property — ownership boundaries must be agreed",
+          "match_any": [
+            "Rights and intellectual property"
+          ],
+          "status": "open",
+          "answered_questions": [
+            "q11-confidentiality-ip"
+          ],
+          "note": "Explicitly states boundaries must be agreed before confidential information is shared."
+        },
+        {
+          "match_hint": "What happens after ATHA — follow-on OneMundi relationship",
+          "match_any": [
+            "What happens after ATHA"
+          ],
+          "supports": [
+            "org-onemundi"
+          ],
+          "answered_questions": [
+            "q12-after-experience"
+          ],
+          "note": "Post-ATHA pathway into OM transformation; explicitly separate paid relationship."
+        },
+        {
+          "match_hint": "ATHA as an ecosystem — international network ambition",
+          "match_any": [
+            "ATHA as an ecosystem"
+          ],
+          "answered_questions": [
+            "q12-after-experience"
+          ],
+          "note": "Long-term ecosystem ambition; each activation strengthens the network."
+        },
+        {
+          "match_hint": "ATHA methodology — seed methodology, jointly owned",
+          "match_any": [
+            "seed methodology"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research",
+            "q14-wbs-role"
+          ],
+          "note": "Methodology is explicitly unfinished; joint ownership intent stated but not formalised."
+        },
+        {
+          "match_hint": "Research ambition — investigate healthier conditions",
+          "match_any": [
+            "research ambition"
+          ],
+          "supports": [
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research"
+          ],
+          "note": "Research questions listed; explicitly cannot independently prove long-term claims."
+        },
+        {
+          "match_hint": "What ATHA is not — negative definition by exclusion",
+          "match_any": [
+            "What ATHA is not"
+          ],
+          "answered_questions": [
+            "q02-why-different"
+          ],
+          "note": "Clarifies identity by listing what ATHA is not; fully settled."
+        },
+        {
+          "match_hint": "Comprehensive definition — full synthesis paragraph",
+          "match_any": [
+            "Comprehensive definition"
+          ],
+          "status": "confirmed",
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q01-what-is-atha"
+          ],
+          "note": "Most complete single-paragraph definition in the OM corpus."
+        }
+      ]
+    },
+    {
+      "file": "What is ATHA (HADORA view).md",
+      "perspective": "hadora",
+      "default_status": "confirmed",
+      "default_roles": [
+        "student",
+        "warwick",
+        "business"
+      ],
+      "default_visitor_states": [
+        "discovering"
+      ],
+      "default_supports": [],
+      "default_answered_questions": [],
+      "section_overrides": [
+        {
+          "match_hint": "New expression of the HADORA philosophy",
+          "match_any": [
+            "new expression of the HADORA"
+          ],
+          "supports": [
+            "org-hadora"
+          ],
+          "note": "Positions ATHA as HADORA's test in commercially consequential work."
+        },
+        {
+          "match_hint": "Designing the conditions, not the person",
+          "match_any": [
+            "Designing the conditions, not the person"
+          ],
+          "supports": [
+            "hadora-design-conditions"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "HADORA's foundational design principle with concrete ATHA conditions listed."
+        },
+        {
+          "match_hint": "Temporary culture, not an event",
+          "match_any": [
+            "temporary culture, not an event"
+          ],
+          "supports": [
+            "hadora-temporary-culture"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Distinguishes ATHA from consumed events; participants create the quality of the experience."
+        },
+        {
+          "match_hint": "Life, Love and Laughs within ATHA",
+          "match_any": [
+            "Life, Love and Laughs"
+          ],
+          "supports": [
+            "hadora-life-love-laughs"
+          ],
+          "answered_questions": [
+            "q06-day-to-day",
+            "q07-takeaway"
+          ],
+          "note": "Life Love Laughs experienced without being presented as explicit public framework."
+        },
+        {
+          "match_hint": "Stewardship rather than conventional hosting",
+          "match_any": [
+            "Stewardship rather than conventional"
+          ],
+          "supports": [
+            "hadora-stewardship"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Stewards protect purpose, safety, rhythm; participants retain freedom over ideas and process."
+        },
+        {
+          "match_hint": "Transformation through work — movement from consumption to contribution",
+          "match_any": [
+            "Transformation through work"
+          ],
+          "supports": [
+            "hadora-transformation-through-work"
+          ],
+          "answered_questions": [
+            "q07-takeaway"
+          ],
+          "note": "Enterprise challenge as medium for human transformation; embodied memory carried forward."
+        },
+        {
+          "match_hint": "Ambition without depletion",
+          "match_any": [
+            "Ambition without depletion"
+          ],
+          "supports": [
+            "hadora-ambition-without-depletion"
+          ],
+          "answered_questions": [
+            "q07-takeaway"
+          ],
+          "note": "Quality of outcome and health of process must be evaluated together."
+        },
+        {
+          "match_hint": "AI serving humanity — technology within wider human context",
+          "match_any": [
+            "AI serving humanity"
+          ],
+          "supports": [
+            "hadora-ai-serving-humanity"
+          ],
+          "note": "AI-native means designing a relationship where technology serves human and ecological flourishing."
+        },
+        {
+          "match_hint": "HADORA experience arc — seven stages with DISCERN",
+          "match_any": [
+            "HADORA experience arc"
+          ],
+          "supports": [
+            "stage-arrive-settle",
+            "stage-open-sense",
+            "stage-connect",
+            "stage-create",
+            "stage-discern",
+            "stage-celebrate",
+            "stage-integrate-return"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Maps HADORA philosophy onto the seven-stage ATHA rhythm; ends with return not escape."
+        },
+        {
+          "match_hint": "HADORA test of ATHA — eight dimensions",
+          "match_any": [
+            "HADORA test of ATHA"
+          ],
+          "supports": [
+            "hadora-transformation-through-work"
+          ],
+          "answered_questions": [
+            "q07-takeaway",
+            "q12-after-experience"
+          ],
+          "note": "Success measured by whether something valuable continues after the container dissolves."
+        },
+        {
+          "match_hint": "What ATHA proves for HADORA — tests philosophy under real ambition",
+          "match_any": [
+            "What ATHA proves for HADORA"
+          ],
+          "supports": [
+            "org-hadora",
+            "org-onemundi",
+            "org-wbs"
+          ],
+          "note": "Closing: participants experience the consequence without being taught the philosophy."
+        }
+      ]
+    },
+    {
+      "file": "ATHA & HADORA Connection.md",
+      "perspective": "joint",
+      "default_status": "confirmed",
+      "default_roles": [
+        "warwick",
+        "business"
+      ],
+      "default_visitor_states": [
+        "deciding"
+      ],
+      "default_supports": [
+        "org-hadora",
+        "org-onemundi"
+      ],
+      "default_answered_questions": [],
+      "section_overrides": [
+        {
+          "match_hint": "HADORA provides the human foundation — principles list",
+          "match_any": [
+            "HADORA provides the human foundation"
+          ],
+          "supports": [
+            "org-hadora",
+            "hadora-design-conditions",
+            "hadora-stewardship",
+            "hadora-temporary-culture"
+          ],
+          "note": "Enumerates the HADORA principles that shape how ATHA works."
+        },
+        {
+          "match_hint": "ATHA gives HADORA a specific field of application",
+          "match_any": [
+            "specific field of application"
+          ],
+          "note": "Translates broader HADORA philosophy into professional and innovation environment."
+        },
+        {
+          "match_hint": "Connection is experiential, not primarily promotional — felt not branded",
+          "match_any": [
+            "experiential, not primarily promotional"
+          ],
+          "note": "Key positioning principle: HADORA deeply present but never dominant public-facing brand."
+        },
+        {
+          "match_hint": "Exchange works in both directions — mutual evolution",
+          "match_any": [
+            "exchange works in both directions"
+          ],
+          "answered_questions": [
+            "q13-education-research"
+          ],
+          "note": "Learning from ATHA refines both the ATHA methodology and HADORA approach."
+        },
+        {
+          "match_hint": "Essential distinction — OM/WBS/HADORA three-way role summary",
+          "match_any": [
+            "essential distinction"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q14-wbs-role"
+          ],
+          "note": "Cleanest three-way institutional role summary across all documents."
+        }
+      ]
+    },
+    {
+      "file": "OM & ATHA connect.md",
+      "perspective": "om",
+      "default_status": "proposed",
+      "default_roles": [
+        "business",
+        "warwick"
+      ],
+      "default_visitor_states": [
+        "deciding"
+      ],
+      "default_supports": [
+        "org-onemundi"
+      ],
+      "default_answered_questions": [
+        "q12-after-experience"
+      ],
+      "section_overrides": [
+        {
+          "match_hint": "Short answer + respective roles — OM company vs ATHA experience",
+          "match_any": [
+            "respective roles"
+          ],
+          "supports": [
+            "org-onemundi",
+            "org-wbs",
+            "org-hadora"
+          ],
+          "answered_questions": [
+            "q14-wbs-role",
+            "q13-education-research"
+          ],
+          "note": "Detailed breakdown of OM vs ATHA responsibilities with three-row responsibility model."
+        },
+        {
+          "match_hint": "OneMundi builds and operates ATHA",
+          "match_any": [
+            "OneMundi builds and operates ATHA"
+          ],
+          "answered_questions": [
+            "q14-wbs-role"
+          ],
+          "note": "Responsibility model table: OM builder/operator, WBS enabler, Hadora experience designer."
+        },
+        {
+          "match_hint": "Makes the OneMundi philosophy experienceable",
+          "match_any": [
+            "philosophy experienceable"
+          ],
+          "supports": [
+            "hadora-design-conditions"
+          ],
+          "answered_questions": [
+            "q06-day-to-day"
+          ],
+          "note": "Partner-facing: ATHA as experiential demonstration of OM thesis."
+        },
+        {
+          "match_hint": "Public laboratory — continuous learning loop",
+          "match_any": [
+            "continuous learning loop"
+          ],
+          "answered_questions": [
+            "q13-education-research"
+          ],
+          "note": "Seven-step learning loop from seed methodology through industry implementation and back."
+        },
+        {
+          "match_hint": "ATHA develops talent for OneMundi and wider market",
+          "match_any": [
+            "develops talent"
+          ],
+          "answered_questions": [
+            "q07-takeaway"
+          ],
+          "roles": [
+            "student",
+            "warwick"
+          ],
+          "note": "Talent development for OM, partner orgs, researchers; WBS and OM missions meet here."
+        },
+        {
+          "match_hint": "Jointly owned methodology — agreements still required",
+          "match_any": [
+            "jointly owned methodology"
+          ],
+          "status": "open",
+          "supports": [
+            "org-wbs"
+          ],
+          "answered_questions": [
+            "q13-education-research",
+            "q14-wbs-role"
+          ],
+          "note": "Role model is confirmed but ownership/licensing/publication agreements explicitly still required."
+        },
+        {
+          "match_hint": "Entry point into OneMundi transformation — six-step journey",
+          "match_any": [
+            "entry point into OneMundi"
+          ],
+          "answered_questions": [
+            "q08-partner-receives",
+            "q12-after-experience",
+            "q10-partner-brings"
+          ],
+          "note": "Proposed partner journey from ATHA entry through first value unlock to longer transformation."
+        },
+        {
+          "match_hint": "Commercial connection — partner pays for experience, follow-on separate",
+          "match_any": [
+            "Commercial connection"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q08-partner-receives"
+          ],
+          "note": "Partner-owns-outputs principle is confirmed; commercial model described."
+        },
+        {
+          "match_hint": "Must not become a disguised sales event",
+          "match_any": [
+            "disguised sales event"
+          ],
+          "status": "confirmed",
+          "answered_questions": [
+            "q02-why-different"
+          ],
+          "note": "Confirmed ethical boundary: value and belonging first, OM relationship only where genuine fit."
+        },
+        {
+          "match_hint": "Brand relationship — architecture still needs finalisation",
+          "match_any": [
+            "Brand relationship"
+          ],
+          "status": "open",
+          "note": "Explicitly states brand architecture still needs finalisation; provisional expression offered."
+        }
+      ]
+    }
+  ]
+}

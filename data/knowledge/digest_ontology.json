@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "generated": "2026-08-28",
+  "roles": [
+    {"id": "student", "name": "Prospective participant", "description": "A student or talent visitor considering joining ATHA as a team member."},
+    {"id": "warwick", "name": "Warwick / education", "description": "A visitor approaching ATHA from the university, education or research side."},
+    {"id": "business", "name": "Enterprise partner", "description": "An organization considering bringing a real AI challenge into ATHA."}
+  ],
+  "states": [
+    {"id": "discovering", "name": "Discovering ATHA for the first time"},
+    {"id": "deciding", "name": "Deciding whether to attend"},
+    {"id": "preparing", "name": "Preparing to come"},
+    {"id": "experienced", "name": "Already experienced ATHA"}
+  ],
+  "ontology": {
+    "organizations": [
+      {"id": "org-onemundi", "name": "OneMundi", "kind": "initiator", "description": "Initiator and owner. Enterprise transformation, the AI-native methodology, the commercial model, the independence of the verdict, and the ecosystem that continues between editions."},
+      {"id": "org-wbs", "name": "Warwick Business School", "kind": "co-host", "description": "Partner and co-host. Academic environment, knowledge, participants, research, network and institutional standards."},
+      {"id": "org-hadora", "name": "Hadora", "kind": "experience-design", "description": "Rhythm, stewardship, nourishment, psychological safety and integration — the human operating system beneath the work. Shaped as a HADORA experience; felt, never prominently branded."}
+    ],
+    "lenses": [
+      {"id": "lens-desirability", "name": "Desirability", "order": 1, "core_question": "Does anyone actually want this?"},
+      {"id": "lens-feasibility", "name": "Feasibility", "order": 2, "core_question": "Can it realistically be built now?"},
+      {"id": "lens-viability", "name": "Viability", "order": 3, "core_question": "Does it make business sense?"},
+      {"id": "lens-scalability", "name": "Scalability", "order": 4, "core_question": "Can it grow beyond one use case?"},
+      {"id": "lens-responsibility", "name": "Responsibility", "order": 5, "core_question": "Is it safe and fair to deploy?"}
+    ],
+    "verdict_states": [
+      {"id": "verdict-proceed", "name": "Proceed", "description": "Conditions for success and an implementation pathway follow."},
+      {"id": "verdict-redirect", "name": "Redirect", "description": "The opportunity is real, the framing was wrong."},
+      {"id": "verdict-pause", "name": "Pause", "description": "The organisation is not yet able to answer this well."},
+      {"id": "verdict-reject", "name": "Reject", "description": "A well-supported decision not to build is a legitimate result."}
+    ],
+    "arc_stages": [
+      {"id": "stage-arrive-settle", "name": "Arrive & Settle", "order": 1, "description": "People are met rather than processed; the room is made, not booked."},
+      {"id": "stage-open-sense", "name": "Open & Sense", "order": 2, "description": "The question is opened before it is attacked, presented as it actually sits."},
+      {"id": "stage-connect", "name": "Connect", "order": 3, "description": "Teams form across disciplines, around the question."},
+      {"id": "stage-create", "name": "Create", "order": 4, "description": "The longest stage: AI-native investigation, AI used fully, never accepted blindly."},
+      {"id": "stage-discern", "name": "Discern", "order": 5, "description": "Evidence, consequences, uncertainty, trade-offs — given more room than any stage except the work itself."},
+      {"id": "stage-celebrate", "name": "Celebrate", "order": 6, "description": "Recognition is shared rather than ranked; different forms of excellence, no overall winner."},
+      {"id": "stage-integrate-return", "name": "Integrate & Return", "order": 7, "description": "Leave with something integrated; the relationships carry into the next edition."}
+    ],
+    "team_functions": [
+      {"id": "func-domain-expert", "name": "Domain Expert", "label": "A", "function": "Domain and customer understanding"},
+      {"id": "func-ai-workflow-lead", "name": "AI Workflow Lead", "label": "B", "function": "AI and technical feasibility"},
+      {"id": "func-responsible-ai-risk", "name": "Responsible AI & Risk Lead", "label": "C", "function": "Responsible AI, governance and risk"},
+      {"id": "func-business-viability-coordinator", "name": "Business Viability & Coordinator", "label": "D", "function": "Business viability, scalability and coordination"},
+      {"id": "func-pitch-design-lead", "name": "Pitch & Design Lead", "label": "E", "function": "Pitch, design and decision communication"}
+    ],
+    "assessment_areas": [
+      {"id": "area-desirability-v1", "name": "Desirability", "weight": 15, "variant": "assessment_doc_v1", "variant_of": "lens-desirability"},
+      {"id": "area-feasibility-v1", "name": "Feasibility", "weight": 20, "variant": "assessment_doc_v1", "variant_of": "lens-feasibility"},
+      {"id": "area-viability-v1", "name": "Viability", "weight": 20, "variant": "assessment_doc_v1", "variant_of": "lens-viability"},
+      {"id": "area-scalability-v1", "name": "Scalability", "weight": 15, "variant": "assessment_doc_v1", "variant_of": "lens-scalability"},
+      {"id": "area-responsibility-v1", "name": "Responsibility", "weight": 20, "variant": "assessment_doc_v1", "variant_of": "lens-responsibility"},
+      {"id": "area-decision-integrity-v1", "name": "Decision integrity and transparency", "weight": 10, "variant": "assessment_doc_v1", "variant_of": null},
+      {"id": "area-commercial-v3", "name": "Commercial Value", "weight": 40, "variant": "judge_doc_v1", "variant_of": "lens-viability"},
+      {"id": "area-implementation-v3", "name": "Implementation Feasibility", "weight": 30, "variant": "judge_doc_v1", "variant_of": "lens-feasibility"},
+      {"id": "area-responsible-v3", "name": "Responsible AI and Sustainability", "weight": 30, "variant": "judge_doc_v1", "variant_of": "lens-responsibility"}
+    ],
+    "recommendation_categories": [
+      {"id": "rec-proceed", "name": "Proceed", "variant": "assessment_doc_v1", "description": "Evidence supports moving directly into a defined implementation or advanced pilot phase."},
+      {"id": "rec-conditional-pilot", "name": "Conditional pilot", "variant": "assessment_doc_v1", "description": "Promising, but specified assumptions must be tested before greater investment."},
+      {"id": "rec-reframe", "name": "Reframe or investigate further", "variant": "assessment_doc_v1", "description": "The problem may be valuable, but approach, data, scope or operating model requires substantial revision."},
+      {"id": "rec-do-not-proceed", "name": "Do not proceed", "variant": "assessment_doc_v1", "description": "Not sufficiently desirable, feasible, viable, scalable or responsible under current conditions."}
+    ],
+    "value_forms": [
+      {"id": "value-experience", "name": "Experience", "description": "The partner experiences a different way an organization can work, collaborate, rest, use AI, and produce ambitious outcomes."},
+      {"id": "value-perspective", "name": "Perspective", "description": "A wider understanding of AI — contextual intelligence, readiness, consequences, responsibility, desirability."},
+      {"id": "value-decision", "name": "Decision", "description": "Concrete insight into whether and how to pursue the challenge: value, assumptions, risks, scalability, recommended direction."},
+      {"id": "value-belonging", "name": "Belonging", "description": "Entry into a community connecting education, research, industry, students, experience design, OneMundi and Hadora."},
+      {"id": "value-continuity", "name": "Continuity", "description": "The relationship continues: platform access, future experiences, ecosystem relationships, implementation pathways."}
+    ],
+    "hadora_principles": [
+      {"id": "hadora-design-conditions", "name": "Design the conditions, not the person", "description": "ATHA creates conditions in which creativity, collaboration and responsibility emerge naturally."},
+      {"id": "hadora-stewardship", "name": "Stewardship", "description": "Hold the container. Release the content. Stewards protect purpose, safety, rhythm and quality; participants keep freedom."},
+      {"id": "hadora-temporary-culture", "name": "Temporary culture, not event", "description": "Events are consumed. Cultures are participated in. Participants become contributors and culture-makers."},
+      {"id": "hadora-life-love-laughs", "name": "Life, Love & Laughs", "description": "The human heartbeat beneath HADORA — experienced within ATHA without being presented as an explicit framework."},
+      {"id": "hadora-ambition-without-depletion", "name": "Ambition without depletion", "description": "ATHA rejects the assumption that ambition requires exhaustion, fear or unhealthy competition."},
+      {"id": "hadora-ai-serving-humanity", "name": "AI serving humanity", "description": "Technology placed within a wider human context; AI expands collective intelligence without replacing responsibility, judgement or meaning."},
+      {"id": "hadora-transformation-through-work", "name": "Transformation through work", "description": "The enterprise challenge is both a real business responsibility and a medium for human transformation."}
+    ]
+  },
+  "questions": [
+    {"id": "q01-what-is-atha", "text": "What is ATHA, really?", "roles": ["student", "warwick", "business"], "states": ["discovering", "deciding"], "rank_by_role": {"student": 2, "warwick": 3, "business": 4}, "keywords": "what is atha definition experience ecosystem innovation"},
+    {"id": "q02-why-different", "text": "Why does ATHA exist — what makes it different?", "roles": ["student", "warwick", "business"], "states": ["discovering", "deciding"], "rank_by_role": {"student": 4, "warwick": 4, "business": 5}, "keywords": "why exist different hackathon conference exhaustion discernment"},
+    {"id": "q03-role-fits-me", "text": "Which role in a team would fit me?", "roles": ["student"], "states": ["deciding", "preparing"], "rank_by_role": {"student": 1}, "keywords": "team role function fit skills subjects domain ai responsible business pitch design"},
+    {"id": "q04-teams-formed", "text": "How are teams formed?", "roles": ["student"], "states": ["preparing"], "rank_by_role": {"student": 3}, "keywords": "team formation matching allocation registration skills size"},
+    {"id": "q05-how-judged", "text": "How is the teams' work judged?", "roles": ["student", "warwick"], "states": ["deciding", "preparing"], "rank_by_role": {"student": 5, "warwick": 6}, "keywords": "judged assessment lenses scoring rubric criteria viability verdict"},
+    {"id": "q06-day-to-day", "text": "What does the experience feel like day to day?", "roles": ["student", "warwick"], "states": ["preparing"], "rank_by_role": {"student": 6, "warwick": 5}, "keywords": "schedule rhythm day food accommodation rest spaces warwick"},
+    {"id": "q07-takeaway", "text": "What do I personally take away from it?", "roles": ["student"], "states": ["deciding"], "rank_by_role": {"student": 7}, "keywords": "takeaway changemaker capabilities talent development career"},
+    {"id": "q08-partner-receives", "text": "What exactly do we receive as a challenge partner?", "roles": ["business"], "states": ["deciding"], "rank_by_role": {"business": 1}, "keywords": "partner receives value experience perspective decision belonging continuity verdict"},
+    {"id": "q09-challenge-evaluated", "text": "How is our challenge evaluated?", "roles": ["business", "warwick"], "states": ["deciding"], "rank_by_role": {"business": 2, "warwick": 7}, "keywords": "challenge evaluated assessment lenses judges criteria recommendation"},
+    {"id": "q10-partner-brings", "text": "What do we need to bring as a partner?", "roles": ["business"], "states": ["deciding", "preparing"], "rank_by_role": {"business": 6}, "keywords": "partner brings senior participation challenge scope commitment sponsorship"},
+    {"id": "q11-confidentiality-ip", "text": "How is confidentiality and IP handled?", "roles": ["business"], "states": ["deciding"], "rank_by_role": {"business": 7}, "keywords": "confidentiality intellectual property ownership ip rights"},
+    {"id": "q12-after-experience", "text": "What happens after the experience?", "roles": ["business", "student"], "states": ["deciding", "experienced"], "rank_by_role": {"business": 3, "student": 8}, "keywords": "after ecosystem continuity transformation value unlock platform future editions"},
+    {"id": "q13-education-research", "text": "How does ATHA serve education and research?", "roles": ["warwick"], "states": ["discovering", "deciding"], "rank_by_role": {"warwick": 1}, "keywords": "education research methodology jointly owned evidence changemakers"},
+    {"id": "q14-wbs-role", "text": "What is Warwick Business School's role in ATHA?", "roles": ["warwick", "business"], "states": ["discovering"], "rank_by_role": {"warwick": 2, "business": 8}, "keywords": "warwick business school role co-host enabler credibility facilities"}
+  ]
+}

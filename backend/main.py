@@ -38,9 +38,11 @@ from agents import (
     PRIMARY_MODEL,
     experience_agent,
     get_client,
+    render_knowledge_bundle,
     render_pool,
 )
 from graph_queries import get_database, get_driver, get_embedder, hybrid_retrieve
+from knowledge import knowledge_for
 from ui_schema import (
     ActionType,
     Button,
@@ -61,9 +63,10 @@ log = logging.getLogger("signal.main")
 
 TRACE_FILE = Path(__file__).resolve().parent / "trace.jsonl"
 RATE_LIMIT_PER_DAY = 30
-CACHE_MAX = 256
+CACHE_MAX = 512  # role x topics x style x visitor_state cardinality
 TOP_K, LIMIT = 10, 6
 EVENT_LIMIT = 6
+VISITOR_STATES = {"discovering", "deciding", "preparing", "experienced"}
 
 app = FastAPI(title="SIGNAL wow-page orchestrator", version="0.1.0")
 
@@ -135,6 +138,7 @@ class ExperienceRequest(BaseModel):
     role: str
     topics: list[str] = []
     style: StyleMode | None = None
+    visitor_state: str | None = None
 
 
 # --- role selection ---------------------------------------------------------------
@@ -405,11 +409,15 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         )
     topics = resolve_topics(role, body.topics)
     style = body.style  # StyleMode | None, pydantic-validated
-    log.info("experience request: role=%s topics=%s style=%s",
-             role, topics, style.value if style else None)
+    visitor_state = ((body.visitor_state or "").strip().lower() or None)
+    if visitor_state is not None and visitor_state not in VISITOR_STATES:
+        visitor_state = None  # unknown gate state -> no state emphasis
+    log.info("experience request: role=%s topics=%s style=%s state=%s",
+             role, topics, style.value if style else None, visitor_state)
 
     key = hashlib.sha256(
-        f"{role}|{'.'.join(topics)}|{style.value if style else ''}".encode("utf-8")
+        f"{role}|{'.'.join(topics)}|{style.value if style else ''}|"
+        f"{visitor_state or ''}".encode("utf-8")
     ).hexdigest()
     started = time.perf_counter()
     cached = _response_cache.get(key)
@@ -432,6 +440,7 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     persona = None
     allowed_ids: list[str] = []
     draft_schema = None
+    knowledge_qids: list[str] = []
     degraded_reason: str | None = None
     experience = DEFAULT_EXPERIENCE.model_dump()
     try:
@@ -453,9 +462,27 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         allowed_ids = sorted(ids)
 
         pool_text = render_pool(rows, events)
+
+        # knowledge layer: the visitor's most important questions, answered
+        # from the digested ATHA canon. Degrades silently — compose works
+        # without knowledge, it just can't answer beyond the data pool.
+        knowledge_text = ""
+        try:
+            bundle = await knowledge_for(
+                role, visitor_state, driver=get_app_driver(),
+                database=get_database(), top_questions=4, max_answers=2)
+            knowledge_text = render_knowledge_bundle(bundle)
+            knowledge_qids = [q["id"] for q in bundle["questions"]]
+            log.info("knowledge bundle: %d questions (%s)",
+                     len(knowledge_qids), ", ".join(knowledge_qids))
+        except Exception as exc:  # noqa: BLE001 — knowledge is an enhancement
+            log.warning("knowledge retrieval failed -> compose without "
+                        "knowledge: %s", exc)
+
         log.info("llm compose starting (model handled in agents.py)")
         llm_started = time.perf_counter()
-        draft = await experience_agent(persona_model, pool_text, ids, client)
+        draft = await experience_agent(persona_model, pool_text, ids, client,
+                                       knowledge_text=knowledge_text)
         log.info("llm compose finished in %d ms",
                  int((time.perf_counter() - llm_started) * 1000))
         # the visitor's style pick wins over the agent's temperament choice —
@@ -475,7 +502,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         degraded_reason = f"{type(exc).__name__}: {exc}"
 
     payload = {"persona": persona, "experience": experience,
-               "allowed_ids": allowed_ids}
+               "allowed_ids": allowed_ids,
+               "knowledge_questions": knowledge_qids}
     if degraded_reason is not None:
         # surfaced as a console.error by the frontend — makes a paused or
         # deleted Aura instance impossible to miss during development
@@ -490,8 +518,10 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     _append_trace({
         "ts": time.time(), "role": role, "topics": topics,
         "style": style.value if style else None,
+        "visitor_state": visitor_state,
         "persona": persona,
         "allowed_ids": allowed_ids, "draft_schema": draft_schema,
+        "knowledge_questions": knowledge_qids,
         "ui_schema": experience,
         "latency_ms": latency_ms, "cache_hit": False,
     })

@@ -1,11 +1,16 @@
 """backend/eval_loop.py — quality gate for the live compose pipeline.
 
 The persona modeler is gone: POST /api/experience now takes {role, topics,
-style} and synthesizes the PersonaModel deterministically server-side. So the
-gate exercises each of the three roles (student, warwick, business) with an
-empty topic list (-> the role's curated list) and no style override (-> the
-agent picks the mode), measures the round-trip latency per role, and
-validates the returned experience schema.
+style, visitor_state} and synthesizes the PersonaModel deterministically
+server-side. The gate exercises each of the three roles (student, warwick,
+business) with an empty topic list (-> the role's curated list) and no style
+override (-> the agent picks the mode), measures the round-trip latency per
+role, and validates the returned experience schema.
+
+Knowledge pass: the same request plus a gate visitor_state must additionally
+return the catalog questions the page was composed around
+(knowledge_questions) and should answer them via TextBlock sections; a 25 s
+latency ceiling guards the knowledge-augmented compose.
 
 Run:  python eval_loop.py [--url http://127.0.0.1:8000]
 Exit: 0 = all roles valid, 1 = any failure.
@@ -21,6 +26,11 @@ import httpx
 
 # The three roles main.py's ROLE_PROFILES accepts.
 ROLES = ("student", "warwick", "business")
+
+# knowledge pass: (role, gate visitor_state) pairs exercising the question
+# catalog end to end through the live compose pipeline.
+KNOWLEDGE_CHECKS = (("student", "discovering"), ("business", "deciding"))
+KNOWLEDGE_LATENCY_CEILING_MS = 25000
 
 
 def validate_experience(exp: dict) -> tuple[bool, list[str]]:
@@ -65,6 +75,9 @@ async def run(base_url: str) -> int:
             body = resp.json()
             exp = body.get("experience", {})
             valid, problems = validate_experience(exp)
+            if body.get("degraded"):
+                valid = False
+                problems.append(f"degraded: {body.get('degraded_reason', '?')}")
             mode = exp.get("mode")
             spectrum = exp.get("spectrum")
             mix = ",".join(s.get("component", "?") for s in exp.get("sections", []))
@@ -78,6 +91,52 @@ async def run(base_url: str) -> int:
                   f"layout: {layout} | mix: {mix}")
 
     all_ok = bool(results) and all(r.get("ok") for r in results)
+
+    knowledge_ok = True
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        for role, state in KNOWLEDGE_CHECKS:
+            t0 = time.perf_counter()
+            try:
+                resp = await client.post(
+                    f"{base_url}/api/experience",
+                    json={"role": role, "topics": [], "style": None,
+                          "visitor_state": state},
+                )
+            except httpx.HTTPError as exc:
+                print(f"[{role}+{state}] REQUEST FAILED: {exc}")
+                knowledge_ok = False
+                continue
+            ms = int((time.perf_counter() - t0) * 1000)
+            if resp.status_code != 200:
+                print(f"[{role}+{state}] HTTP {resp.status_code}: "
+                      f"{resp.text[:200]}")
+                knowledge_ok = False
+                continue
+            body = resp.json()
+            exp = body.get("experience", {})
+            valid, problems = validate_experience(exp)
+            if body.get("degraded"):
+                valid = False
+                problems.append(f"degraded: {body.get('degraded_reason', '?')}")
+            qids = body.get("knowledge_questions") or []
+            has_textblock = any(s.get("component") == "TextBlock"
+                                for s in exp.get("sections", []))
+            too_slow = ms > KNOWLEDGE_LATENCY_CEILING_MS
+            ok = valid and bool(qids) and not too_slow
+            knowledge_ok = knowledge_ok and ok
+            print(f"\n=== knowledge {role}+{state} ({ms} ms) "
+                  f"{'PASS' if ok else 'FAIL'} ===")
+            print(f"  schema: {'valid' if valid else 'INVALID'} "
+                  f"{problems if problems else ''}")
+            print(f"  answered questions: {qids if qids else 'NONE'}")
+            if not has_textblock:
+                print("  WARNING: no TextBlock section — knowledge not "
+                      "surfaced on the page")
+            if too_slow:
+                print(f"  FAIL: latency {ms} ms > ceiling "
+                      f"{KNOWLEDGE_LATENCY_CEILING_MS} ms")
+
+    all_ok = all_ok and knowledge_ok
     spectra = {r.get("spectrum") for r in results if r.get("spectrum")}
     mixes = {r.get("mix") for r in results if r.get("mix")}
     values = list(latencies.values())
