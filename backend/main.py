@@ -1,18 +1,21 @@
-"""backend/main.py — FastAPI orchestrator for the SIGNAL wow-page (ticket 10).
+"""backend/main.py — FastAPI orchestrator for the ATHA knowledge page.
 
-Pipeline per POST /api/experience {role, topics, style}:
-  visitor's role selection -> deterministic PersonaModel synthesis (no LLM)
-  -> hybrid retrieval over the selected topics (graph_queries.hybrid_retrieve,
-  REUSED from ticket 09) -> compose agent (ExperienceSchema, prompt includes
-  persona JSON + data pool WITH ids) -> the visitor-chosen style overrides
-  the schema's mode (prompt stays untouched) -> verify() filters entity_ids
-  against the whitelist -> hydrate() fills the entities map from Neo4j ->
-  ExperienceSchema JSON. Any failure degrades to DEFAULT_EXPERIENCE — the
-  endpoint never crashes.
+Pipeline per POST /api/experience {role, topics?, style?, visitor_state?,
+intent?, facet?, free_text?}:
+  deterministic skeleton plan (skeleton.build_skeleton: anchor questions ->
+  facet -> vector extras -> edition/rhythm/layers tail, all from the
+  knowledge graph) -> copywriter agent writes title/text copy for the slots
+  (copy only, no structure) -> the visitor's style overrides the mode ->
+  verify() -> ExperienceSchema JSON (TextBlocks, entities empty). Any failure
+  degrades to DEFAULT_EXPERIENCE — the endpoint never crashes.
+
+`topics` is accepted for API stability but ignored (the skeleton plans from
+role/state/intent/facet/free_text).
 
 Plus: CORS for the Vite dev server, /health, in-memory rate limit
 (30 req/day per IP), per-request tracing to backend/trace.jsonl, and a
-role+topics+style-keyed response cache so repeat runs cost zero LLM calls.
+role+state+intent+facet+free_text+style-keyed response cache so repeat runs
+cost zero LLM calls.
 
 Run:  uvicorn main:app --reload   (from backend/)
 """
@@ -30,6 +33,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from neo4j import AsyncDriver
 from pydantic import BaseModel
 
@@ -53,8 +57,6 @@ from ui_schema import (
     Button,
     ColorToken,
     ComponentType,
-    EntityPayload,
-    EntityType,
     ExperienceSchema,
     Layout,
     PersonaModel,
@@ -68,9 +70,7 @@ log = logging.getLogger("signal.main")
 
 TRACE_FILE = Path(__file__).resolve().parent / "trace.jsonl"
 RATE_LIMIT_PER_DAY = 30
-CACHE_MAX = 512  # role x topics x style x visitor_state cardinality
-TOP_K, LIMIT = 10, 6
-EVENT_LIMIT = 6
+CACHE_MAX = 512  # role x state x intent x facet x free_text x style cardinality
 VISITOR_STATES = {"discovering", "deciding", "preparing", "experienced"}
 
 app = FastAPI(title="SIGNAL wow-page orchestrator", version="0.1.0")
@@ -197,20 +197,10 @@ ROLE_MODE = {
 }
 
 
-def resolve_topics(role: str, requested: list[str]) -> list[str]:
-    """Keep only topics from the role's curated list (order-preserving,
-    de-duplicated); an empty or fully unknown selection means CAM chooses —
-    the role's full list."""
-    curated = ROLE_PROFILES[role]["topics"]
-    allowed = set(curated)
-    picked = list(dict.fromkeys(t.strip().lower() for t in requested if t and t.strip().lower() in allowed))
-    return picked or list(curated)
-
-
-def synthesize_persona(role: str, topics: list[str]) -> PersonaModel:
+def synthesize_persona(role: str) -> PersonaModel:
     profile = ROLE_PROFILES[role]
     return PersonaModel(
-        interests=topics,
+        interests=list(profile["topics"]),
         tone=profile["tone"],
         accent_color=profile["accent_color"],
         expertise_level=profile["expertise_level"],
@@ -218,112 +208,7 @@ def synthesize_persona(role: str, topics: list[str]) -> PersonaModel:
     )
 
 
-# --- hydration queries (server-side, by id) ----------------------------------------------
-
-PERSONS_BY_ID_QUERY = """
-MATCH (p:Person) WHERE p.id IN $ids
-OPTIONAL MATCH (p)-[:ATTENDS]->(s:School)
-OPTIONAL MATCH (p)-[:INTERESTED_IN]->(t:Topic)
-OPTIONAL MATCH (p)-[:MENTORED_BY]->(m:Person)
-RETURN p.id AS id, p.name AS name, p.role AS role,
-       p.program_or_role AS program, p.skills AS skills,
-       s.name AS school, collect(DISTINCT t.name) AS topics,
-       m.name AS mentor
-"""
-
-ENTERPRISES_BY_ID_QUERY = """
-MATCH (e:Enterprise) WHERE e.id IN $ids
-OPTIONAL MATCH (e)-[:SEEKS_EXPERTISE]->(t:Topic)
-RETURN e.id AS id, e.name AS name, e.sector AS sector, e.size AS size,
-       e.hq AS hq, e.contact_name AS contact_name, e.contact_role AS contact_role,
-       collect(DISTINCT t.name) AS topics
-"""
-
-EVENTS_BY_ID_QUERY = """
-MATCH (ev:Event) WHERE ev.id IN $ids
-RETURN ev.id AS id, ev.name AS name, ev.date AS date, ev.kind AS kind,
-       ev.location AS location, ev.highlights AS highlights
-"""
-
-EVENTS_QUERY = """
-MATCH (ev:Event)
-RETURN ev.id AS id, ev.name AS name, ev.date AS date, ev.kind AS kind,
-       ev.location AS location, ev.highlights AS highlights
-ORDER BY CASE WHEN ev.kind = 'upcoming' THEN 0 ELSE 1 END, ev.date
-LIMIT $limit
-"""
-
-
-async def _hydrate(driver: AsyncDriver, ids: set[str]) -> dict[str, EntityPayload]:
-    """Fill the entities map from Neo4j for exactly the given ids."""
-    entities: dict[str, EntityPayload] = {}
-    ids_list = list(ids)
-    async with driver.session(database=get_database()) as session:
-        persons = await (await session.run(PERSONS_BY_ID_QUERY, ids=ids_list)).data()
-        enterprises = await (
-            await session.run(ENTERPRISES_BY_ID_QUERY, ids=ids_list)
-        ).data()
-        events = await (await session.run(EVENTS_BY_ID_QUERY, ids=ids_list)).data()
-    for row in persons:
-        story = None
-        if row.get("mentor"):
-            story = f"Found a mentor through the network: {row['mentor']}."
-        entities[row["id"]] = EntityPayload(
-            type=EntityType.PERSON,
-            name=row["name"],
-            school=row.get("school"),
-            topics=[t for t in (row.get("topics") or []) if t],
-            role=row.get("program") or row.get("role"),
-            story=story,
-        )
-    for row in enterprises:
-        contact = row.get("contact_name")
-        if contact and row.get("contact_role"):
-            contact = f"{contact} ({row['contact_role']})"
-        entities[row["id"]] = EntityPayload(
-            type=EntityType.ENTERPRISE,
-            name=row["name"],
-            sector=row.get("sector"),
-            size=row.get("size"),
-            hq=row.get("hq"),
-            contact=contact,
-            topics=[t for t in (row.get("topics") or []) if t],
-        )
-    for row in events:
-        entities[row["id"]] = EntityPayload(
-            type=EntityType.EVENT,
-            name=row["name"],
-            date=row.get("date"),
-            location=row.get("location"),
-            highlights=[h for h in (row.get("highlights") or []) if h],
-        )
-    return entities
-
-
-async def enrich_persons_async(rows: list[dict]) -> list[dict]:
-    """Attach mentor names to retrieval rows so mentor stories stay grounded."""
-    by_id = {r["person_id"]: r for r in rows}
-    if not by_id:
-        return rows
-    async with get_app_driver().session(database=get_database()) as session:
-        result = await session.run(
-            "UNWIND $ids AS pid "
-            "MATCH (p:Person {id: pid})-[:MENTORED_BY]->(m:Person) "
-            "RETURN pid AS id, m.name AS mentor",
-            ids=list(by_id),
-        )
-        for rec in await result.data():
-            if rec["id"] in by_id:
-                by_id[rec["id"]]["mentor_name"] = rec["mentor"]
-    return rows
-
-
-async def fetch_events(limit: int = EVENT_LIMIT) -> list[dict]:
-    async with get_app_driver().session(database=get_database()) as session:
-        return await (await session.run(EVENTS_QUERY, limit=limit)).data()
-
-
-# --- verify + hydrate ----------------------------------------------------------------------
+# --- verify --------------------------------------------------------------------------------
 
 
 def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
@@ -431,7 +316,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
             status_code=422,
             detail=f"Unknown role: {role!r}. Expected one of {sorted(ROLE_PROFILES)}.",
         )
-    topics = resolve_topics(role, body.topics)
+    # `topics` is accepted for API stability but ignored — the skeleton
+    # plans the page from role/state/intent/facet/free_text instead.
     style = body.style  # StyleMode | None, pydantic-validated
     visitor_state = ((body.visitor_state or "").strip().lower() or None)
     if visitor_state is not None and visitor_state not in VISITOR_STATES:
@@ -462,7 +348,7 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
                  style.value if style else None)
         _response_cache.move_to_end(key)
         _append_trace({
-            "ts": time.time(), "role": role, "topics": topics,
+            "ts": time.time(), "role": role,
             "style": style.value if style else None,
             "persona": cached.get("persona"),
             "allowed_ids": cached.get("allowed_ids"),
@@ -483,7 +369,7 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     experience = DEFAULT_EXPERIENCE.model_dump()
     try:
         client = get_client()
-        persona_model = synthesize_persona(role, topics)
+        persona_model = synthesize_persona(role)
         persona = persona_model.model_dump()
 
         # 1. deterministic page plan from the knowledge graph (structure,
@@ -565,6 +451,16 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     log.info("composed experience in %d ms (sections=%d, copy=%s)",
              latency_ms, len(experience.get("sections", [])), copy_source)
     return payload
+
+
+# --- single-service packaging ---------------------------------------------------
+# The Docker image builds the Vue app and ships it as ./static next to this
+# file; FastAPI then serves API and SPA from one origin (no CORS). The mount
+# comes last so the /api and /health routes above keep priority. In local dev
+# the directory does not exist and Vite serves the frontend as before.
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+if STATIC_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="spa")
 
 
 if __name__ == "__main__":

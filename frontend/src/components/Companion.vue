@@ -96,9 +96,23 @@ const activeLine = computed(() => poke.value ?? props.line)
 const said = ref(false)
 const optionsAreActive = computed(() => props.options.length > 0 && said.value)
 // chip options collapse into one wrapped multi-select group (chunking),
-// regular and action options stay as stacked rows
+// regular and action options stay as stacked rows; the input marker renders
+// its own text field instead of a button
 const chipOptions = computed(() => props.options.filter((o) => o.chip && !o.action))
-const rowOptions = computed(() => props.options.filter((o) => !o.chip || o.action))
+const rowOptions = computed(() => props.options.filter((o) => !o.input && (!o.chip || o.action)))
+const inputOption = computed(() => props.options.find((o) => o.input))
+
+// free-text answer: the visitor types their own question and submits it
+const inputText = ref('')
+function submitInput() {
+  const t = inputText.value.trim()
+  if (!t) return
+  emit('answer', t)
+  inputText.value = ''
+}
+watch(() => props.options, () => {
+  inputText.value = ''
+})
 
 // typewriter voice: the companion writes his lines, antenna pulses while talking
 const shown = ref('')
@@ -203,6 +217,25 @@ watch(activeLine, (v) => {
         >
           {{ o.label }}
         </button>
+        <div v-if="inputOption" class="companion-inputrow">
+          <input
+            v-model="inputText"
+            class="companion-input"
+            type="text"
+            placeholder="Type your own question…"
+            aria-label="Your own question"
+            @click.stop
+            @keyup.enter.stop="submitInput"
+          />
+          <button
+            type="button"
+            class="companion-option ask"
+            :disabled="!inputText.trim()"
+            @click.stop="submitInput"
+          >
+            Ask
+          </button>
+        </div>
       </div>
     </div>
     <div class="companion-pop" :key="popKey" :class="{ happy }">
@@ -469,6 +502,43 @@ watch(activeLine, (v) => {
   background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.73)), rgba(226, 120, 78, var(--boris-alpha, 0.73)));
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(226, 120, 78, 0.45);
+}
+
+/* free-text answer row: a dark field + Ask button, in the bubble's material */
+.companion-inputrow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  width: 100%;
+}
+.companion-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: rgba(14, 26, 30, 0.55);
+  border: 1px solid rgba(241, 237, 230, 0.18);
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: #f1ede6;
+  font: inherit;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  outline: none;
+  transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
+}
+.companion-input::placeholder { color: rgba(241, 237, 230, 0.4); }
+.companion-input:focus {
+  border-color: rgba(127, 227, 240, 0.6);
+  background: rgba(18, 32, 38, 0.6);
+}
+.companion-option.ask {
+  flex: 0 0 auto;
+  margin: 0;
+  width: auto;
+}
+.companion-option.ask:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
 }
 
 .companion-pop { transform-origin: bottom right; }

@@ -2,14 +2,14 @@
 import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
 import UiRenderer from '../UiRenderer.vue'
 import Theater from '../Theater.vue'
-import { useCompose, ROLES, STYLES } from '../../composables/useCompose.js'
+import { useCompose, ROLES, STYLES, INTENTS, FACETS } from '../../composables/useCompose.js'
 import { ACCENT_HUES, DEFAULT_HUES } from '../../theme.js'
 import bg from '../../assets/plaza/north.jpg'
 
 // S3 North — AI Corner (spec §3): the plaza's composed-live zone. Everything
-// here is composed live from the existing backend. The ritual is three
-// questions from CAM — role, topics, style — asked sequentially by Boris
-// himself (useCompose step machine); the zone shows a compact summary of
+// here is composed live from the existing backend. The ritual is a short
+// interview — role, intent, facet, free text, style — asked sequentially by
+// Boris himself (useCompose step machine); the zone shows a compact summary of
 // the selections. Loading is the Theater field, never a spinner.
 
 const {
@@ -50,9 +50,17 @@ const theaterSteps = ['asking the network', 'retrieving your matches', 'composin
 
 // compact selection summary — the picking itself happens with Boris
 const roleLabel = computed(() => ROLES[selections.value.role]?.label ?? '')
-const topicsLabel = computed(() =>
-  selections.value.topics.length ? selections.value.topics.join(', ') : 'Boris chooses'
-)
+const intentLabel = computed(() => {
+  const id = selections.value.intent
+  if (!id) return 'Looking around'
+  return (INTENTS[selections.value.role] ?? []).find((o) => o.id === id)?.label ?? '—'
+})
+const facetLabel = computed(() => {
+  const id = selections.value.facet
+  if (!id) return 'Open mix'
+  return (FACETS[selections.value.role] ?? []).find((o) => o.id === id)?.label ?? '—'
+})
+const freeTextLabel = computed(() => selections.value.freeText ?? '')
 const styleLabel = computed(
   () => STYLES.find((s) => s.id === selections.value.style)?.label ?? ''
 )
@@ -108,8 +116,20 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
               type="button"
               class="sum-chip"
               :class="{ filled: !!selections.role }"
-              @click="reopen('topics')"
-            ><span class="sum-k">topics</span><span class="sum-v">{{ topicsLabel }}</span></button>
+              @click="reopen('intent')"
+            ><span class="sum-k">intent</span><span class="sum-v">{{ intentLabel }}</span></button>
+            <button
+              type="button"
+              class="sum-chip"
+              :class="{ filled: !!selections.role }"
+              @click="reopen('facet')"
+            ><span class="sum-k">facet</span><span class="sum-v">{{ facetLabel }}</span></button>
+            <button
+              v-if="freeTextLabel"
+              type="button"
+              class="sum-chip filled"
+              @click="reopen('freetext')"
+            ><span class="sum-k">asked</span><span class="sum-v">{{ freeTextLabel }}</span></button>
             <button
               type="button"
               class="sum-chip"

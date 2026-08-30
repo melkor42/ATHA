@@ -6,26 +6,92 @@ import { usePlaza } from './usePlaza.js'
 // they can wander, and the result waits for them. Mirrors the usePlaza /
 // useGate pattern: one visitor, one shared state.
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/experience'
+// Single-service deploys (Koyeb Docker) serve SPA and API from one origin,
+// so production defaults to the relative path; local dev talks to the
+// uvicorn port unless VITE_API_URL overrides.
+const API_URL = import.meta.env.VITE_API_URL
+  || (import.meta.env.DEV ? 'http://localhost:8000/api/experience' : '/api/experience')
 const fixtureName = new URLSearchParams(window.location.search).get('fixture')
 
 // Step 1 — who are you coming as. Keys travel through the API as `role`.
 export const ROLES = {
-  student: {
-    label: 'Student',
-    topics: ['networking', 'mentoring', 'career development', 'events', 'entrepreneurship']
-  },
-  warwick: {
-    label: 'University of Warwick',
-    topics: ['mentoring', 'wellbeing', 'community', 'events', 'leadership']
-  },
-  business: {
-    label: 'Business connection',
-    topics: ['talent acquisition', 'consulting', 'fintech', 'sustainability', 'entrepreneurship']
-  }
+  student: { label: 'As talent — I want to join a team' },
+  warwick: { label: 'From Warwick — education & research' },
+  business: { label: 'As an enterprise — I want to bring a challenge' }
 }
 
-// Step 3 — how should it feel. 'surprise' sends no style: the compose agent's
+// Step 2 — intent: what do you most want to know right now? Ids must match
+// backend skeleton.INTENTS (role-specific keys); the skip option sends no
+// intent, which yields the identity bundle. Unknown ids are ignored by the
+// backend, so drift degrades gracefully.
+export const INTENTS = {
+  student: [
+    { id: 'talent-fit', label: 'Whether I\u2019d fit a team' },
+    { id: 'talent-happens', label: 'What actually happens' },
+    { id: 'talent-judged', label: 'How the work is judged' },
+    { id: 'talent-takeaway', label: 'What I take away' }
+  ],
+  warwick: [
+    { id: 'wbs-education', label: 'How ATHA serves education' },
+    { id: 'wbs-role', label: 'WBS\u2019s role' },
+    { id: 'wbs-research', label: 'The research ambition' }
+  ],
+  business: [
+    { id: 'biz-receive', label: 'What we receive as a partner' },
+    { id: 'biz-evaluated', label: 'How our challenge is evaluated' },
+    { id: 'biz-afterwards', label: 'What happens afterwards' },
+    { id: 'biz-ip', label: 'IP & confidentiality' }
+  ]
+}
+export const INTENT_SKIP = { id: null, label: 'Just looking around' }
+
+// Step 3 — facet: one role-specific narrowing question. Ids must match
+// backend skeleton.known_facet_ids() (team functions / value forms / clusters).
+export const FACETS = {
+  student: [
+    { id: 'func-domain-expert', label: 'Domain Expert — understanding the challenge' },
+    { id: 'func-ai-workflow-lead', label: 'AI Workflow Lead — the technical approach' },
+    { id: 'func-responsible-ai-risk', label: 'Responsible AI & Risk — governance and ethics' },
+    { id: 'func-business-viability-coordinator', label: 'Business Viability — the business case' },
+    { id: 'func-pitch-design-lead', label: 'Pitch & Design — communicating the decision' }
+  ],
+  warwick: [
+    { id: 'cluster-education', label: 'Education — developing changemakers' },
+    { id: 'cluster-research', label: 'Research — evidence for healthier innovation' },
+    { id: 'cluster-institutional', label: 'Institutional — WBS\u2019s role and network' }
+  ],
+  business: [
+    { id: 'value-experience', label: 'Experience — a different way of working' },
+    { id: 'value-perspective', label: 'Perspective — seeing AI more fully' },
+    { id: 'value-decision', label: 'Decision — a defensible verdict' },
+    { id: 'value-belonging', label: 'Belonging — joining the community' },
+    { id: 'value-continuity', label: 'Continuity — an ongoing relationship' }
+  ]
+}
+export const FACET_SKIP = { id: null, label: 'Not sure yet — show me the mix' }
+
+// Step 4 — free text: suggestion chips are real catalog questions; a chip click
+// sends that question as free_text (the vector search finds its answer).
+export const CHIPS = {
+  student: [
+    'How are teams formed?',
+    'How is the teams\u2019 work judged?',
+    'What happens during the experience?'
+  ],
+  warwick: [
+    'How does ATHA serve education and research?',
+    'What is Warwick Business School\u2019s role in ATHA?',
+    'Why does ATHA exist — what makes it different?'
+  ],
+  business: [
+    'How is confidentiality and IP handled?',
+    'What happens after the experience?',
+    'What do we need to bring as a partner?'
+  ]
+}
+export const FREETEXT_SKIP_ID = 'freetext-skip'
+
+// Step 5 — how should it feel. 'surprise' sends no style: the compose agent's
 // temperament rule keeps the pages diverse. Everything else is enforced
 // server-side (mode override), guaranteed.
 export const STYLES = [
@@ -77,19 +143,20 @@ function clearPickup() {
   pickup.value = false
 }
 
-// owner decision: all moods visible at once — the style pick is low-stakes, no decision-load cap.
-
 const selections = ref({
   role: null,
-  topics: [],
+  intent: null,   // backend intent id or null (identity bundle)
+  facet: null,    // backend facet id or null (no narrowing)
+  freeText: null, // free-text question or null
   style: 'organic' // organic preselected — the AI Corner's home register
 })
 
-// Boris's sequential interview (spec: three questions, one after another,
-// asked by the companion in the north wing). Lazy: starts on the first
-// north visit of the session, pauses when the visitor wanders off (the
-// plaza's line priority simply hides the branch) and resumes on return.
-const step = ref('role') // role | topics | style | done
+// Boris's sequential interview: role -> intent -> facet -> freetext -> style,
+// asked by the companion in the north wing. Every step after role is skippable.
+// Lazy: starts on the first north visit of the session, pauses when the visitor
+// wanders off (the plaza's line priority simply hides the branch) and resumes
+// on return.
+const step = ref('role') // role | intent | facet | freetext | style | done
 const interviewStarted = ref(false)
 
 function beginInterview() {
@@ -103,9 +170,13 @@ const interviewActive = computed(
 const interviewLine = computed(() => {
   switch (step.value) {
     case 'role':
-      return 'Who are you coming as?'
-    case 'topics':
-      return 'What would you like to see? Pick as many as you like — pick none and I choose.'
+      return 'How are you coming to ATHA?'
+    case 'intent':
+      return 'What do you most want to know right now?'
+    case 'facet':
+      return facetLine()
+    case 'freetext':
+      return 'Anything else you want to know? Pick a suggestion or type your own.'
     case 'style':
       return 'How should it feel?'
     default:
@@ -113,7 +184,17 @@ const interviewLine = computed(() => {
   }
 })
 
+function facetLine() {
+  switch (selections.value.role) {
+    case 'student': return 'Which role in a team would fit you best?'
+    case 'business': return 'What matters most to you as a partner?'
+    case 'warwick': return 'Where is your focus?'
+    default: return 'Anything you want to narrow down?'
+  }
+}
+
 const interviewOptions = computed(() => {
+  const role = selections.value.role
   if (step.value === 'role') {
     return Object.entries(ROLES).map(([id, r]) => ({
       id,
@@ -121,17 +202,33 @@ const interviewOptions = computed(() => {
       selected: selections.value.role === id
     }))
   }
-  if (step.value === 'topics') {
-    const role = ROLES[selections.value.role]
-    // one framed multi-select group (chip: true renders them as a wrapped
-    // chip set, not competing full-width rows) + a single continue action
-    const topics = (role?.topics ?? []).map((t) => ({
-      id: t,
-      label: t,
-      selected: selections.value.topics.includes(t),
+  if (step.value === 'intent') {
+    const opts = (INTENTS[role] ?? []).map((o) => ({
+      id: o.id,
+      label: o.label,
+      selected: selections.value.intent === o.id
+    }))
+    return [...opts, { id: 'intent-skip', label: INTENT_SKIP.label, selected: selections.value.intent === null }]
+  }
+  if (step.value === 'facet') {
+    const opts = (FACETS[role] ?? []).map((o) => ({
+      id: o.id,
+      label: o.label,
+      selected: selections.value.facet === o.id
+    }))
+    return [...opts, { id: 'facet-skip', label: FACET_SKIP.label, selected: selections.value.facet === null }]
+  }
+  if (step.value === 'freetext') {
+    const chips = (CHIPS[role] ?? []).map((text) => ({
+      id: text,       // chip id IS the question text -> becomes free_text
+      label: text,
       chip: true
     }))
-    return [...topics, { id: 'continue', label: 'continue →', action: true }]
+    return [
+      ...chips,
+      { input: true }, // renders the text field (Companion.vue)
+      { id: FREETEXT_SKIP_ID, label: 'Just show me what matters most', action: true }
+    ]
   }
   if (step.value === 'style') {
     return STYLES.map((s) => ({ id: s.id, label: s.label, selected: selections.value.style === s.id, theme: s.id }))
@@ -143,22 +240,26 @@ function answer(id) {
   if (!interviewStarted.value || step.value === 'done') return
   if (step.value === 'role') {
     console.info('[atha:compose] role picked', { role: id })
-    if (selections.value.role !== id) selections.value.topics = [] // new role, new topic pool
-    selections.value.role = id
-    step.value = 'topics'
-  } else if (step.value === 'topics') {
-    if (id === 'continue') {
-      console.info('[atha:compose] continue pressed', { topics: selections.value.topics })
-      step.value = 'style'
-      return
+    if (selections.value.role !== id) {
+      // new role resets the narrowing answers
+      selections.value.intent = null
+      selections.value.facet = null
+      selections.value.freeText = null
     }
-    const t = selections.value.topics
-    selections.value.topics = t.includes(id) ? t.filter((x) => x !== id) : [...t, id]
-    console.info('[atha:compose] topic toggled', {
-      topic: id,
-      selected: selections.value.topics.includes(id),
-      topics: selections.value.topics
-    })
+    selections.value.role = id
+    step.value = 'intent'
+  } else if (step.value === 'intent') {
+    selections.value.intent = id === 'intent-skip' ? null : id
+    console.info('[atha:compose] intent picked', { intent: selections.value.intent })
+    step.value = 'facet'
+  } else if (step.value === 'facet') {
+    selections.value.facet = id === 'facet-skip' ? null : id
+    console.info('[atha:compose] facet picked', { facet: selections.value.facet })
+    step.value = 'freetext'
+  } else if (step.value === 'freetext') {
+    selections.value.freeText = id === FREETEXT_SKIP_ID ? null : id
+    console.info('[atha:compose] freetext set', { freeText: selections.value.freeText })
+    step.value = 'style'
   } else if (step.value === 'style') {
     selections.value.style = id
     step.value = 'done'
@@ -173,7 +274,7 @@ function answer(id) {
 // even after 'done', so selections stay editable until compose starts
 function reopen(s) {
   if (!interviewStarted.value) return
-  if ((s === 'topics' || s === 'style') && !selections.value.role) return
+  if (s !== 'role' && !selections.value.role) return
   step.value = s
 }
 
@@ -196,7 +297,7 @@ async function revealStagger() {
 
 async function compose() {
   if (state.value === 'loading') return
-  const { role, topics, style } = selections.value
+  const { role, intent, facet, freeText, style } = selections.value
   if (!role) return
   state.value = 'loading'
   errorMsg.value = ''
@@ -210,7 +311,10 @@ async function compose() {
       console.info('[atha:compose] fixture branch', { fixture: fixtureName })
       payload = await loadFixture()
     } else {
-      const body = { role, topics }
+      const body = { role, topics: [] }
+      if (intent) body.intent = intent
+      if (facet) body.facet = facet
+      if (freeText) body.free_text = freeText
       if (style && style !== 'surprise') body.style = style
       const visitorState = gateVisitorState()
       if (visitorState) body.visitor_state = visitorState
@@ -255,7 +359,7 @@ async function compose() {
 // discreet recompose: back to step 1, role first
 function restart() {
   if (state.value === 'loading') return
-  selections.value = { role: null, topics: [], style: 'organic' }
+  selections.value = { role: null, intent: null, facet: null, freeText: null, style: 'organic' }
   schema.value = null
   persona.value = null
   revealed.value = 0

@@ -1,7 +1,8 @@
-"""backend/agents.py — the LLM agent behind the SIGNAL wow-page.
+"""backend/agents.py — the LLM copywriter behind the ATHA knowledge page.
 
-experience_builder: PersonaModel (synthesized server-side from the visitor's
-role selection) + retrieved data pool -> ExperienceSchema.
+copywriter: the skeleton (backend/skeleton.py) plans the page structure
+deterministically; this agent only writes the title/text copy for the
+pre-planned slots. It never chooses structure, entities, or grounding.
 
 Plain async OpenAI client against an OpenAI-compatible LLM provider.
 Provider-aware: the base URL decides the quirks. Groq (current default via
@@ -41,10 +42,9 @@ from typing import TypeVar
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI, APIConnectionError, APIError, APITimeoutError, RateLimitError
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from graph_queries import load_env
-from ui_schema import ExperienceSchema, PersonaModel
 
 log = logging.getLogger("signal.agents")
 
@@ -86,7 +86,6 @@ T = TypeVar("T")
 
 # --- system prompts (loaded once at startup from prompts/*.md) ------------------
 
-EXPERIENCE_SYSTEM = (PROMPTS_DIR / "experience_builder.md").read_text(encoding="utf-8")
 COPYWRITER_SYSTEM = (PROMPTS_DIR / "copywriter.md").read_text(encoding="utf-8")
 
 
@@ -132,24 +131,7 @@ def get_nvidia_client() -> AsyncOpenAI | None:
     return _NVIDIA_CLIENT
 
 
-# --- json schema + parsing -------------------------------------------------------
-
-# The compose agent authors sections only; the entities hydration map is
-# server-side.
-_EXPERIENCE_SCHEMA = TypeAdapter(ExperienceSchema).json_schema()
-
-
-def _agent2_schema() -> dict:
-    """ExperienceSchema minus the server-authored entities map."""
-    schema = json.loads(json.dumps(_EXPERIENCE_SCHEMA))
-    props = schema.get("properties", {})
-    props.pop("entities", None)
-    required = [r for r in schema.get("required", []) if r != "entities"]
-    schema["required"] = required
-    return schema
-
-
-_EXPERIENCE_LLM_SCHEMA = _agent2_schema()
+# --- json parsing -----------------------------------------------------------------
 
 
 def parse_json(raw: str | None) -> dict:
@@ -329,95 +311,6 @@ async def _chat_json(
     raise RuntimeError(
         f"{schema_name}: all attempts failed, last error: {last_error}"
     )
-
-
-# --- the compose agent (experience builder) -------------------------------------------
-
-
-def render_pool(rows: list[dict], events: list[dict]) -> str:
-    """Render the retrieved data pool WITH ids for the compose agent's prompt."""
-    lines: list[str] = []
-    for row in rows[:8]:
-        matched = ", ".join(
-            f"{m['name']} ({m['topic']})" for m in (row.get("matches") or []) if m
-        ) or "none"
-        mentor = f" | mentor: {row['mentor_name']}" if row.get("mentor_name") else ""
-        interests = ", ".join(row.get("skills") or [])
-        lines.append(
-            f"- person id={row['person_id']} | {row['name']} | role={row['role']} | "
-            f"school={row['school']} | match_score={row['score']:.3f} | "
-            f"interests: {interests} | seeking enterprises: {matched}{mentor}"
-        )
-    if events:
-        lines.append("")
-        lines.append("Events:")
-        for ev in events[:6]:
-            extra = ""
-            if ev.get("kind") == "past" and ev.get("highlights"):
-                extra = " | highlights: " + " / ".join(ev["highlights"][:3])
-            elif ev.get("date"):
-                extra = f" | date={ev['date']} | location={ev.get('location', '')}"
-            lines.append(f"- event id={ev['id']} | {ev['name']} ({ev['kind']}){extra}")
-    return "\n".join(lines)
-
-
-def render_knowledge_bundle(bundle: dict | None) -> str:
-    """Render a knowledge_for() bundle for the compose prompt: the visitor's
-    most important questions plus the grounded passages answering them."""
-    if not bundle or not bundle.get("questions"):
-        return ""
-    lines = ["Visitor's most important questions — answer these with "
-             "TextBlocks, in order:"]
-    for i, q in enumerate(bundle["questions"], 1):
-        lines.append(f"Q{i}. {q['text']}")
-        for a in q["answers"]:
-            heading = " › ".join(a.get("heading_path") or [])
-            text = " ".join((a.get("text") or "").split())
-            if len(text) > 300:
-                text = text[:297] + "..."
-            lines.append(f"  [{a.get('status', '?')}] ({heading}): {text}")
-    if bundle.get("supporting"):
-        lines.append("")
-        lines.append("Supporting knowledge (optional extra grounding):")
-        for s in bundle["supporting"]:
-            text = " ".join((s.get("text") or "").split())
-            if len(text) > 150:
-                text = text[:147] + "..."
-            lines.append(f"- [{s.get('score', 0):.2f}] {text}")
-    return "\n".join(lines)
-
-
-async def experience_agent(
-    persona: PersonaModel,
-    pool_text: str,
-    allowed_ids: set[str],
-    client: AsyncOpenAI | None = None,
-    knowledge_text: str = "",
-) -> ExperienceSchema:
-    """PersonaModel + data pool (+ optional knowledge bundle) -> ExperienceSchema
-    draft (entities left empty)."""
-    client = client or get_client()
-    user = (
-        "PersonaModel of the visitor:\n"
-        f"{json.dumps(persona.model_dump(), ensure_ascii=False)}\n\n"
-        "Allowed entity ids (entity_ids may ONLY contain ids from this list):\n"
-        f"{json.dumps(sorted(allowed_ids), ensure_ascii=False)}\n\n"
-        f"Data pool retrieved from the ATHA network graph:\n{pool_text}\n\n"
-        "Compose the ExperienceSchema JSON now. Leave \"entities\" empty — the "
-        "server hydrates it. Respond with JSON only."
-    )
-    if knowledge_text:
-        user += f"\n\n{knowledge_text}"
-    data = await _chat_json(
-        client,
-        system=EXPERIENCE_SYSTEM,
-        user=user,
-        json_schema=_EXPERIENCE_LLM_SCHEMA,
-        schema_name="experience_schema",
-        temperature=0.6,
-    )
-    data.setdefault("entities", {})
-    return ExperienceSchema.model_validate(data)
 
 
 # --- the copywriter (skeleton architecture: structure is deterministic, -------
