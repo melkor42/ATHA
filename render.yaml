@@ -1,0 +1,15 @@
+# Render blueprint — single free web service, Dockerfile runtime.
+# The frontend build happens on Render's build servers (Dockerfile stage 1),
+# so the 512 MB free instance only has to RUN FastAPI + serve the built SPA.
+# Secrets (NEO4J_*, LLM/NVIDIA/OPENROUTER keys, model names) are NOT stored
+# here — set them in the Render dashboard under Environment after the first
+# create, or add renderValue entries locally before pushing.
+services:
+  - type: web
+    name: atha
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
