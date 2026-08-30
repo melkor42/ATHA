@@ -1,5 +1,5 @@
 <script setup>
-import bg from '../../assets/plaza/west.png'
+import bg from '../../assets/plaza/west.jpg'
 import SevenDirections from './SevenDirections.vue'
 
 // S4 West — the quiet wing (spec §3): calm, bright, maximum readability.

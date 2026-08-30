@@ -37,7 +37,7 @@ def validate_experience(exp: dict) -> tuple[bool, list[str]]:
     problems = []
     if not exp or "sections" not in exp:
         return False, ["no sections"]
-    if not 1 <= len(exp["sections"]) <= 6:
+    if not 1 <= len(exp["sections"]) <= 10:
         problems.append(f"section count {len(exp['sections'])}")
     entities = exp.get("entities", {})
     for sec in exp["sections"]:
@@ -119,19 +119,35 @@ async def run(base_url: str) -> int:
                 valid = False
                 problems.append(f"degraded: {body.get('degraded_reason', '?')}")
             qids = body.get("knowledge_questions") or []
-            has_textblock = any(s.get("component") == "TextBlock"
-                                for s in exp.get("sections", []))
+            sections = exp.get("sections", [])
+            if len(sections) < 8:
+                valid = False
+                problems.append(f"only {len(sections)} sections (<8)")
+            non_tb = [s.get("component") for s in sections
+                      if s.get("component") != "TextBlock"]
+            if non_tb:
+                valid = False
+                problems.append(f"non-TextBlock sections: {non_tb}")
+            empty = [i for i, s in enumerate(sections)
+                     if not (s.get("title") and s.get("text"))]
+            if empty:
+                valid = False
+                problems.append(f"sections missing title/text: {empty}")
+            if not isinstance(body.get("suggestions"), list):
+                valid = False
+                problems.append("suggestions missing or not a list")
+            if not qids:
+                valid = False
+                problems.append("no knowledge_questions")
             too_slow = ms > KNOWLEDGE_LATENCY_CEILING_MS
-            ok = valid and bool(qids) and not too_slow
+            ok = valid and not too_slow
             knowledge_ok = knowledge_ok and ok
             print(f"\n=== knowledge {role}+{state} ({ms} ms) "
                   f"{'PASS' if ok else 'FAIL'} ===")
             print(f"  schema: {'valid' if valid else 'INVALID'} "
                   f"{problems if problems else ''}")
-            print(f"  answered questions: {qids if qids else 'NONE'}")
-            if not has_textblock:
-                print("  WARNING: no TextBlock section — knowledge not "
-                      "surfaced on the page")
+            print(f"  sections: {len(sections)} | answered: {qids}")
+            print(f"  spectrum: {exp.get('spectrum')} | mode: {exp.get('mode')}")
             if too_slow:
                 print(f"  FAIL: latency {ms} ms > ceiling "
                       f"{KNOWLEDGE_LATENCY_CEILING_MS} ms")

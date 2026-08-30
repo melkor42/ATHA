@@ -10,7 +10,11 @@ Checks:
      with at least one grounded answer;
   2. internal passage ids never surface in any role/state bundle;
   3. realistic compose-sized bundles (top 5 questions) are non-empty for every
-     role × state combination.
+     role × state combination;
+  4. skeleton gate: every role × state yields >=8 slots incl. the guaranteed
+     tail (edition/rhythm/layers) and leaks no internal passage;
+  5. facet probes (value form honest ceiling, lens dedicated slot) and the
+     calibrated free-text threshold (relevant surfaces, irrelevant does not).
 
 Run:  python test_knowledge_retrieval.py      (exit 0 = gate passed)
 """
@@ -24,6 +28,7 @@ from pathlib import Path
 
 from graph_queries import get_database, get_driver
 from knowledge import knowledge_for
+from skeleton import build_skeleton
 
 MAP_PATH = Path(__file__).resolve().parents[1] / "data" / "knowledge" / "knowledge_map.json"
 ROLES = ["student", "warwick", "business"]
@@ -71,6 +76,55 @@ async def main() -> None:
                 if unanswered:
                     errors.append(f"role={role} state={state}: questions "
                                   f"without answers: {unanswered}")
+
+        # 4. skeleton gate — filled page, guaranteed tail, no internal leak
+        for role in ROLES:
+            for state in STATES:
+                sk = await build_skeleton(role, state, driver=driver,
+                                          database=db)
+                kinds = {s["kind"] for s in sk["slots"]}
+                if len(sk["slots"]) < 8:
+                    errors.append(f"skeleton role={role} state={state}: "
+                                  f"only {len(sk['slots'])} slots (<8)")
+                for tail in ("edition", "rhythm", "layers"):
+                    if tail not in kinds:
+                        errors.append(f"skeleton role={role} state={state}: "
+                                      f"missing tail '{tail}'")
+                leaked = [src["pid"] for s in sk["slots"]
+                          for src in s["sources"]
+                          if src.get("pid") in internal_ids]
+                if leaked:
+                    errors.append(f"SKELETON INTERNAL LEAK role={role} "
+                                  f"state={state}: {leaked}")
+
+        # 5a. facet probes
+        sk = await build_skeleton("business", "deciding", driver=driver,
+                                  database=db, facet="value-decision")
+        facets = [s for s in sk["slots"] if s["kind"] == "facet"]
+        if not facets:
+            errors.append("value-decision facet produced no facet slot")
+        elif len(facets[0]["sources"]) != 1:
+            errors.append("value-decision facet: expected exactly 1 source "
+                          f"(honest ceiling), got {len(facets[0]['sources'])}")
+        sk = await build_skeleton("student", None, driver=driver, database=db,
+                                  facet="lens-responsibility")
+        if not any(s["kind"] == "facet" for s in sk["slots"]):
+            errors.append("lens-responsibility facet produced no facet slot")
+
+        # 5b. free-text threshold: relevant surfaces, irrelevant falls back
+        sk = await build_skeleton("student", None, driver=driver, database=db,
+                                  free_text="how are teams formed and how is "
+                                            "the work judged")
+        extra_pids = {src["pid"] for s in sk["slots"] if s["kind"] == "extra"
+                      for src in s["sources"]}
+        if not extra_pids & {"team-setup-03", "assessment-framework-03",
+                             "team-setup-01"}:
+            errors.append("relevant free_text did not surface team/judgement "
+                          f"passages as extras (got {sorted(extra_pids)})")
+        sk = await build_skeleton("student", None, driver=driver, database=db,
+                                  free_text="banana pancake recipe")
+        if len(sk["slots"]) < 8:
+            errors.append("irrelevant free_text shrank the page below 8 slots")
     finally:
         await driver.close()
 

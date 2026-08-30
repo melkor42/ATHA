@@ -36,13 +36,18 @@ from pydantic import BaseModel
 from agents import (
     FALLBACK_MODEL,
     PRIMARY_MODEL,
-    experience_agent,
+    copywriter_agent,
     get_client,
-    render_knowledge_bundle,
-    render_pool,
 )
-from graph_queries import get_database, get_driver, get_embedder, hybrid_retrieve
-from knowledge import knowledge_for
+from graph_queries import get_database, get_driver, get_embedder
+from skeleton import (
+    INTENTS,
+    align_copy,
+    build_skeleton,
+    deterministic_fallback,
+    known_facet_ids,
+    render_slots_for_prompt,
+)
 from ui_schema import (
     ActionType,
     Button,
@@ -139,6 +144,9 @@ class ExperienceRequest(BaseModel):
     topics: list[str] = []
     style: StyleMode | None = None
     visitor_state: str | None = None
+    intent: str | None = None
+    facet: str | None = None
+    free_text: str | None = None
 
 
 # --- role selection ---------------------------------------------------------------
@@ -172,6 +180,20 @@ ROLE_PROFILES: dict[str, dict] = {
         "expertise_level": "expert",
         "perspective": "enterprise",
     },
+}
+
+# Skeleton architecture: spectrum and base mode are fixed per role (the old
+# prompt's tone->mode rule, made deterministic). A visitor style pick still
+# overrides the mode; spectrum always stays the role's.
+ROLE_SPECTRUM = {
+    "student": Spectrum.AURORA,
+    "warwick": Spectrum.MYCELIUM,
+    "business": Spectrum.VOID,
+}
+ROLE_MODE = {
+    "student": StyleMode.RETRO,      # playful -> retro
+    "warwick": StyleMode.ORGANIC,    # warm -> organic
+    "business": StyleMode.MINIMAL,   # direct -> minimal
 }
 
 
@@ -309,7 +331,9 @@ def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
 
     TextBlocks carry no entity references and always survive; a section that
     references entities of which none are whitelisted is dropped (its claims
-    would be ungrounded). Sections beyond six are cut.
+    would be ungrounded). Sections beyond ten are cut. (In the skeleton
+    architecture entity_ids are always empty, so the filter is dormant but
+    stays armed for a future return of entity cards.)
     """
     kept: list[UINode] = []
     for section in schema.sections:
@@ -338,7 +362,7 @@ def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
         layout=schema.layout,
         spectrum=schema.spectrum,
         mode=schema.mode,
-        sections=kept[:6],
+        sections=kept[:10],
         entities={},
     )
 
@@ -412,12 +436,24 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     visitor_state = ((body.visitor_state or "").strip().lower() or None)
     if visitor_state is not None and visitor_state not in VISITOR_STATES:
         visitor_state = None  # unknown gate state -> no state emphasis
-    log.info("experience request: role=%s topics=%s style=%s state=%s",
-             role, topics, style.value if style else None, visitor_state)
+    intent = ((body.intent or "").strip().lower() or None)
+    if intent is not None:
+        spec = INTENTS.get(intent)
+        if spec is None or ("roles" in spec and role not in spec["roles"]):
+            intent = None  # unknown or role-incompatible intent -> ignore
+    facet = ((body.facet or "").strip().lower() or None)
+    if facet is not None and facet not in known_facet_ids():
+        facet = None  # unknown facet -> ignore
+    free_text = ((body.free_text or "").strip() or None)
+    if free_text is not None:
+        free_text = " ".join(free_text.split())[:400] or None
+    log.info("experience request: role=%s state=%s intent=%s facet=%s "
+             "free_text=%s style=%s", role, visitor_state, intent, facet,
+             bool(free_text), style.value if style else None)
 
     key = hashlib.sha256(
-        f"{role}|{'.'.join(topics)}|{style.value if style else ''}|"
-        f"{visitor_state or ''}".encode("utf-8")
+        f"{role}|{visitor_state or ''}|{intent or ''}|{facet or ''}|"
+        f"{free_text or ''}|{style.value if style else ''}".encode("utf-8")
     ).hexdigest()
     started = time.perf_counter()
     cached = _response_cache.get(key)
@@ -439,8 +475,10 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 
     persona = None
     allowed_ids: list[str] = []
-    draft_schema = None
     knowledge_qids: list[str] = []
+    suggestions: list[dict] = []
+    copy_source: str | None = None
+    slot_kinds: list[str] = []
     degraded_reason: str | None = None
     experience = DEFAULT_EXPERIENCE.model_dump()
     try:
@@ -448,54 +486,51 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         persona_model = synthesize_persona(role, topics)
         persona = persona_model.model_dump()
 
-        query_text = " ".join(persona_model.interests)
+        # 1. deterministic page plan from the knowledge graph (structure,
+        #    grounding and section order never come from the model)
         retrieval_started = time.perf_counter()
-        rows, allowed = await hybrid_retrieve(
-            query_text, top_k=TOP_K, limit=LIMIT, driver=get_app_driver()
-        )
-        rows = await enrich_persons_async(rows)
-        events = await fetch_events()
-        log.info("retrieval finished in %d ms (rows=%d, events=%d)",
+        skel = await build_skeleton(
+            role, visitor_state, driver=get_app_driver(),
+            database=get_database(), intent=intent, facet=facet,
+            free_text=free_text)
+        slots = skel["slots"]
+        knowledge_qids = skel["anchor_qids"]
+        suggestions = skel["suggestions"]
+        slot_kinds = [s["kind"] for s in slots]
+        log.info("skeleton built in %d ms: %d slots %s",
                  int((time.perf_counter() - retrieval_started) * 1000),
-                 len(rows), len(events))
-        ids = set(allowed) | {ev["id"] for ev in events}
-        allowed_ids = sorted(ids)
+                 len(slots), slot_kinds)
 
-        pool_text = render_pool(rows, events)
-
-        # knowledge layer: the visitor's most important questions, answered
-        # from the digested ATHA canon. Degrades silently — compose works
-        # without knowledge, it just can't answer beyond the data pool.
-        knowledge_text = ""
+        # 2. copy: one small LLM call over the slots. Any failure falls back
+        #    to deterministic template copy — the page always renders.
         try:
-            bundle = await knowledge_for(
-                role, visitor_state, driver=get_app_driver(),
-                database=get_database(), top_questions=4, max_answers=2)
-            knowledge_text = render_knowledge_bundle(bundle)
-            knowledge_qids = [q["id"] for q in bundle["questions"]]
-            log.info("knowledge bundle: %d questions (%s)",
-                     len(knowledge_qids), ", ".join(knowledge_qids))
-        except Exception as exc:  # noqa: BLE001 — knowledge is an enhancement
-            log.warning("knowledge retrieval failed -> compose without "
-                        "knowledge: %s", exc)
+            llm_started = time.perf_counter()
+            raw = await copywriter_agent(
+                render_slots_for_prompt(slots),
+                ROLE_PROFILES[role]["tone"], client)
+            copy, copy_source = align_copy(slots, raw)
+            log.info("copywriter finished in %d ms (source=%s)",
+                     int((time.perf_counter() - llm_started) * 1000),
+                     copy_source)
+        except Exception as exc:  # noqa: BLE001 — copy is degradable
+            log.warning("copywriter failed -> deterministic copy: %s", exc)
+            copy = deterministic_fallback(slots)
+            copy_source = "fallback"
 
-        log.info("llm compose starting (model handled in agents.py)")
-        llm_started = time.perf_counter()
-        draft = await experience_agent(persona_model, pool_text, ids, client,
-                                       knowledge_text=knowledge_text)
-        log.info("llm compose finished in %d ms",
-                 int((time.perf_counter() - llm_started) * 1000))
-        # the visitor's style pick wins over the agent's temperament choice —
-        # server-side, deterministic, prompt untouched. No style chosen:
-        # keep the agent's mode (the diversity rule).
-        if style is not None:
-            draft.mode = style
-        draft_schema = draft.model_dump()
-        verified = verify(draft, ids)
-        entities = await _hydrate(get_app_driver(),
-                                  {eid for s in verified.sections
-                                   for eid in s.entity_ids})
-        verified.entities = entities
+        # 3. assemble the ExperienceSchema (TextBlocks only; entities empty)
+        draft = ExperienceSchema(
+            layout=Layout.GRID,
+            spectrum=ROLE_SPECTRUM[role],
+            mode=style if style is not None else ROLE_MODE[role],
+            sections=[
+                UINode(component=ComponentType.TEXT_BLOCK,
+                       title=c["title"][:80], text=c["text"][:500])
+                for c in copy
+            ],
+            entities={},
+        )
+        verified = verify(draft, set())
+        verified.entities = {}
         experience = verified.model_dump()
     except Exception as exc:  # noqa: BLE001 — DEFAULT_EXPERIENCE, never crash
         log.exception("pipeline failed -> DEFAULT_EXPERIENCE: %s", exc)
@@ -503,7 +538,8 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 
     payload = {"persona": persona, "experience": experience,
                "allowed_ids": allowed_ids,
-               "knowledge_questions": knowledge_qids}
+               "knowledge_questions": knowledge_qids,
+               "suggestions": suggestions}
     if degraded_reason is not None:
         # surfaced as a console.error by the frontend — makes a paused or
         # deleted Aura instance impossible to miss during development
@@ -516,17 +552,18 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 
     latency_ms = int((time.perf_counter() - started) * 1000)
     _append_trace({
-        "ts": time.time(), "role": role, "topics": topics,
+        "ts": time.time(), "role": role, "visitor_state": visitor_state,
+        "intent": intent, "facet": facet, "free_text": bool(free_text),
         "style": style.value if style else None,
-        "visitor_state": visitor_state,
         "persona": persona,
-        "allowed_ids": allowed_ids, "draft_schema": draft_schema,
         "knowledge_questions": knowledge_qids,
+        "suggestions": suggestions,
+        "slot_kinds": slot_kinds, "copy_source": copy_source,
         "ui_schema": experience,
         "latency_ms": latency_ms, "cache_hit": False,
     })
-    log.info("composed experience in %d ms (sections=%d)",
-             latency_ms, len(experience.get("sections", [])))
+    log.info("composed experience in %d ms (sections=%d, copy=%s)",
+             latency_ms, len(experience.get("sections", [])), copy_source)
     return payload
 
 

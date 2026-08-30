@@ -29,7 +29,7 @@ One-time data load (idempotent, safe to re-run): `cd backend; python generate_da
 - Backend: `cd backend; python -m uvicorn main:app --host 127.0.0.1 --port 8000`
 - Frontend: `cd frontend; npm run dev` → http://localhost:5173
 
-Type one sentence about yourself and the page composes itself. Mock mode without the backend: `http://localhost:5173/?fixture=miriam|jonas|david|tobias`.
+Type one sentence about yourself and the page composes itself. Mock mode without the backend: `http://localhost:5173/?fixture=student|warwick|business`.
 
 Repeats are cached server-side — the same input costs no LLM call. Fresh compositions call OpenRouter free models; when the free quota is exhausted the backend retries with backoff and finally degrades to the welcome page (never crashes).
 

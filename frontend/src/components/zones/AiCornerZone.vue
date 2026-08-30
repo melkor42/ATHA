@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
 import UiRenderer from '../UiRenderer.vue'
-import NetworkGraph from '../NetworkGraph.vue'
 import Theater from '../Theater.vue'
 import { useCompose, ROLES, STYLES } from '../../composables/useCompose.js'
 import { ACCENT_HUES, DEFAULT_HUES } from '../../theme.js'
@@ -58,15 +57,11 @@ const styleLabel = computed(
   () => STYLES.find((s) => s.id === selections.value.style)?.label ?? ''
 )
 
-// the echo: the composed page says back what the visitor stated — role and
-// topics only, straight from their own selections; nothing invented
+// the echo: the composed page says back what the visitor stated — their role,
+// straight from their own selection; nothing invented
 const echoLine = computed(() => {
   const role = ROLES[selections.value.role]?.label
-  if (!role) return ''
-  const topics = selections.value.topics
-  return topics.length
-    ? `For you — coming as ${role}, curious about ${topics.join(', ')}`
-    : `For you — coming as ${role}, with Boris choosing what fits`
+  return role ? `For you — coming as ${role}` : ''
 })
 
 // loading → ready choreography: the opaque dark Theater used to unmount in
@@ -150,9 +145,6 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
         </div>
 
         <template v-if="state === 'ready'">
-          <div class="graph-panel on">
-            <NetworkGraph />
-          </div>
           <div
             class="composed"
             :class="['spectrum-' + spectrum, 'mode-' + mode]"
@@ -336,7 +328,6 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   align-items: flex-start;
 }
 
-.graph-panel,
 .panel {
   width: 100%;
   opacity: 0;
@@ -347,22 +338,10 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
     transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
     filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.graph-panel.on,
 .panel.on {
   opacity: 1;
   transform: none;
   filter: blur(0);
-}
-.graph-panel {
-  /* the graph yields to the space we have instead of forcing its aspect */
-  --graph-h: clamp(240px, 52vh, 640px);
-  display: flex;
-  align-items: center;
-  background: rgba(14, 26, 30, 0.72);
-  border: 1px solid rgba(127, 227, 240, 0.2);
-  border-radius: 30px 34px 32px 28px;
-  padding: 14px 18px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35), inset 0 0 26px rgba(127, 227, 240, 0.08);
 }
 
 /* the composed canvas: spectrum × mode own the card styling now — the
@@ -419,11 +398,6 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
     padding-bottom: 120px;
   }
   .canvas-frame { width: 100%; min-height: 0; gap: 14px; }
-  .graph-panel {
-    --graph-h: clamp(200px, 40vh, 420px);
-    padding: 10px;
-    border-radius: 22px 24px 22px 20px;
-  }
   .composed { padding: 18px 14px; border-radius: 18px; }
 }
 @media (max-width: 600px) {

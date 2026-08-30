@@ -1,0 +1,15 @@
+{
+  "source": "docs/atha-context-brief.md — Edition 001, current working direction",
+  "preamble": "Nothing below is confirmed; it is set out as it actually stands.",
+  "facts": [
+    {"id": "participants", "fact": "Around 45 selected participants, Warwick-centred", "status": "proposed"},
+    {"id": "teams", "fact": "Nine multidisciplinary teams of five", "status": "proposed"},
+    {"id": "challenges", "fact": "Three real enterprise AI challenges", "status": "proposed"},
+    {"id": "teams-per-challenge", "fact": "Three independent teams per challenge", "status": "proposed"},
+    {"id": "location", "fact": "Warwick/Coventry as the core working location", "status": "proposed"},
+    {"id": "format", "fact": "A multi-day working experience at Warwick Business School", "status": "proposed"},
+    {"id": "showcase", "fact": "Possible later enterprise showcase at WBS The Shard, London", "status": "open"},
+    {"id": "dates", "fact": "Dates not fixed — direction: around March 2027", "status": "open"},
+    {"id": "partners", "fact": "Challenge partners being selected", "status": "open"}
+  ]
+}

@@ -1,7 +1,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useGate } from '../../composables/useGate.js'
-import bg from '../../assets/plaza/south.png'
+import bg from '../../assets/plaza/south.jpg'
 
 // S2 South — Story & Entrance-Gate (spec §3).
 // (a) five phases revealed on scroll like growing light;

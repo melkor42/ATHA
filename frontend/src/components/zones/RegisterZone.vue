@@ -1,5 +1,5 @@
 <script setup>
-import bg from '../../assets/plaza/east.png'
+import bg from '../../assets/plaza/east.jpg'
 
 // S5 East — Anmeldung (spec §3): warm welcoming pole, two organic CTAs.
 // Copy = the four-perspective deliverables (docs/atha-context-brief.md);

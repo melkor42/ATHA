@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 MAP_PATH = Path(__file__).resolve().parents[1] / "data" / "knowledge" / "knowledge_map.json"
+EDITION_PATH = Path(__file__).resolve().parents[1] / "data" / "knowledge" / "edition_facts.json"
 MAX_TEXT_CHARS = 2000
 VALID_PERSPECTIVES = {"om", "hadora", "joint", "operational"}
 VALID_STATUSES = {"confirmed", "proposed", "open"}
@@ -98,6 +99,27 @@ def main() -> None:
     for qid in question_ids:
         if not answered.get(qid):
             errors.append(f"question '{qid}' has no answering passage")
+
+    # edition facts (static skeleton tail source, not ingested as passages)
+    if not EDITION_PATH.exists():
+        errors.append("edition_facts.json missing")
+    else:
+        edition = json.loads(EDITION_PATH.read_text(encoding="utf-8"))
+        facts = edition.get("facts") or []
+        if not facts:
+            errors.append("edition_facts.json: no facts")
+        seen_ids: set[str] = set()
+        for f in facts:
+            fid = f.get("id", "?")
+            if fid in seen_ids:
+                errors.append(f"edition fact id duplicated: {fid}")
+            seen_ids.add(fid)
+            if not f.get("fact"):
+                errors.append(f"edition fact {fid}: empty fact text")
+            elif len(f["fact"]) > 200:
+                errors.append(f"edition fact {fid}: fact text > 200 chars")
+            if f.get("status") not in VALID_STATUSES:
+                errors.append(f"edition fact {fid}: bad status {f.get('status')!r}")
 
     if errors:
         fail(errors)

@@ -37,6 +37,25 @@ export const STYLES = [
   { id: 'steampunk', label: 'Brass & steam' }
 ]
 
+// The entrance gate (useGate.js answer1) stores its option id in
+// sessionStorage['athaVisitorState']; 'first' means discovering. Map those ids
+// onto the backend's visitor_state vocabulary so the compose call carries the
+// journey state the visitor already stated at the gate.
+const GATE_STATE = {
+  first: 'discovering',
+  deciding: 'deciding',
+  preparing: 'preparing',
+  experienced: 'experienced'
+}
+
+function gateVisitorState() {
+  try {
+    return GATE_STATE[sessionStorage.getItem('athaVisitorState') ?? ''] ?? null
+  } catch {
+    return null // private mode / storage unavailable
+  }
+}
+
 const state = ref('idle') // idle | loading | ready | error
 const schema = ref(null)
 const persona = ref(null)
@@ -193,6 +212,8 @@ async function compose() {
     } else {
       const body = { role, topics }
       if (style && style !== 'surprise') body.style = style
+      const visitorState = gateVisitorState()
+      if (visitorState) body.visitor_state = visitorState
       console.info('[atha:compose] request', body)
       const t0 = performance.now()
       payload = await fetch(API_URL, {

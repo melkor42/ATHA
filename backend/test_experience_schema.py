@@ -1,7 +1,7 @@
 """backend/test_experience_schema.py — offline contract for /api/experience.
 
 Reuses validate_experience from eval_loop.py and pins the schema rules it
-encodes (1..6 sections, hydrated entity_ids, title <= 80, text <= 500) with
+encodes (1..10 sections, hydrated entity_ids, title <= 80, text <= 500) with
 synthetic payloads. Pure function, instant, credential-free — no live backend.
 
 Run:  python backend/test_experience_schema.py
@@ -38,12 +38,18 @@ CASES = [
                    "text": "The network is composing your personal page.",
                    "entity_ids": []}],
         entities={}), True),
-    ("six sections is the ceiling", _experience(
+    ("six sections valid", _experience(
         sections=[{"component": "text_block", "title": f"S{i}",
                    "text": "x", "entity_ids": []} for i in range(6)]), True),
-    ("seven sections rejected", _experience(
+    ("seven sections valid", _experience(
         sections=[{"component": "text_block", "title": f"S{i}",
-                   "text": "x", "entity_ids": []} for i in range(7)]), False),
+                   "text": "x", "entity_ids": []} for i in range(7)]), True),
+    ("ten sections is the ceiling", _experience(
+        sections=[{"component": "text_block", "title": f"S{i}",
+                   "text": "x", "entity_ids": []} for i in range(10)]), True),
+    ("eleven sections rejected", _experience(
+        sections=[{"component": "text_block", "title": f"S{i}",
+                   "text": "x", "entity_ids": []} for i in range(11)]), False),
     ("zero sections rejected", _experience(sections=[]), False),
     ("missing sections key rejected", {"entities": {}}, False),
     ("empty payload rejected", {}, False),

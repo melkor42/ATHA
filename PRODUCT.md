@@ -23,7 +23,7 @@ ATHA is the first 48-hour AI-native viability environment: real enterprise AI pr
 - Vue 3 + Vite frontend with a Component Registry and recursive UiRenderer (no `v-html`).
 - FastAPI backend orchestrating two LLM agents via OpenRouter free-tier models; embeddings are local fastembed (bge-small-en-v1.5, 384 dims); graph data in Neo4j.
 - Repeated inputs are cached server-side; free-quota exhaustion triggers backoff and graceful degradation to the welcome page — it never crashes.
-- Mock mode runs without the backend via fixture query params (`?fixture=miriam|jonas|david|tobias`).
+- Mock mode runs without the backend via fixture query params (`?fixture=student|warwick|business`).
 - Demo context: presented at Warwick Business School; demo target 2026-08-24.
 
 ## Capabilities and Constraints

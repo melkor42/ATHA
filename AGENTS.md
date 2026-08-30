@@ -14,10 +14,11 @@ Single-context: `CONTEXT.md` + `docs/adr/` at the repo root, created lazily as t
 
 ## Setup, run, verification
 
-Setup and local run instructions live in `README.md`. Credential-free fixture mode (no backend, no LLM): `http://localhost:5173/?fixture=miriam|jonas|david|tobias`. Verification gate: `python backend/eval_loop.py` against the running backend — exit 0 = all three roles valid.
+Setup and local run instructions live in `README.md`. Credential-free fixture mode (no backend, no LLM): `http://localhost:5173/?fixture=student|warwick|business`. Verification gate: `python backend/eval_loop.py` against the running backend — exit 0 = all three roles valid.
 
 ### Pre-commit checks
 
-- Changes to `backend/main.py`, `backend/agents.py`, or `frontend/src/composables/useCompose.js`: start the backend, then run `python backend/eval_loop.py` before committing.
-- Frontend changes: open fixture mode (`?fixture=miriam`) once before committing.
+- Changes to `backend/main.py`, `backend/agents.py`, `backend/skeleton.py`, `backend/knowledge.py`, or `frontend/src/composables/useCompose.js`: start the backend, then run `python backend/eval_loop.py` before committing.
+- Frontend changes: open fixture mode (`?fixture=student`) once before committing.
 - Instant offline schema contract (no backend, no credentials): `python backend/test_experience_schema.py`.
+- Knowledge graph changes (`data/knowledge/*`, `backend/ingest_knowledge.py`): `python backend/test_knowledge_ingest.py` (offline contract), and after ingest `python backend/test_knowledge_retrieval.py` (live skeleton/retrieval gate).

@@ -87,6 +87,7 @@ T = TypeVar("T")
 # --- system prompts (loaded once at startup from prompts/*.md) ------------------
 
 EXPERIENCE_SYSTEM = (PROMPTS_DIR / "experience_builder.md").read_text(encoding="utf-8")
+COPYWRITER_SYSTEM = (PROMPTS_DIR / "copywriter.md").read_text(encoding="utf-8")
 
 
 def _client() -> AsyncOpenAI:
@@ -417,3 +418,56 @@ async def experience_agent(
     )
     data.setdefault("entities", {})
     return ExperienceSchema.model_validate(data)
+
+
+# --- the copywriter (skeleton architecture: structure is deterministic, -------
+# --- the LLM only writes title/text copy for pre-planned slots) --------------
+
+_COPY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "sections": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "text": {"type": "string"},
+                },
+                "required": ["title", "text"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["sections"],
+    "additionalProperties": False,
+}
+
+
+async def copywriter_agent(
+    slots_json: str,
+    tone: str,
+    client: AsyncOpenAI | None = None,
+    temperature: float = 0.5,
+) -> list:
+    """Slots JSON + tone -> raw [{title, text}, ...] (caller aligns to slots).
+
+    Copy-only: the skeleton already fixed structure and grounding, so this call
+    is small (slots with truncated sources in, one {title,text} per slot out)
+    and rides the same provider ladder/budget governor as the old compose call.
+    """
+    client = client or get_client()
+    user = (
+        f"Tone: {tone}.\n\n"
+        f"Slots:\n{slots_json}\n\n"
+        "Write the copy now. Respond with JSON only."
+    )
+    data = await _chat_json(
+        client,
+        system=COPYWRITER_SYSTEM,
+        user=user,
+        json_schema=_COPY_SCHEMA,
+        schema_name="copywriter",
+        temperature=temperature,
+    )
+    return data.get("sections") or []

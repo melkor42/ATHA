@@ -12,8 +12,21 @@ The vocabulary the project uses. Terms are defined as used; don't drift to synon
 - **Profile** — the embedding-bearing text of a Person; the vector surface of retrieval. Same embedding model in ingest and query (fastembed bge-small-en-v1.5, 384 dims).
 - **Perspective** — the visitor's stance: `enterprise` | `talent` | `infrastructure` | `education`. Agent 1's primary branching axis; inherited from the page the Wow Page replaces.
 - **PersonaModel** — Agent 1's output: interests, tone, accent_color (ColorToken), expertise_level, perspective.
-- **ExperienceSchema** — the contract between Agent 2 and the frontend: allowlist enums (components, color tokens, actions, layouts, Spectrum, StyleMode), recursive UINode, entity_ids whitelist-checked by verify(). **Spectrum** (`mycelium | terra | aurora | neon | void`) owns the hue family — surfaces, borders, glows, ambient aura; selected by perspective. **StyleMode** (`none | minimal | retro | organic | earth | steampunk`) owns materiality, typography and atmosphere; selected by explicit design words or persona temperament. The two axes compose orthogonally (axis grammar).
-- **Wow Page** — the composed personal page: grounded, visibly different per persona, building itself in front of the user.
+- **ExperienceSchema** — the contract between the compose pipeline and the frontend: allowlist enums (components, color tokens, actions, layouts, Spectrum, StyleMode), recursive UINode, 1–10 sections. In the skeleton architecture the pipeline fills it with TextBlocks only (entities empty). **Spectrum** (`mycelium | terra | aurora | neon | void`) owns the hue family and is fixed per role (student→aurora, warwick→mycelium, business→void). **StyleMode** (`none | minimal | retro | organic | earth | steampunk`) owns materiality, typography and atmosphere; fixed per role, overridden by the visitor's explicit style pick.
+- **Wow Page** — the composed personal page: grounded, visibly different per role, building itself in front of the user.
+- **Skeleton** — the deterministic page plan (`backend/skeleton.py`): anchor questions (catalog, state-adjusted, intent-boosted) → facet slot → vector extras → guaranteed tail (edition facts, rhythm arc, partner layers). Structure, grounding and section order never come from the model.
+- **Slot** — one planned section of the skeleton: kind (anchor|facet|extra|edition|rhythm|layers), title_hint, about, and the source passages (with status) the copy is written from.
+- **Copywriter** — the small LLM call (`agents.copywriter_agent`) that writes title/text copy for the skeleton's slots and nothing else; `align_copy` index-aligns its output with a deterministic per-slot fallback.
+- **Edition facts** — the ATHA 001 status facts (`data/knowledge/edition_facts.json`, from the context brief), shown in the guaranteed tail with status discipline (proposed/open framed as forming).
+
+## Knowledge graph (digested ATHA canon)
+
+The composed page is grounded in a digested knowledge graph, separate from the synthetic network dataset below. Source: Richard's ATHA context docs, vendored to `data/knowledge/context-md/ATHA/`, curated via `data/knowledge/digest_rules_cluster*.json` into `data/knowledge/knowledge_map.json`, ingested by `backend/ingest_knowledge.py` (idempotent MERGE + edge-clear convergence).
+
+- **Question** — a catalog question the page can answer (`q01`…`q14`), ranked per role (`rank_by_role`), tagged to visitor states. Linked to its answers by `ANSWERED_BY`.
+- **Passage** — a chunk of a source doc with `perspective`, `status` (confirmed|proposed|open), role/state relevance, and an embedding. `:InternalPassage` marks internal-only content (judge panel, partner strategy) that is never embedded and never surfaces to visitors.
+- **Ontology** — anchors the passages: Organization, Lens (5), VerdictState (4), ArcStage (7), TeamFunction (5), AssessmentArea (versioned variants), RecommendationCategory, ValueForm (5), HadoraPrinciple. Passages `SUPPORT` ontology nodes; facet retrieval matches on these.
+- Retrieval: `backend/knowledge.py::knowledge_for` (anchor answers) and `backend/skeleton.py::build_skeleton` (full page plan). Free-text threshold for the vector extras is calibrated to ~0.82 on bge-small for this corpus.
 
 ## Dataset spec (synthetic v1)
 

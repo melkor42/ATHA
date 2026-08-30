@@ -1,6 +1,6 @@
 <script setup>
 import { usePlaza } from '../../composables/usePlaza.js'
-import bg from '../../assets/plaza/center.png'
+import bg from '../../assets/plaza/center.jpg'
 
 // S1 Town Square center (delta §2) — the resting point: promise,
 // grounding, belonging, two doors. Both doors lead to the east wing.

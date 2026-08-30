@@ -164,11 +164,11 @@ class ExperienceSchema(BaseModel):
     layout: Layout
     spectrum: Spectrum = Spectrum.TERRA
     mode: StyleMode = StyleMode.NONE
-    sections: list[UINode] = Field(min_length=1, max_length=6)
+    sections: list[UINode] = Field(min_length=1, max_length=10)
     entities: dict[str, EntityPayload] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _clean(self) -> "ExperienceSchema":
-        if len(self.sections) > 6:
-            self.sections = self.sections[:6]
+        if len(self.sections) > 10:
+            self.sections = self.sections[:10]
         return self

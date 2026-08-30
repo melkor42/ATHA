@@ -513,6 +513,38 @@ watch(activeLine, (v) => {
 }
 .pupil { transition: transform 0.09s ease-out; }
 
+/* narrow viewports: the bubble must never leave the viewport — anchor it
+   right beside Boris, compact typography, long labels wrap. The desktop
+   prominent scale-up would push a 320px bubble past the left edge, so it
+   yields here; the bubble stays in the right half, clear of the compass
+   (its bottom edge still sits above the bear's full height). */
+@media (max-width: 640px) {
+  .companion { right: 10px; }
+  .companion.prominent { transform: none; }
+  .companion-bubble {
+    right: 10px;
+    left: auto;
+    width: min(320px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    padding: 9px 12px;
+    font-size: 14px;
+    border-radius: 18px 16px 6px 15px;
+  }
+  .companion-bubble.question {
+    width: min(320px, calc(100vw - 20px));
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+  .companion-options { gap: 6px; margin-top: 9px; }
+  .companion-option {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .companion-option.chip { padding: 6px 10px; font-size: 12px; }
+}
+
 /* reduced motion: no bob/blink/spin/pulse/halo, pupils stay centered
    (tracking is skipped in JS), content stays fully visible */
 .companion.still .bear,
