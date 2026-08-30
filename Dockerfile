@@ -14,9 +14,17 @@ RUN npm run build
 # --- stage 2: backend + static ---------------------------------------------------
 FROM python:3.11-slim
 WORKDIR /app
+# onnxruntime (via fastembed) needs libgomp at import time — not in slim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgomp1 \
+ && rm -rf /var/lib/apt/lists/*
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
+# agents.py and skeleton.py resolve ../prompts and ../data/knowledge from the
+# repo root, so the image mirrors that layout: /app (backend) + /prompts + /data
+COPY prompts/ /prompts
+COPY data/knowledge/ /data/knowledge
 COPY --from=web /web/dist ./static
 # bake the embedding model into the image so cold starts don't download it
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='BAAI/bge-small-en-v1.5')"

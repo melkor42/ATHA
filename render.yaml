@@ -12,4 +12,5 @@ services:
     region: frankfurt
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    port: "8000"
     healthCheckPath: /health
