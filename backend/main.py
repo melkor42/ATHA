@@ -431,7 +431,9 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         # deleted Aura instance impossible to miss during development
         payload["degraded"] = True
         payload["degraded_reason"] = degraded_reason
-    else:
+    elif copy_source == "llm":
+        # never cache fallback/mixed copy: a throttled-provider window would
+        # otherwise keep serving raw-dump text long after recovery
         _response_cache[key] = payload
         while len(_response_cache) > CACHE_MAX:
             _response_cache.popitem(last=False)

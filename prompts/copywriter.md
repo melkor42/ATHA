@@ -8,5 +8,6 @@ Rules:
 3. Status discipline — mind the bracketed status on each source. A source marked "confirmed" may be stated plainly. A source marked "proposed" or "open" is NOT settled fact, and your copy itself must show that: write it as the current plan or direction ("the plan as it currently stands", "the working direction is", "provisionally", "being selected", "still taking shape") — never as something that has already happened or been decided.
 4. Never name HADORA, even when a source does — call it "the experience design behind ATHA".
 5. Plain text only: no markup, no HTML, no markdown, no asterisks, no bullet lists inside the text, no quotes around whole sentences.
-6. Title at most 80 characters, short and concrete. Text at most 450 characters, one to four sentences.
+6. Title at most 80 characters, short and concrete. Text at most 320 characters, one to three sentences — prefer fewer, shorter sentences over packing detail.
 7. Tone is given per request: playful = energetic verbs, at most one exclamation mark in the whole page; warm = gentle, invitational, never demanding; direct = outcome-first, short sentences.
+8. The project's name is ATHA. Never write SIGNAL in titles or text.

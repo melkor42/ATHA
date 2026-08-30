@@ -11,6 +11,7 @@ grounded. Free text is a RETRIEVAL KEY ONLY — it never reaches the copywriter.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from neo4j import AsyncDriver
@@ -133,6 +134,20 @@ def _slot(kind: str, title_hint: str, about: str, sources: list[dict],
             "sources": sources, "ref_id": ref_id}
 
 
+def _degenerate(text: str | None, heading_path: list | None) -> bool:
+    """Heading-only passages (text == last heading) and near-empty texts are
+    useless as visitor-facing copy — they would render as title-only cards."""
+    t = " ".join((text or "").split())
+    if len(t) < 40:
+        return True
+    head = (heading_path or [])[-1] if heading_path else ""
+    return bool(head) and t == " ".join(head.split())
+
+
+def _norm_title(title: str) -> str:
+    return re.sub(r"[^a-z0-9 ]", "", title.lower()).strip()
+
+
 async def build_skeleton(
     role: str,
     visitor_state: str | None,
@@ -169,6 +184,7 @@ async def build_skeleton(
                    for q in questions[anchor_questions:anchor_questions + 3]]
 
     used_pids: set[str] = set()
+    used_titles: set[str] = set()
     slots: list[dict] = []
 
     async with driver.session(database=db) as session:
@@ -183,7 +199,8 @@ async def build_skeleton(
                         answers_by_q.get(q["id"], []),
                         key=lambda a: ({"confirmed": 0, "proposed": 1}
                                        .get(a["status"], 2), a["pid"])):
-                    if a["pid"] in used_pids:
+                    if (a["pid"] in used_pids
+                            or _degenerate(a["text"], a["heading_path"])):
                         continue
                     used_pids.add(a["pid"])
                     sources.append({"pid": a["pid"], "text": a["text"],
@@ -192,6 +209,9 @@ async def build_skeleton(
                                     "origin": "catalog"})
                     if len(sources) >= max_answers:
                         break
+                if not sources:
+                    continue  # a question with no visitor-usable answer
+                used_titles.add(_norm_title(q["text"]))
                 slots.append(_slot("anchor", q["text"], q["text"], sources,
                                    q["id"]))
 
@@ -202,47 +222,42 @@ async def build_skeleton(
             if row and row["passages"]:
                 sources = []
                 for p in row["passages"]:
-                    if p["pid"] in used_pids:
+                    if (p["pid"] in used_pids
+                            or _degenerate(p["text"], p["heading_path"])):
                         continue
                     used_pids.add(p["pid"])
                     sources.append({"pid": p["pid"], "text": p["text"],
                                     "status": p["status"],
                                     "heading_path": p["heading_path"],
                                     "origin": "facet"})
-                if sources:
-                    name = row["facet_name"] or facet
+                name = row["facet_name"] or facet
+                if sources and _norm_title(name) not in used_titles:
+                    used_titles.add(_norm_title(name))
                     slots.append(_slot("facet", name, f"The {name} role"
                                        if facet.startswith("func-") else name,
                                        sources, facet))
 
-        # --- vector extras ---------------------------------------------------
-        # tail_count: edition + rhythm + layers are guaranteed below.
+        # --- vector extras (only when the visitor actually asked) -----------
+        # Without free_text the page is anchors + guaranteed tail only:
+        # filler extras that echo the anchors read as noise, not value.
+        # bge-small's baseline is high, so free_text needs the calibrated
+        # ~0.82 threshold to keep junk out.
         tail_count = 3
         room = max_sections - (len(slots) + tail_count)
         wanted = min(max_extras, room)
-        if wanted > 0:
-            extra_rows: list[dict] = []
-            if free_text:
-                extra_rows = await (await session.run(
-                    VECTOR_EXTRAS_QUERY, vector=embed_query(free_text),
-                    role=role, top_k=12, exclude=sorted(used_pids),
-                    min_score=extra_threshold, limit=wanted)).data()
-            # Top up any shortfall from the role-anchored fill path (no
-            # threshold — same trust level as the catalog) so the page stays
-            # full even when free_text is absent or irrelevant. bge-small's
-            # baseline is high, so free_text needs the calibrated ~0.82
-            # threshold to keep junk out.
-            if len(extra_rows) < wanted:
-                fill_query = (f"{role} "
-                              + " ".join(q["text"] for q in anchors[:3]))
-                exclude = sorted(used_pids | {r["pid"] for r in extra_rows})
-                extra_rows += await (await session.run(
-                    VECTOR_EXTRAS_QUERY, vector=embed_query(fill_query),
-                    role=role, top_k=12, exclude=exclude, min_score=0.0,
-                    limit=wanted - len(extra_rows))).data()
+        if wanted > 0 and free_text:
+            extra_rows = await (await session.run(
+                VECTOR_EXTRAS_QUERY, vector=embed_query(free_text),
+                role=role, top_k=12, exclude=sorted(used_pids),
+                min_score=extra_threshold, limit=wanted)).data()
             for r in extra_rows:
-                used_pids.add(r["pid"])
+                if _degenerate(r["text"], r["heading_path"]):
+                    continue
                 heading = (r["heading_path"] or ["Background"])[-1]
+                if _norm_title(heading) in used_titles:
+                    continue
+                used_pids.add(r["pid"])
+                used_titles.add(_norm_title(heading))
                 slots.append(_slot(
                     "extra", heading,
                     f"More context: {heading}",
@@ -315,9 +330,25 @@ def render_slots_for_prompt(slots: list[dict]) -> str:
 
 
 def _fallback_entry(slot: dict) -> dict:
-    text = " ".join(src["text"] for src in slot["sources"]).strip()
-    if len(text) > 450:
-        text = text[:447] + "..."
+    """Emergency copy when the LLM is down: cleaned sources, status kept
+    honest ("Planned:"), capped short — readable, never a raw dump."""
+    settled: list[str] = []
+    planned: list[str] = []
+    for src in slot["sources"]:
+        t = re.sub(r"\[[^\]]*\]", " ", src["text"]).replace("|", ", ")
+        t = re.sub(r"\s+", " ", t).strip()
+        if not t:
+            continue
+        if src.get("status") in ("proposed", "open"):
+            planned.append(t)
+        else:
+            settled.append(t)
+    parts = settled[:]
+    if planned:
+        parts.append("Planned: " + " ".join(planned))
+    text = " ".join(parts)
+    if len(text) > 320:
+        text = text[:317].rsplit(" ", 1)[0] + "..."
     return {"title": slot["title_hint"][:80], "text": text}
 
 

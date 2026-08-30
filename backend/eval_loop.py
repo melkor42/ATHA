@@ -120,9 +120,9 @@ async def run(base_url: str) -> int:
                 problems.append(f"degraded: {body.get('degraded_reason', '?')}")
             qids = body.get("knowledge_questions") or []
             sections = exp.get("sections", [])
-            if len(sections) < 8:
+            if len(sections) < 7:
                 valid = False
-                problems.append(f"only {len(sections)} sections (<8)")
+                problems.append(f"only {len(sections)} sections (<7)")
             non_tb = [s.get("component") for s in sections
                       if s.get("component") != "TextBlock"]
             if non_tb:

@@ -11,7 +11,7 @@ Checks:
   2. internal passage ids never surface in any role/state bundle;
   3. realistic compose-sized bundles (top 5 questions) are non-empty for every
      role × state combination;
-  4. skeleton gate: every role × state yields >=8 slots incl. the guaranteed
+  4. skeleton gate: every role × state yields >=7 slots incl. the guaranteed
      tail (edition/rhythm/layers) and leaks no internal passage;
   5. facet probes (value form honest ceiling, lens dedicated slot) and the
      calibrated free-text threshold (relevant surfaces, irrelevant does not).
@@ -83,9 +83,9 @@ async def main() -> None:
                 sk = await build_skeleton(role, state, driver=driver,
                                           database=db)
                 kinds = {s["kind"] for s in sk["slots"]}
-                if len(sk["slots"]) < 8:
+                if len(sk["slots"]) < 7:
                     errors.append(f"skeleton role={role} state={state}: "
-                                  f"only {len(sk['slots'])} slots (<8)")
+                                  f"only {len(sk['slots'])} slots (<7)")
                 for tail in ("edition", "rhythm", "layers"):
                     if tail not in kinds:
                         errors.append(f"skeleton role={role} state={state}: "
@@ -123,8 +123,8 @@ async def main() -> None:
                           f"passages as extras (got {sorted(extra_pids)})")
         sk = await build_skeleton("student", None, driver=driver, database=db,
                                   free_text="banana pancake recipe")
-        if len(sk["slots"]) < 8:
-            errors.append("irrelevant free_text shrank the page below 8 slots")
+        if len(sk["slots"]) < 7:
+            errors.append("irrelevant free_text shrank the page below 7 slots")
     finally:
         await driver.close()
 

@@ -69,7 +69,7 @@ const styleLabel = computed(
 // straight from their own selection; nothing invented
 const echoLine = computed(() => {
   const role = ROLES[selections.value.role]?.label
-  return role ? `For you — coming as ${role}` : ''
+  return role ? `For you — ${role}` : ''
 })
 
 // loading → ready choreography: the opaque dark Theater used to unmount in
