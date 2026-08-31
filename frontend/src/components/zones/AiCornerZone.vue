@@ -192,7 +192,7 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
 .zone-north {
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(127, 227, 240, 0.35) transparent;
+  scrollbar-color: rgba(107, 128, 76, 0.4) transparent;
 }
 .north-copy {
   position: relative;
@@ -210,34 +210,32 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
 .eyebrow {
   font-size: 12px;
   letter-spacing: 0.34em;
-  color: rgba(174, 244, 252, 0.75);
+  color: rgba(76, 90, 62, 0.78);
   margin: 0;
-  text-shadow: 0 1px 8px rgba(8, 16, 20, 0.55);
 }
 .wing-title {
   font-weight: 300;
   font-size: clamp(24px, 3vw, 40px);
-  color: #f1ede6;
+  color: #241f1b;
   margin: 0 0 4px;
-  text-shadow: 0 0 24px rgba(127, 227, 240, 0.35);
+  text-shadow: 0 1px 0 rgba(255, 251, 240, 0.6);
 }
 
-/* CAM's explanation of what happens here — a dark card surface so the
-   light text never washes out over the photo, in the wisdom-corner card
-   language but in this wing's night material */
+/* CAM's explanation of what happens here — frosted paper like the rest
+   of the plaza's day material, dark ink over the photo */
 .cam-intro {
   width: min(720px, 94%);
   margin: 0;
-  background: rgba(10, 18, 22, 0.85);
-  border: 1px solid rgba(127, 227, 240, 0.16);
+  background: rgba(250, 247, 240, 0.78);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(120, 105, 85, 0.35);
   border-radius: 22px;
   padding: 28px 36px;
-  color: rgba(241, 237, 230, 0.72);
+  color: rgba(43, 38, 34, 0.8);
   font-size: 14px;
   line-height: 1.65;
   letter-spacing: 0.02em;
   text-align: center;
-  text-shadow: 0 1px 8px rgba(8, 16, 20, 0.55);
 }
 
 /* the compact selection summary — mono chips, one glance at the choices */
@@ -258,36 +256,37 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: rgba(14, 26, 30, 0.55);
-  border: 1px solid rgba(241, 237, 230, 0.16);
-  border-radius: 7px;
-  padding: 7px 12px;
-  color: rgba(241, 237, 230, 0.48);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  background: rgba(250, 247, 240, 0.66);
+  border: 1px solid rgba(120, 105, 85, 0.3);
+  border-radius: 9px;
+  padding: 8px 14px;
+  color: rgba(43, 38, 34, 0.72);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: border-color 0.35s var(--ease), color 0.35s var(--ease),
     background 0.35s var(--ease);
 }
 .sum-k {
-  color: rgba(174, 244, 252, 0.5);
-  font-size: 9.5px;
-  letter-spacing: 0.2em;
+  color: rgba(76, 90, 62, 0.75);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-.sum-chip:hover { border-color: rgba(127, 227, 240, 0.55); }
+.sum-chip:hover { border-color: rgba(107, 128, 76, 0.55); }
 .sum-chip.filled {
-  color: #f1ede6;
-  border-color: rgba(127, 227, 240, 0.45);
-  background: rgba(32, 58, 66, 0.5);
+  color: #2b2622;
+  border-color: rgba(107, 128, 76, 0.5);
+  background: rgba(244, 236, 214, 0.9);
 }
 
 /* the canvas — flex-grows to claim the rest of the zone; its min-height
    stays stable across the loading→ready swap so nothing collapses */
 .canvas-frame {
   position: relative;
-  width: min(1080px, 96%);
+  width: min(1240px, 97%);
   flex: 1;
   min-height: clamp(240px, 52vh, 640px);
   display: flex;
@@ -337,11 +336,11 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
 
 .error-card {
   width: min(720px, 94%);
-  background: rgba(14, 26, 30, 0.6);
-  border: 1px solid rgba(255, 150, 120, 0.3);
+  background: rgba(250, 247, 240, 0.85);
+  border: 1px solid rgba(180, 90, 60, 0.4);
   border-radius: 28px 32px 30px 26px;
   padding: 22px 26px;
-  color: #f1ede6;
+  color: #2b2622;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -366,21 +365,24 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
 
 /* the composed canvas: spectrum × mode own the card styling now — the
    selected style restyles this wing's canvas and nothing else.
-   The sheet carries its own full-height night background so the composed
-   content never renders light-on-light over the day plaza below the fold. */
+   The sheet ground (paper vs. night) is decided in style.css — light
+   modes read warm paper, retro/steampunk keep their dark material. */
 .composed {
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
   gap: 16px;
-  background-color: #0b0a09;
   background-image: var(--bg-tint, none);
   border: 1px solid rgba(241, 237, 230, 0.09);
   border-radius: 22px;
   padding: clamp(20px, 3vw, 32px);
-  /* label tokens lifted for ≥4.5:1 contrast on the dark sheet */
-  --subtle: #948c80;
 }
+
+/* echo and restart span the full sheet width */
+.composed .echo,
+.composed .link-btn { grid-column: 1 / -1; }
+.composed .link-btn { justify-self: center; }
 
 /* the echo line — mono eyebrow restating the visitor's own inputs */
 .echo {
@@ -399,14 +401,16 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
   background: none;
   border: none;
   padding: 6px 10px;
-  color: rgba(241, 237, 230, 0.68);
+  /* token colors: readable on the paper sheet AND the night sheet
+     (retro/steampunk), since both tokens flip with the ground */
+  color: var(--muted);
   font: inherit;
   font-size: 13px;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: color 0.35s var(--ease);
 }
-.link-btn:hover { color: rgba(174, 244, 252, 0.9); }
+.link-btn:hover { color: var(--text); }
 
 /* narrow viewports: keep the composed page readable and non-overlapping;
    the desktop layout above stays untouched */
@@ -418,11 +422,11 @@ onBeforeUnmount(() => clearTimeout(exitTimer))
     padding-bottom: 120px;
   }
   .canvas-frame { width: 100%; min-height: 0; gap: 14px; }
-  .composed { padding: 18px 14px; border-radius: 18px; }
+  .composed { padding: 18px 14px; border-radius: 18px; grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .wing-title { font-size: 22px; }
   .cam-intro { font-size: 13px; }
-  .sum-chip { font-size: 10px; padding: 6px 9px; }
+  .sum-chip { font-size: 12px; padding: 7px 11px; }
 }
 </style>

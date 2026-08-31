@@ -26,7 +26,7 @@ const { goTo } = usePlaza()
         <button type="button" class="plaza-btn solid" @click="goTo('east')">
           Join as a Student
         </button>
-        <button type="button" class="plaza-btn" @click="goTo('east')">
+        <button type="button" class="plaza-btn solid" @click="goTo('east')">
           Bring a Challenge
         </button>
       </div>

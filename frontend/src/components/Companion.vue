@@ -193,6 +193,25 @@ watch(activeLine, (v) => {
     >
       {{ shown }}<span v-if="talking && !reduced" class="caret"></span>
       <div v-if="optionsAreActive" class="companion-options">
+        <div v-if="inputOption" class="companion-inputrow">
+          <input
+            v-model="inputText"
+            class="companion-input"
+            type="text"
+            placeholder="Type your own question…"
+            aria-label="Your own question"
+            @click.stop
+            @keyup.enter.stop="submitInput"
+          />
+          <button
+            type="button"
+            class="companion-option ask"
+            :disabled="!inputText.trim()"
+            @click.stop="submitInput"
+          >
+            Ask
+          </button>
+        </div>
         <div v-if="chipOptions.length" class="companion-chips" role="group">
           <button
             v-for="o in chipOptions"
@@ -217,25 +236,6 @@ watch(activeLine, (v) => {
         >
           {{ o.label }}
         </button>
-        <div v-if="inputOption" class="companion-inputrow">
-          <input
-            v-model="inputText"
-            class="companion-input"
-            type="text"
-            placeholder="Type your own question…"
-            aria-label="Your own question"
-            @click.stop
-            @keyup.enter.stop="submitInput"
-          />
-          <button
-            type="button"
-            class="companion-option ask"
-            :disabled="!inputText.trim()"
-            @click.stop="submitInput"
-          >
-            Ask
-          </button>
-        </div>
       </div>
     </div>
     <div class="companion-pop" :key="popKey" :class="{ happy }">
@@ -483,28 +483,26 @@ watch(activeLine, (v) => {
 .companion-option.selected:hover {
   background: rgba(127, 227, 240, 0.32);
 }
-/* the action option (e.g. 'continue →'): the plaza's amber action material,
-   mirroring .plaza-btn.solid — solid, dark text, hover lift; it is never
-   'selected', so the cyan multi-select state cannot collide with it.
-   Shrink-wraps to its text and centers instead of stretching full-width
-   like the regular answer rows (which carry no .action class). */
+/* the action option (e.g. 'continue →'): the plaza's sage action material,
+   mirroring .plaza-btn.solid — solid, dark moss text, hover lift; it is
+   never 'selected', so the cyan multi-select state cannot collide with it.
+   Full-width like the answer rows so the options list keeps one rhythm. */
 .companion-option.action {
-  flex: 0 0 auto;
-  align-self: center;
   text-align: center;
-  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.73)), rgba(226, 120, 78, var(--boris-alpha, 0.73)));
-  border-color: transparent;
-  color: #241f1b;
+  background: linear-gradient(135deg, rgba(205, 217, 174, var(--boris-alpha, 0.73)), rgba(147, 171, 114, var(--boris-alpha, 0.73)));
+  border-color: rgba(90, 110, 62, 0.45);
+  color: #24301c;
   font-weight: 600;
-  box-shadow: 0 8px 22px rgba(226, 120, 78, 0.35);
+  box-shadow: 0 8px 22px rgba(120, 146, 88, 0.3);
 }
 .companion-option.action:hover {
-  background: linear-gradient(135deg, rgba(242, 179, 97, var(--boris-alpha, 0.73)), rgba(226, 120, 78, var(--boris-alpha, 0.73)));
+  background: linear-gradient(135deg, rgba(214, 225, 187, var(--boris-alpha, 0.73)), rgba(160, 183, 126, var(--boris-alpha, 0.73)));
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(226, 120, 78, 0.45);
+  box-shadow: 0 12px 28px rgba(120, 146, 88, 0.4);
 }
 
-/* free-text answer row: a dark field + Ask button, in the bubble's material */
+/* free-text answer row: a light field in the bubble's own material +
+   an Ask button sharing the sage action material */
 .companion-inputrow {
   display: flex;
   gap: 8px;
@@ -514,26 +512,31 @@ watch(activeLine, (v) => {
 .companion-input {
   flex: 1 1 auto;
   min-width: 0;
-  background: rgba(14, 26, 30, 0.55);
-  border: 1px solid rgba(241, 237, 230, 0.18);
-  border-radius: 7px;
-  padding: 8px 12px;
-  color: #f1ede6;
+  background: rgba(255, 252, 246, 0.95);
+  border: 1px solid rgba(120, 105, 85, 0.28);
+  border-radius: 16px 18px 17px 14px;
+  padding: 9px 12px;
+  color: #2b2622;
   font: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
   letter-spacing: 0.02em;
   outline: none;
   transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
 }
-.companion-input::placeholder { color: rgba(241, 237, 230, 0.4); }
+.companion-input::placeholder { color: rgba(43, 38, 34, 0.38); }
 .companion-input:focus {
-  border-color: rgba(127, 227, 240, 0.6);
-  background: rgba(18, 32, 38, 0.6);
+  border-color: rgba(47, 188, 211, 0.65);
+  background: #fffdf8;
 }
 .companion-option.ask {
   flex: 0 0 auto;
   margin: 0;
   width: auto;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(205, 217, 174, var(--boris-alpha, 0.73)), rgba(147, 171, 114, var(--boris-alpha, 0.73)));
+  border-color: rgba(90, 110, 62, 0.45);
+  color: #24301c;
+  font-weight: 600;
 }
 .companion-option.ask:disabled {
   opacity: 0.4;

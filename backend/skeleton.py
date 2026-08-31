@@ -101,8 +101,9 @@ RETURN o.name AS name, o.kind AS kind, o.description AS description
 ORDER BY CASE o.kind WHEN 'initiator' THEN 0 WHEN 'co-host' THEN 1 ELSE 2 END
 """
 
-# source-text truncation for the copywriter prompt, per slot kind
-_SOURCE_CAP = {"anchor": 600, "facet": 500, "extra": 400}
+# source-text truncation for the copywriter prompt, per slot kind — kept
+# tight so a full page stays under Groq's free-tier TPM window
+_SOURCE_CAP = {"anchor": 500, "facet": 420, "extra": 340}
 
 _edition_cache: dict | None = None
 _facet_ids_cache: set | None = None
@@ -336,6 +337,8 @@ def _fallback_entry(slot: dict) -> dict:
     planned: list[str] = []
     for src in slot["sources"]:
         t = re.sub(r"\[[^\]]*\]", " ", src["text"]).replace("|", ", ")
+        t = re.sub(r"(?:^|[\s;])\d+[.)]\s+", " ", t)
+        t = re.sub(r"\s-\s+", ", ", t)
         t = re.sub(r"\s+", " ", t).strip()
         if not t:
             continue

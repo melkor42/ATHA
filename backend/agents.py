@@ -15,7 +15,8 @@ plus require_parameters/allow_fallbacks provider routing. NVIDIA NIM is the
 cross-provider fallback rung (NVIDIA_BASE_URL / NVIDIA_API_KEY /
 NVIDIA_MODEL): probed to HANG on response_format json_schema, so that rung
 sends json_object with the schema embedded in the prompt and leans on
-parse_json + pydantic validation.
+parse_json + pydantic validation. The Groq rungs send reasoning_effort=low
+(gpt-oss reasoning tokens would otherwise exhaust max_tokens mid-JSON).
 Strategy: json_schema response_format -> robust parse -> one retry on the
 same model -> fast fallthrough to the next endpoint on 429 (same-provider
 fallback first, then the NVIDIA pool), all bounded by a hard total
@@ -62,6 +63,10 @@ LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 # OpenRouter-only provider routing is active exactly when the base URL is
 # OpenRouter's; other providers (Groq) reject/ignore the provider block.
 _IS_OPENROUTER = "openrouter.ai" in LLM_BASE_URL
+# Groq's gpt-oss models are reasoning models: without reasoning_effort=low
+# the thinking chain eats the max_tokens budget mid-JSON
+# ("max completion tokens reached before generating a valid document").
+_IS_GROQ = "api.groq.com" in LLM_BASE_URL
 PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "z-ai/glm-5.2:free")
 # OpenRouter fallback must live on a DIFFERENT provider pool than the
 # primary: glm-5.2 is served by Decart and 429s ~9/10 in its shared pool,
@@ -249,6 +254,10 @@ async def _chat_json(
                         ),
                         temperature=temperature,
                         max_tokens=LLM_MAX_TOKENS,
+                        # Groq gpt-oss: short thinking chain, otherwise the
+                        # reasoning tokens exhaust max_tokens mid-JSON
+                        **({"reasoning_effort": "low"}
+                           if (_IS_GROQ and not is_nvidia) else {}),
                         # OpenRouter-only extras: require_parameters keeps us
                         # on provider endpoints that honor json_schema (no
                         # prose-instead-of-JSON); allow_fallbacks lets
