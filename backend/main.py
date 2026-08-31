@@ -461,8 +461,27 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
 # comes last so the /api and /health routes above keep priority. In local dev
 # the directory does not exist and Vite serves the frontend as before.
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+class SPAStaticFiles(StaticFiles):
+    """index.html is the only file naming the hashed bundles, so a cached
+    copy keeps visitors on the previous deploy; Starlette sends no
+    Cache-Control at all, leaving the reuse decision to the browser."""
+
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        response = super().file_response(
+            full_path, stat_result, scope, status_code)
+        name = str(full_path).replace("\\", "/")
+        if name.endswith(".html"):
+            response.headers["Cache-Control"] = "no-cache"
+        elif "/assets/" in name:
+            response.headers["Cache-Control"] = (
+                "public, max-age=31536000, immutable")
+        return response
+
+
 if STATIC_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="spa")
+    app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="spa")
 
 
 if __name__ == "__main__":
