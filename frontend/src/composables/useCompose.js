@@ -227,7 +227,7 @@ const interviewOptions = computed(() => {
     return [
       ...chips,
       { input: true }, // renders the text field (Companion.vue)
-      { id: FREETEXT_SKIP_ID, label: 'Just show me what matters most', action: true }
+      { id: FREETEXT_SKIP_ID, label: 'Just show me what matters most' }
     ]
   }
   if (step.value === 'style') {

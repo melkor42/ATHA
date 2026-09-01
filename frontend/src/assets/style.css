@@ -191,6 +191,9 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: var(--gap);
+  /* inherited text (h3, meta) must follow the sheet's own ink token,
+     not the body's light default — dark on paper, light on night */
+  color: var(--text);
 }
 .zone-north .composed.grid {
   display: grid;

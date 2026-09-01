@@ -96,10 +96,10 @@ const activeLine = computed(() => poke.value ?? props.line)
 const said = ref(false)
 const optionsAreActive = computed(() => props.options.length > 0 && said.value)
 // chip options collapse into one wrapped multi-select group (chunking),
-// regular and action options stay as stacked rows; the input marker renders
+// regular options stay as stacked rows; the input marker renders
 // its own text field instead of a button
-const chipOptions = computed(() => props.options.filter((o) => o.chip && !o.action))
-const rowOptions = computed(() => props.options.filter((o) => !o.input && (!o.chip || o.action)))
+const chipOptions = computed(() => props.options.filter((o) => o.chip))
+const rowOptions = computed(() => props.options.filter((o) => !o.input && !o.chip))
 const inputOption = computed(() => props.options.find((o) => o.input))
 
 // free-text answer: the visitor types their own question and submits it
@@ -230,7 +230,7 @@ watch(activeLine, (v) => {
           :key="o.id"
           type="button"
           class="companion-option"
-          :class="[o.theme ? 'theme-' + o.theme : '', { selected: o.selected, action: o.action }]"
+          :class="[o.theme ? 'theme-' + o.theme : '', { selected: o.selected }]"
           :aria-pressed="o.selected || undefined"
           @click.stop="emit('answer', o.id)"
         >
@@ -389,7 +389,13 @@ watch(activeLine, (v) => {
   gap: 6px;
 }
 .companion-option.chip {
-  flex: 0 0 auto;
+  /* shrinkable + wrapping: long suggestion labels must stay inside the
+     bubble instead of overflowing it on one line */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   padding: 6px 12px;
   font-size: 12.5px;
   border-radius: 999px;
@@ -483,24 +489,6 @@ watch(activeLine, (v) => {
 .companion-option.selected:hover {
   background: rgba(127, 227, 240, 0.32);
 }
-/* the action option (e.g. 'continue →'): the plaza's sage action material,
-   mirroring .plaza-btn.solid — solid, dark moss text, hover lift; it is
-   never 'selected', so the cyan multi-select state cannot collide with it.
-   Full-width like the answer rows so the options list keeps one rhythm. */
-.companion-option.action {
-  text-align: center;
-  background: linear-gradient(135deg, rgba(205, 217, 174, var(--boris-alpha, 0.73)), rgba(147, 171, 114, var(--boris-alpha, 0.73)));
-  border-color: rgba(90, 110, 62, 0.45);
-  color: #24301c;
-  font-weight: 600;
-  box-shadow: 0 8px 22px rgba(120, 146, 88, 0.3);
-}
-.companion-option.action:hover {
-  background: linear-gradient(135deg, rgba(214, 225, 187, var(--boris-alpha, 0.73)), rgba(160, 183, 126, var(--boris-alpha, 0.73)));
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(120, 146, 88, 0.4);
-}
-
 /* free-text answer row: a light field in the bubble's own material +
    an Ask button sharing the sage action material */
 .companion-inputrow {
