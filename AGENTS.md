@@ -21,8 +21,8 @@ Setup and local run instructions live in `README.md`. Credential-free fixture mo
 Two branches, two hosts — a push to `main` no longer deploys anything visible on its own.
 
 - **`town-square`** = frozen state, served by **Render** (`https://atha-hadora.onrender.com`). Render's production branch is set to `town-square`, so pushes to `main` do not reach it.
-- **`main`** = the line that moves forward, served by the **Oracle Always-Free VM** (`http://129.159.24.78`). There is no CI: deploy with `./.scratch/deploy-vm.sh` (gitignored tooling), which builds the SPA locally and ships tarballs — the box has no package manager, no Node and no git. The script refuses a dirty tree or a non-`main` checkout unless `FORCE_BRANCH=1`.
-- Never Stop/Start the OCI instance (ephemeral public IP); **Restart** only. The host's recurring outage was `dnf makecache` OOM-killing itself roughly every 2 h — `dnf-makecache.timer` and PackageKit are masked; leave them masked.
+- **`main`** = the line that moves forward, served by the **Oracle Always-Free VM** (`http://89.168.73.93`, reserved public IP since 2026-09-04 — the earlier `129.159.24.78` was released and is dead). There is no CI: deploy with `./.scratch/deploy-vm.sh` (gitignored tooling), which builds the SPA locally and ships tarballs — the box has no package manager, no Node and no git. The script refuses a dirty tree or a non-`main` checkout unless `FORCE_BRANCH=1`.
+- Prefer **Restart** over Stop/Start. The reserved IP now survives either, but a stopped Always-Free instance can be reclaimed by Oracle. `dnf-makecache.timer` and PackageKit stay **masked** on the box: unattended `dnf makecache` grew to ~740 MB on its 945 MiB every ~2 h and was the sole cause of every outage; masking ended it (0 OOM kills since 2026-09-01 22:09).
 
 ### Pre-commit checks
 
