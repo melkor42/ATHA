@@ -67,6 +67,11 @@ _IS_OPENROUTER = "openrouter.ai" in LLM_BASE_URL
 # the thinking chain eats the max_tokens budget mid-JSON
 # ("max completion tokens reached before generating a valid document").
 _IS_GROQ = "api.groq.com" in LLM_BASE_URL
+# Cerebras (pitch primary since 2026-09-04, probed): OpenAI-compatible,
+# honors response_format json_object and reasoning_effort on gpt-oss — but
+# json_schema structured mode is not assumed, so the primary+fallback rungs
+# send json_object with the schema embedded in the prompt (NVIDIA style).
+_IS_CEREBRAS = "cerebras.ai" in LLM_BASE_URL
 PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "z-ai/glm-5.2:free")
 # OpenRouter fallback must live on a DIFFERENT provider pool than the
 # primary: glm-5.2 is served by Decart and 429s ~9/10 in its shared pool,
@@ -190,10 +195,11 @@ async def _chat_json(
     passes we stop retrying and raise. Returns the parsed JSON dict; raises
     on total failure so the caller can degrade gracefully.
 
-    NVIDIA quirk (probed): response_format json_schema HANGS on NIM, so the
-    NVIDIA rung sends response_format json_object with the schema embedded in
-    the user prompt and relies on parse_json + the caller's pydantic gate.
-    No strict flag, no OpenRouter provider block ever reaches NVIDIA.
+    NVIDIA/Cerebras quirk (probed): response_format json_schema HANGS on NIM
+    and is not assumed on Cerebras, so those rungs send response_format
+    json_object with the schema embedded in the user prompt and rely on
+    parse_json + the caller's pydantic gate. No strict flag, no OpenRouter
+    provider block ever reaches them.
     """
     endpoints: list[tuple[str, AsyncOpenAI, str]] = [
         ("primary", client, PRIMARY_MODEL),
@@ -207,9 +213,11 @@ async def _chat_json(
     deadline = time.monotonic() + LLM_TOTAL_BUDGET
     for endpoint, ep_client, model in endpoints:
         is_nvidia = endpoint == "nvidia"
+        # prompt-schema mode: NVIDIA always, Cerebras primary/fallback rungs
+        prompt_schema = is_nvidia or _IS_CEREBRAS
         ep_user = user
-        if is_nvidia:
-            # NIM's supported structured mode is json_object: hand the model
+        if prompt_schema:
+            # their supported structured mode is json_object: hand the model
             # the schema in the prompt instead of via response_format.
             ep_user = (
                 user
@@ -235,9 +243,9 @@ async def _chat_json(
                             {"role": "user", "content": ep_user},
                         ],
                         response_format=(
-                            # NVIDIA: json_object only (json_schema hangs)
+                            # prompt-schema rungs: json_object only
                             {"type": "json_object"}
-                            if is_nvidia else
+                            if prompt_schema else
                             {
                                 "type": "json_schema",
                                 "json_schema": {
@@ -254,10 +262,13 @@ async def _chat_json(
                         ),
                         temperature=temperature,
                         max_tokens=LLM_MAX_TOKENS,
-                        # Groq gpt-oss: short thinking chain, otherwise the
-                        # reasoning tokens exhaust max_tokens mid-JSON
+                        # Groq gpt-oss and Cerebras gpt-oss alike: short
+                        # thinking chain, otherwise the reasoning tokens
+                        # exhaust max_tokens mid-JSON
                         **({"reasoning_effort": "low"}
-                           if (_IS_GROQ and not is_nvidia) else {}),
+                           if ((_IS_GROQ or
+                                (_IS_CEREBRAS and "gpt-oss" in model))
+                               and not is_nvidia) else {}),
                         # OpenRouter-only extras: require_parameters keeps us
                         # on provider endpoints that honor json_schema (no
                         # prose-instead-of-JSON); allow_fallbacks lets
@@ -333,13 +344,17 @@ _COPY_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
+                    "i": {"type": "integer"},
                     "title": {"type": "string"},
                     "text": {"type": "string"},
+                    "source_i": {"type": "array", "items": {"type": "integer"}},
                 },
-                "required": ["title", "text"],
+                "required": ["i", "title", "text"],
                 "additionalProperties": False,
             },
-        }
+        },
+        "order": {"type": "array", "items": {"type": "integer"}},
+        "lead": {"type": "integer"},
     },
     "required": ["sections"],
     "additionalProperties": False,
@@ -351,18 +366,27 @@ async def copywriter_agent(
     tone: str,
     client: AsyncOpenAI | None = None,
     temperature: float = 0.5,
-) -> list:
-    """Slots JSON + tone -> raw [{title, text}, ...] (caller aligns to slots).
+    visitor_state: str | None = None,
+    question: str | None = None,
+) -> dict:
+    """Slots JSON + tone + ranking context -> the full copy object
+    {sections: [{i, title, text, source_i}], order, lead}.
 
-    Copy-only: the skeleton already fixed structure and grounding, so this call
-    is small (slots with truncated sources in, one {title,text} per slot out)
-    and rides the same provider ladder/budget governor as the old compose call.
-    """
+    Copy AND ranking only: the skeleton fixed structure and grounding, this
+    call decides which sections matter most for THIS visitor (order/lead) and
+    which sources its copy rests on (source_i). The question is ranking
+    context — never a source of facts. Caller aligns and validates every
+    index (skeleton.align_copy)."""
     client = client or get_client()
     user = (
-        f"Tone: {tone}.\n\n"
+        f"Tone: {tone}.\n"
+        f"Visitor state: {visitor_state or 'discovering'}.\n"
+        f"Visitor question (ranking context only, never a fact source): "
+        f"{question or '(none — rank by what matters at this stage)'}.\n\n"
         f"Slots:\n{slots_json}\n\n"
-        "Write the copy now. Respond with JSON only."
+        "Rank the slots for this visitor (order + lead), then write the copy "
+        "for every slot (i = slot index, source_i = the source indexes your "
+        "copy rests on). Respond with JSON only."
     )
     data = await _chat_json(
         client,
@@ -372,4 +396,4 @@ async def copywriter_agent(
         schema_name="copywriter",
         temperature=temperature,
     )
-    return data.get("sections") or []
+    return data

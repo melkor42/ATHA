@@ -1,393 +1,239 @@
-import { computed, ref, watch } from 'vue'
-import { usePlaza } from './usePlaza.js'
+import { computed, ref } from 'vue'
 
-// AI Corner compose state — lifted out of the zone (module-level singleton)
-// so a fast single-model compose survives the visitor leaving the north wing:
-// they can wander, and the result waits for them. Mirrors the usePlaza /
-// useGate pattern: one visitor, one shared state.
+// Chat-centred compose engine — module singleton so the conversation and the
+// composed page survive every remount of the shell.
+//
+// The visitor never picks a role, a facet or a style any more: role is pinned
+// to 'student', and everything else is a question in the chat. The backend
+// stays stateless — the conversation lives here and in localStorage, and the
+// only thing that travels as "memory" is visitor_state, derived from how many
+// answers the visitor already has.
 
-// Single-service deploys (Koyeb Docker) serve SPA and API from one origin,
-// so production defaults to the relative path; local dev talks to the
-// uvicorn port unless VITE_API_URL overrides.
 const API_URL = import.meta.env.VITE_API_URL
-  || (import.meta.env.DEV ? 'http://localhost:8000/api/experience' : '/api/experience')
+  || (import.meta.env.DEV ? 'http://localhost:8001/api/experience' : '/api/experience')
 const fixtureName = new URLSearchParams(window.location.search).get('fixture')
 
-// Step 1 — who are you coming as. Keys travel through the API as `role`.
-export const ROLES = {
-  student: { label: 'As talent — I want to join a team' },
-  warwick: { label: 'From Warwick — education & research' },
-  business: { label: 'As an enterprise — I want to bring a challenge' }
-}
+export const ROLE = 'student'
 
-// Step 2 — intent: what do you most want to know right now? Ids must match
-// backend skeleton.INTENTS (role-specific keys); the skip option sends no
-// intent, which yields the identity bundle. Unknown ids are ignored by the
-// backend, so drift degrades gracefully.
-export const INTENTS = {
-  student: [
-    { id: 'talent-fit', label: 'Whether I\u2019d fit a team' },
-    { id: 'talent-happens', label: 'What actually happens' },
-    { id: 'talent-judged', label: 'How the work is judged' },
-    { id: 'talent-takeaway', label: 'What I take away' }
-  ],
-  warwick: [
-    { id: 'wbs-education', label: 'How ATHA serves education' },
-    { id: 'wbs-role', label: 'WBS\u2019s role' },
-    { id: 'wbs-research', label: 'The research ambition' }
-  ],
-  business: [
-    { id: 'biz-receive', label: 'What we receive as a partner' },
-    { id: 'biz-evaluated', label: 'How our challenge is evaluated' },
-    { id: 'biz-afterwards', label: 'What happens afterwards' },
-    { id: 'biz-ip', label: 'IP & confidentiality' }
-  ]
-}
-export const INTENT_SKIP = { id: null, label: 'Just looking around' }
+// Brand voice (§2): declarative, short, no hype. The agent opens with a
+// question, because a question is what an agent does first.
+export const GREETING =
+  'I am the ATHA agent. I read the ATHA knowledge graph and compose the answer ' +
+  'that matters for you now. What do you want to know about the three days?'
 
-// Step 3 — facet: one role-specific narrowing question. Ids must match
-// backend skeleton.known_facet_ids() (team functions / value forms / clusters).
-export const FACETS = {
-  student: [
-    { id: 'func-domain-expert', label: 'Domain Expert — understanding the challenge' },
-    { id: 'func-ai-workflow-lead', label: 'AI Workflow Lead — the technical approach' },
-    { id: 'func-responsible-ai-risk', label: 'Responsible AI & Risk — governance and ethics' },
-    { id: 'func-business-viability-coordinator', label: 'Business Viability — the business case' },
-    { id: 'func-pitch-design-lead', label: 'Pitch & Design — communicating the decision' }
-  ],
-  warwick: [
-    { id: 'cluster-education', label: 'Education — developing changemakers' },
-    { id: 'cluster-research', label: 'Research — evidence for healthier innovation' },
-    { id: 'cluster-institutional', label: 'Institutional — WBS\u2019s role and network' }
-  ],
-  business: [
-    { id: 'value-experience', label: 'Experience — a different way of working' },
-    { id: 'value-perspective', label: 'Perspective — seeing AI more fully' },
-    { id: 'value-decision', label: 'Decision — a defensible verdict' },
-    { id: 'value-belonging', label: 'Belonging — joining the community' },
-    { id: 'value-continuity', label: 'Continuity — an ongoing relationship' }
-  ]
-}
-export const FACET_SKIP = { id: null, label: 'Not sure yet — show me the mix' }
-
-// Step 4 — free text: suggestion chips are real catalog questions; a chip click
-// sends that question as free_text (the vector search finds its answer).
-export const CHIPS = {
-  student: [
-    'How are teams formed?',
-    'How is the teams\u2019 work judged?',
-    'What happens during the experience?'
-  ],
-  warwick: [
-    'How does ATHA serve education and research?',
-    'What is Warwick Business School\u2019s role in ATHA?',
-    'Why does ATHA exist — what makes it different?'
-  ],
-  business: [
-    'How is confidentiality and IP handled?',
-    'What happens after the experience?',
-    'What do we need to bring as a partner?'
-  ]
-}
-export const FREETEXT_SKIP_ID = 'freetext-skip'
-
-// Step 5 — how should it feel. 'surprise' sends no style: the compose agent's
-// temperament rule keeps the pages diverse. Everything else is enforced
-// server-side (mode override), guaranteed.
-export const STYLES = [
-  { id: 'organic', label: 'Organic & alive' },
-  { id: 'surprise', label: 'Surprise me' },
-  { id: 'minimal', label: 'Clean & minimal' },
-  { id: 'retro', label: 'Retro arcade' },
-  { id: 'earth', label: 'Earth & craft' },
-  { id: 'steampunk', label: 'Brass & steam' }
+// First-time visitors are never faced with an empty input.
+export const STARTERS = [
+  { label: 'What actually happens across the three days?', intent: 'talent-happens' },
+  { label: 'Would I fit a team like this?', intent: 'talent-fit' },
+  { label: 'What do I take away from it?', intent: 'talent-takeaway' }
 ]
 
-// The entrance gate (useGate.js answer1) stores its option id in
-// sessionStorage['athaVisitorState']; 'first' means discovering. Map those ids
-// onto the backend's visitor_state vocabulary so the compose call carries the
-// journey state the visitor already stated at the gate.
-const GATE_STATE = {
-  first: 'discovering',
-  deciding: 'deciding',
-  preparing: 'preparing',
-  experienced: 'experienced'
+// Persistent CTA (§ brand: one ask per surface). The subject is the approved
+// running case used since the register zone.
+export const APPLY_HREF =
+  'mailto:hello@onemundi.one?subject=ATHA%20001%20%E2%80%94%20Talent%20Application'
+export const APPLY_LABEL = 'Apply as talent'
+
+// MMC Delta — the synergy-matching app for the MBA teams. Separate host,
+// IP-only, so it always opens in a new tab. Placement of this CTA is still
+// being decided with Manuel; it hangs off team-shaped questions for now.
+export const MMC_DELTA_HREF = 'http://92.5.120.120/'
+const TEAM_INTENTS = new Set(['talent-fit'])
+
+const COMPOSING_LINE = 'Retrieving and composing. A few seconds.'
+const LOG_KEY = 'athaChatLog'
+
+// discovering → deciding → preparing: the ranking context the copywriter uses.
+function stateForTurn(turns) {
+  if (turns <= 0) return 'discovering'
+  if (turns < 3) return 'deciding'
+  return 'preparing'
 }
 
-function gateVisitorState() {
+function loadSession() {
   try {
-    return GATE_STATE[sessionStorage.getItem('athaVisitorState') ?? ''] ?? null
+    const raw = localStorage.getItem(LOG_KEY)
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed && Array.isArray(parsed.messages) ? parsed : null
   } catch {
     return null // private mode / storage unavailable
   }
 }
 
-const state = ref('idle') // idle | loading | ready | error
-const schema = ref(null)
-const persona = ref(null)
-const errorMsg = ref('')
-const revealed = ref(0) // staggered panel reveal, survives zone travel too
-
-// Boris stays pinned to the composing line while the model is out
-export const COMPOSING_LINE =
-  'One model is out in the network now, retrieving and composing your page. A few heartbeats — stay close, it is already taking shape.'
-
-// pickup notice: the compose finished while the visitor wandered elsewhere
-const pickup = ref(false)
-const { current: plazaZone } = usePlaza()
-watch(plazaZone, (z) => {
-  if (z === 'north') pickup.value = false
-})
-
-function clearPickup() {
-  pickup.value = false
-}
-
-const selections = ref({
-  role: null,
-  intent: null,   // backend intent id or null (identity bundle)
-  facet: null,    // backend facet id or null (no narrowing)
-  freeText: null, // free-text question or null
-  style: 'organic' // organic preselected — the AI Corner's home register
-})
-
-// Boris's sequential interview: role -> intent -> facet -> freetext -> style,
-// asked by the companion in the north wing. Every step after role is skippable.
-// Lazy: starts on the first north visit of the session, pauses when the visitor
-// wanders off (the plaza's line priority simply hides the branch) and resumes
-// on return.
-const step = ref('role') // role | intent | facet | freetext | style | done
-const interviewStarted = ref(false)
-
-function beginInterview() {
-  interviewStarted.value = true
-}
-
-const interviewActive = computed(
-  () => interviewStarted.value && step.value !== 'done'
-)
-
-const interviewLine = computed(() => {
-  switch (step.value) {
-    case 'role':
-      return 'How are you coming to ATHA?'
-    case 'intent':
-      return 'What do you most want to know right now?'
-    case 'facet':
-      return facetLine()
-    case 'freetext':
-      return 'Anything else you want to know? Pick a suggestion or type your own.'
-    case 'style':
-      return 'How should it feel?'
-    default:
-      return ''
-  }
-})
-
-function facetLine() {
-  switch (selections.value.role) {
-    case 'student': return 'Which role in a team would fit you best?'
-    case 'business': return 'What matters most to you as a partner?'
-    case 'warwick': return 'Where is your focus?'
-    default: return 'Anything you want to narrow down?'
+function persist(messages, schema, suggestions, turns) {
+  try {
+    localStorage.setItem(LOG_KEY, JSON.stringify({
+      messages, schema, suggestions, turns
+    }))
+  } catch {
+    /* non-fatal: the conversation simply does not survive a reload */
   }
 }
 
-const interviewOptions = computed(() => {
-  const role = selections.value.role
-  if (step.value === 'role') {
-    return Object.entries(ROLES).map(([id, r]) => ({
-      id,
-      label: r.label,
-      selected: selections.value.role === id
-    }))
-  }
-  if (step.value === 'intent') {
-    const opts = (INTENTS[role] ?? []).map((o) => ({
-      id: o.id,
-      label: o.label,
-      selected: selections.value.intent === o.id
-    }))
-    return [...opts, { id: 'intent-skip', label: INTENT_SKIP.label, selected: selections.value.intent === null }]
-  }
-  if (step.value === 'facet') {
-    const opts = (FACETS[role] ?? []).map((o) => ({
-      id: o.id,
-      label: o.label,
-      selected: selections.value.facet === o.id
-    }))
-    return [...opts, { id: 'facet-skip', label: FACET_SKIP.label, selected: selections.value.facet === null }]
-  }
-  if (step.value === 'freetext') {
-    const chips = (CHIPS[role] ?? []).map((text) => ({
-      id: text,       // chip id IS the question text -> becomes free_text
-      label: text,
-      chip: true
-    }))
-    return [
-      ...chips,
-      { input: true }, // renders the text field (Companion.vue)
-      { id: FREETEXT_SKIP_ID, label: 'Just show me what matters most' }
-    ]
-  }
-  if (step.value === 'style') {
-    return STYLES.map((s) => ({ id: s.id, label: s.label, selected: selections.value.style === s.id, theme: s.id }))
-  }
-  return []
+const saved = loadSession()
+
+const messages = ref(saved?.messages ?? [{ from: 'atha', text: GREETING }])
+const schema = ref(saved?.schema ?? null)
+const suggestions = ref(saved?.suggestions ?? [])
+const turns = ref(saved?.turns ?? 0)
+const status = ref('idle') // idle | composing | ready | error
+const revealed = ref(schema.value ? (schema.value.sections?.length ?? 0) : 0)
+// True only while a brand-new greeting has never been seen: restored sessions
+// are already-read conversations, and the agent does not repeat itself.
+const greetingLive = ref(saved === null)
+
+const hasResult = computed(() => schema.value !== null)
+const phase = computed(() => (hasResult.value ? 'reading' : 'landing'))
+const busy = computed(() => status.value === 'composing')
+const lastAnswer = computed(() => [...messages.value].reverse().find((m) => m.from === 'atha' && m.answer))
+
+// Suggestion chips: the static starters before the first answer, the
+// catalog's follow-up questions after it.
+const chips = computed(() => {
+  if (turns.value === 0) return STARTERS.map((s) => ({ ...s, kind: 'starter' }))
+  return suggestions.value.map((s) => ({ label: s.text, intent: null, kind: 'follow' }))
 })
 
-function answer(id) {
-  if (!interviewStarted.value || step.value === 'done') return
-  if (step.value === 'role') {
-    console.info('[atha:compose] role picked', { role: id })
-    if (selections.value.role !== id) {
-      // new role resets the narrowing answers
-      selections.value.intent = null
-      selections.value.facet = null
-      selections.value.freeText = null
+// Exactly one contextual CTA below the persistent ask. It points at whatever
+// the answer actually contains, or at MMC Delta for team-shaped questions.
+const contextualCta = computed(() => {
+  const sections = schema.value?.sections ?? []
+  if (lastAnswer.value && TEAM_INTENTS.has(lastAnswer.value.intent)) {
+    return {
+      label: 'Match your team on MMC Delta',
+      href: MMC_DELTA_HREF,
+      external: true
     }
-    selections.value.role = id
-    step.value = 'intent'
-  } else if (step.value === 'intent') {
-    selections.value.intent = id === 'intent-skip' ? null : id
-    console.info('[atha:compose] intent picked', { intent: selections.value.intent })
-    step.value = 'facet'
-  } else if (step.value === 'facet') {
-    selections.value.facet = id === 'facet-skip' ? null : id
-    console.info('[atha:compose] facet picked', { facet: selections.value.facet })
-    step.value = 'freetext'
-  } else if (step.value === 'freetext') {
-    selections.value.freeText = id === FREETEXT_SKIP_ID ? null : id
-    console.info('[atha:compose] freetext set', { freeText: selections.value.freeText })
-    step.value = 'style'
-  } else if (step.value === 'style') {
-    selections.value.style = id
-    step.value = 'done'
-    // compose starts the moment the last answer lands — compose() itself
-    // speaks the 'one model is out in the network' line
-    console.info('[atha:compose] style picked — compose triggered', { style: id })
-    compose()
   }
-}
-
-// a summary chip can pull the interview back to its question any time —
-// even after 'done', so selections stay editable until compose starts
-function reopen(s) {
-  if (!interviewStarted.value) return
-  if (s !== 'role' && !selections.value.role) return
-  step.value = s
-}
+  const kinds = {
+    StageFlow: 'See how the three days run',
+    FactList: 'What is settled, and what is still open',
+    PartnerLayers: 'See who stands behind ATHA'
+  }
+  for (const order of ['StageFlow', 'FactList', 'PartnerLayers']) {
+    const i = sections.findIndex((s) => s.component === order)
+    if (i >= 0) return { label: kinds[order], href: `#section-${i}`, external: false }
+  }
+  return null
+})
 
 async function loadFixture() {
   const mods = import.meta.glob('../fixtures/*.json', { eager: true })
   const mod = mods[`../fixtures/${fixtureName}.json`]
   if (!mod) throw new Error(`unknown fixture: ${fixtureName}`)
-  // small beat so the theater field is visible in mock mode too
+  // one full beat, so the composing field is legible in demo mode too
   await new Promise((r) => setTimeout(r, 2400))
-  return mod.default ?? mod
+  const payload = mod.default ?? mod
+  return { ...payload, experience: payload.experience ?? payload }
+}
+
+async function requestPayload(body) {
+  const t0 = performance.now()
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  const ms = Math.round(performance.now() - t0)
+  console.info('[atha:compose] response', { status: res.status, ms })
+  if (!res.ok) throw new Error(`backend responded HTTP ${res.status}`)
+  return res.json()
 }
 
 async function revealStagger() {
-  const count = Array.isArray(schema.value?.sections) ? schema.value.sections.length : 0
+  const count = schema.value?.sections?.length ?? 0
   for (let i = revealed.value; i < count; i++) {
-    await new Promise((r) => setTimeout(r, 380))
+    await new Promise((r) => setTimeout(r, 340))
     revealed.value = i + 1
   }
 }
 
-async function compose() {
-  if (state.value === 'loading') return
-  const { role, intent, facet, freeText, style } = selections.value
-  if (!role) return
-  state.value = 'loading'
-  errorMsg.value = ''
-  revealed.value = 0
-  const { slowVeins, say } = usePlaza()
-  slowVeins.value = true
-  say(COMPOSING_LINE, 9000)
+// A starter chip asks by intent (deterministic anchors); typed text and
+// follow-up chips ask by free_text (the vector search finds their answer).
+async function ask({ label, intent = null }) {
+  if (busy.value || !label) return
+  const text = label.trim()
+  if (!text) return
+  messages.value = [...messages.value, { from: 'you', text }]
+  status.value = 'composing'
+  const body = { role: ROLE, topics: [], visitor_state: stateForTurn(turns.value) }
+  if (intent) body.intent = intent
+  else body.free_text = text
+  console.info('[atha:compose] request', body)
   try {
-    let payload
-    if (fixtureName) {
-      console.info('[atha:compose] fixture branch', { fixture: fixtureName })
-      payload = await loadFixture()
-    } else {
-      const body = { role, topics: [] }
-      if (intent) body.intent = intent
-      if (facet) body.facet = facet
-      if (freeText) body.free_text = freeText
-      if (style && style !== 'surprise') body.style = style
-      const visitorState = gateVisitorState()
-      if (visitorState) body.visitor_state = visitorState
-      console.info('[atha:compose] request', body)
-      const t0 = performance.now()
-      payload = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }).then((r) => {
-        const ms = Math.round(performance.now() - t0)
-        console.info('[atha:compose] response', { status: r.status, ms })
-        if (!r.ok) throw new Error(`backend responded HTTP ${r.status}`)
-        return r.json()
-      })
+    const payload = fixtureName
+      ? await loadFixture()
+      : await requestPayload(body)
+    schema.value = payload.experience ?? null
+    suggestions.value = Array.isArray(payload.suggestions) ? payload.suggestions : []
+    turns.value += 1
+    if (payload.degraded) {
+      // loud on purpose: a paused Aura instance must not hide behind the page
+      console.error('[atha:compose] degraded — ' + (payload.degraded_reason || 'no reason given'))
     }
-    schema.value = payload?.experience ?? payload
-    persona.value = payload?.persona ?? null
-    if (payload?.degraded) {
-      // loud on purpose: a paused/deleted Aura instance must not hide
-      // behind the quiet fallback page
-      console.info('[atha:compose] degraded branch', { reason: payload?.degraded_reason || 'none' })
-      console.error(
-        '[AI Corner] compose degraded to the fallback page — Neo4j Aura is likely not connected.\n' +
-          (payload?.degraded_reason || 'backend reported no reason')
-      )
-    }
-    state.value = 'ready'
-    pickup.value = plazaZone.value !== 'north'
-    say('I composed this from who you told me you are. Poke me if you want to wander.')
-    revealStagger() // soft panel assembly, one breath apart
+    const lead = schema.value?.sections?.[0]
+    messages.value = [...messages.value, {
+      from: 'atha',
+      answer: true,
+      intent: intent || null,
+      title: lead?.title ?? 'Here is what the graph holds.',
+      text: lead?.text ?? 'The answer is open in the page beside this conversation.'
+    }]
+    status.value = 'ready'
+    revealed.value = 0
+    revealStagger()
   } catch (e) {
     console.error('[atha:compose] failed', e)
-    errorMsg.value = e?.message || String(e)
-    state.value = 'error'
-    say('The corner could not compose this time — it stays patient.')
+    status.value = 'error'
+    messages.value = [...messages.value, {
+      from: 'atha',
+      error: true,
+      text: 'That answer did not come. The graph is still there — ask again.'
+    }]
   } finally {
-    slowVeins.value = false
+    persist(messages.value, schema.value, suggestions.value, turns.value)
   }
 }
 
-// discreet recompose: back to step 1, role first
 function restart() {
-  if (state.value === 'loading') return
-  selections.value = { role: null, intent: null, facet: null, freeText: null, style: 'organic' }
+  if (busy.value) return
+  messages.value = [{ from: 'atha', text: GREETING }]
+  greetingLive.value = true
   schema.value = null
-  persona.value = null
+  suggestions.value = []
+  turns.value = 0
   revealed.value = 0
-  state.value = 'idle'
-  step.value = 'role'
-  pickup.value = false
+  status.value = 'idle'
+  persist(messages.value, schema.value, suggestions.value, turns.value)
+  window.scrollTo({ top: 0, behavior: 'auto' })
+}
+
+// The opening line counts as spoken the moment it has been delivered — persist
+// it then, so a reload never re-types a greeting the visitor has already read.
+function settleGreeting() {
+  if (!greetingLive.value) return
+  greetingLive.value = false
+  persist(messages.value, schema.value, suggestions.value, turns.value)
 }
 
 export function useCompose() {
   return {
-    state,
+    phase,
+    hasResult,
+    status,
+    busy,
     schema,
-    persona,
-    errorMsg,
+    suggestions,
+    messages,
+    chips,
+    greetingLive,
+    settleGreeting,
+    contextualCta,
     revealed,
-    selections,
-    compose,
-    restart,
-    pickup,
-    clearPickup,
+    turns,
     fixtureName,
-    // the Boris interview
-    step,
-    interviewActive,
-    interviewLine,
-    interviewOptions,
-    beginInterview,
-    answer,
-    reopen
+    asking: ask,
+    restart,
+    composingLine: COMPOSING_LINE
   }
 }

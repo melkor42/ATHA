@@ -4,9 +4,12 @@ Pipeline per POST /api/experience {role, topics?, style?, visitor_state?,
 intent?, facet?, free_text?}:
   deterministic skeleton plan (skeleton.build_skeleton: anchor questions ->
   facet -> vector extras -> edition/rhythm/layers tail, all from the
-  knowledge graph) -> copywriter agent writes title/text copy for the slots
-  (copy only, no structure) -> the visitor's style overrides the mode ->
-  verify() -> ExperienceSchema JSON (TextBlocks, entities empty). Any failure
+  knowledge graph) -> copywriter agent writes the title/text copy for the
+  slots AND ranks them for the current visitor (order/lead/source_i; the
+  structure itself never comes from the model) -> main.py hydrates each slot
+  into its atomic node (Statement / FactList / StageFlow / PartnerLayers,
+  structured payloads filtered by source_i) -> the visitor's style overrides
+  the mode -> verify() -> ExperienceSchema JSON (entities empty). Any failure
   degrades to DEFAULT_EXPERIENCE — the endpoint never crashes.
 
 `topics` is accepted for API stability but ignored (the skeleton plans from
@@ -92,11 +95,10 @@ DEFAULT_EXPERIENCE = ExperienceSchema(
     sections=[
         UINode(
             component=ComponentType.TEXT_BLOCK,
-            title="Welcome to SIGNAL",
+            title="Welcome to ATHA",
             text=(
-                "The network is composing your personal page. This time the "
-                "connection was too quiet to ground it in live data — try "
-                "again in a moment."
+                "ATHA is composing your page. This time the connection was "
+                "too quiet to ground it in live data — try again in a moment."
             ),
             button=Button(label="Try again", action=ActionType.SHOW_DETAILS),
         )
@@ -214,15 +216,21 @@ def synthesize_persona(role: str) -> PersonaModel:
 def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
     """Whitelist-filter: keep only sections whose entity_ids survive filtering.
 
-    TextBlocks carry no entity references and always survive; a section that
-    references entities of which none are whitelisted is dropped (its claims
-    would be ungrounded). Sections beyond ten are cut. (In the skeleton
-    architecture entity_ids are always empty, so the filter is dormant but
-    stays armed for a future return of entity cards.)
+    The structural components (TextBlock + the ATHA atomic set) carry no
+    entity references and always survive; a section that references entities
+    of which none are whitelisted is dropped (its claims would be ungrounded).
+    Sections beyond ten are cut. (In the skeleton architecture entity_ids are
+    always empty, so the filter is dormant but stays armed for a future
+    return of entity cards.)
     """
+    structural = {
+        ComponentType.TEXT_BLOCK, ComponentType.STATEMENT,
+        ComponentType.FACT_LIST, ComponentType.STAGE_FLOW,
+        ComponentType.PARTNER_LAYERS,
+    }
     kept: list[UINode] = []
     for section in schema.sections:
-        if section.component == ComponentType.TEXT_BLOCK and not section.entity_ids:
+        if section.component in structural and not section.entity_ids:
             kept.append(section)
             continue
         filtered = [eid for eid in section.entity_ids if eid in allowed_ids]
@@ -236,10 +244,10 @@ def verify(schema: ExperienceSchema, allowed_ids: set[str]) -> ExperienceSchema:
         kept = [
             UINode(
                 component=ComponentType.TEXT_BLOCK,
-                title="SIGNAL",
+                title="ATHA",
                 text=(
-                    "Your page is being recomposed — the first draft referenced "
-                    "data outside the verified pool."
+                    "Your page is being recomposed — the first draft "
+                    "referenced data outside the verified pool."
                 ),
             )
         ]
@@ -387,32 +395,55 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
                  int((time.perf_counter() - retrieval_started) * 1000),
                  len(slots), slot_kinds)
 
-        # 2. copy: one small LLM call over the slots. Any failure falls back
-        #    to deterministic template copy — the page always renders.
+        # 2. copy + ranking: one LLM call over the slots. Any failure falls
+        #    back to deterministic template copy in slot order — the page
+        #    always renders, and the atomic structure is never model-authored.
         try:
             llm_started = time.perf_counter()
             raw = await copywriter_agent(
                 render_slots_for_prompt(slots),
-                ROLE_PROFILES[role]["tone"], client)
-            copy, copy_source = align_copy(slots, raw)
+                ROLE_PROFILES[role]["tone"], client,
+                visitor_state=visitor_state, question=free_text)
+            plan, copy_source = align_copy(slots, raw)
             log.info("copywriter finished in %d ms (source=%s)",
                      int((time.perf_counter() - llm_started) * 1000),
                      copy_source)
         except Exception as exc:  # noqa: BLE001 — copy is degradable
             log.warning("copywriter failed -> deterministic copy: %s", exc)
-            copy = deterministic_fallback(slots)
+            plan = [{"slot": s, "title": c["title"], "text": c["text"],
+                     "si": list(range(len(s["sources"])))}
+                    for s, c in zip(slots, deterministic_fallback(slots))]
             copy_source = "fallback"
 
-        # 3. assemble the ExperienceSchema (TextBlocks only; entities empty)
+        # 3. assemble the ExperienceSchema: one atomic node per plan entry.
+        #    The copywriter ranks; it never deletes. Edition facts follow the
+        #    model's promotion order, the rhythm and the layers keep theirs —
+        #    for those two the sequence IS the information.
+        sections = []
+        for entry in plan:
+            slot = entry["slot"]
+            structured = slot.get("structured") or []
+            promoted = [structured[j] for j in entry["si"]
+                        if j < len(structured)]
+            chosen = promoted + [s for s in structured if s not in promoted]
+            node = {"title": entry["title"][:80], "text": entry["text"][:500]}
+            if slot["kind"] == "edition":
+                node.update(component=ComponentType.FACT_LIST,
+                            facts=chosen[:8])
+            elif slot["kind"] == "rhythm":
+                node.update(component=ComponentType.STAGE_FLOW,
+                            stages=structured)
+            elif slot["kind"] == "layers":
+                node.update(component=ComponentType.PARTNER_LAYERS,
+                            layers=structured)
+            else:
+                node["component"] = ComponentType.STATEMENT
+            sections.append(UINode(**node))
         draft = ExperienceSchema(
             layout=Layout.GRID,
             spectrum=ROLE_SPECTRUM[role],
             mode=style if style is not None else ROLE_MODE[role],
-            sections=[
-                UINode(component=ComponentType.TEXT_BLOCK,
-                       title=c["title"][:80], text=c["text"][:500])
-                for c in copy
-            ],
+            sections=sections,
             entities={},
         )
         verified = verify(draft, set())

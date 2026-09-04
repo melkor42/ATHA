@@ -1,820 +1,158 @@
-/* SIGNAL brand tokens — from prototypes/brand-theater.html (ticket 06) */
+/* ATHA — brand tokens copied verbatim from ATHA-brand-identity.md §9.
+   Everything on this ground is paper; one accent per surface. */
+
 :root {
-  --bg: #0B0A09;
-  --surface: #131110;
-  --surface2: #1A1715;
-  --text: #F1EDE6;
-  --muted: #9C948A;
-  --subtle: #6A635B;
-  --border: rgba(241, 237, 230, 0.09);
-  --border-mid: rgba(241, 237, 230, 0.16);
-  --rust: #CF7053;
-  --violet: #9A7FC8;
-  /* ColorToken -> brand palette (persona accent) */
-  --primary: #5E92C4;
-  --accent-tok: #BD8794;
-  --success: #8FA96E;
-  --warning: #D8A24C;
-  --accent: var(--accent-tok);
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font-ui: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-  /* layout vars — overridden per mode (.mode-*), hues per spectrum (.spectrum-*) */
-  --radius: 18px;
-  --gap: 16px;
-  --pad: 22px;
-  --bdw: 1px;
-  --shadow: none;
-  --font-display: var(--font-ui);
-  --bg-tint: transparent;
-  /* ambient field (Phase B) — bioluminescent aura over dark soil.
-     Spectra set --aura as their glow pair; the composed page mirrors the persona
-     accent aura and breathing tempo onto the document root. */
-  --aura: rgba(230, 190, 112, 0.10);
-  --breathe-dur: 16s;
-  --breathe-play: running;      /* modes may pause the field (minimal) */
-  --grain-opacity: 0.035;       /* modes may push/quiet the grain */
-  /* spectrum color vars — aurora defaults keep the root renderable */
-  --s-surface: #101216;
-  --s-surface2: #161B21;
-  --s-border: rgba(95, 217, 203, 0.16);
-  --s-accent: #5FD9CB;
-  --s-accent2: #9A7FC8;
-  --s-glow1: rgba(95, 217, 203, 0.10);
-  --s-glow2: rgba(154, 127, 200, 0.09);
-  --s-dimtext: #A3ABA6;         /* spectrum-owned body-text tint */
-
-  /* ATHA tokens — authority: .scratch/ATHA_Design-Direction.html.
-     Consumed by the ATHA surfaces in the quiet wing; all legacy tokens
-     above are untouched. Usage rules: no gradients, no drop shadows, no
-     rounded containers; --atha-ferrous appears at most once per view;
-     --atha-rind covers ≤5% of a view and never carries text. */
-  --atha-clay: #2A2622;
-  --atha-chalk: #F2EDE4;
-  --atha-slip: #E0D8C9;
-  --atha-field: #4C5A3E;
-  --atha-ferrous: #8A3B26;
-  --atha-rind: #C9D34A;
-  --atha-rule: #A39C90;
-  --atha-deep: #1E2419;
-  --atha-hair: rgba(42, 38, 34, 0.20);
-  --atha-font-display: Fraunces, serif;
-  --atha-font-body: 'Instrument Sans', sans-serif;
-  --atha-font-mono: 'IBM Plex Mono', monospace;
-  /* ATHA type scale (px mirror of the rem scale in the design direction) */
-  --atha-s0: 12px;
-  --atha-s1: 13px;
-  --atha-s2: 14px;
-  --atha-s3: 16px;
-  --atha-s4: 20px;
-  --atha-s5: 28px;
-  --atha-s6: 44px;
-  --atha-s7: 72px;
-  /* ATHA motion */
-  --atha-ease: cubic-bezier(.2, .7, .25, 1);
+  --navy: #0E2A4E;
+  --deep: #081A31;
+  --signal: #3B8AD6;
+  --paper: #F4F2ED;
+  --surface: #E5E2DA;
+  --ink: #1B2129;
+  --ferrous: #9B4324;
+  --rule: #A9A69E;
+  --slate: #5A6B84;
+  --chrome: #0B1424;
+  --f-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --f-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+  --ease: cubic-bezier(0.16, 0.72, 0.3, 1);
 }
 
-* { box-sizing: border-box; }
-html, body { margin: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--bg);
-  color: var(--text);
-  font: 15px/1.6 var(--font-ui);
-  min-height: 100vh;
-}
-#app { max-width: 1080px; margin: 0 auto; padding: 32px; position: relative; z-index: 2; }
-
-/* ---------- ambient field (Phase B) — aurora glow + grain, behind everything ----------
-   Softness comes from gradient stops only; no filter: blur() (continuous repaints).
-   Breathing animates opacity/transform only (compositor-friendly). */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(72vmax 72vmax at 10% 6%, var(--aura), transparent 68%),
-    radial-gradient(64vmax 64vmax at 92% 96%, var(--aura), transparent 70%);
-  animation: breathe var(--breathe-dur) ease-in-out infinite alternate;
-  animation-play-state: var(--breathe-play, running);
-  will-change: opacity, transform;
-}
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: var(--grain-opacity, 0.035);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
-@keyframes breathe {
-  from { opacity: 0.6; transform: translate3d(-1.2%, -0.8%, 0) scale(1); }
-  to   { opacity: 1;   transform: translate3d(1.2%, 0.8%, 0) scale(1.05); }
-}
-@media (prefers-reduced-motion: reduce) {
-  body::before { animation: none; } /* static glows stay */
-}
-
-/* content stacks above the ambient field and the Theater substrate */
-.shell, .onboarding, .error { position: relative; z-index: 2; }
-.zone-north .composed { position: relative; z-index: 2; }
-
-/* ---------- brand shell ---------- */
-.shell h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 4px; }
-.grad {
-  background: linear-gradient(100deg, var(--warning), var(--rust), var(--violet), var(--primary));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.hint { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
-.hint a { color: var(--muted); }
-
-/* ---------- pill buttons ---------- */
-.pill {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border-mid);
-  border-radius: 100px;
-  padding: 8px 18px;
-  font: 600 13px var(--font-ui);
-  cursor: pointer;
-  transition: all 0.3s var(--ease);
-}
-.pill:hover:not(:disabled) { border-color: var(--text); }
-.pill:disabled { opacity: 0.4; cursor: default; }
-.pill.solid { background: var(--text); color: var(--bg); border-color: var(--text); }
-
-/* ---------- onboarding ---------- */
-.onboarding { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
-.onboarding textarea {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border-mid);
-  border-radius: 18px;
-  padding: 16px 18px;
-  font: 15px/1.6 var(--font-ui);
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.3s var(--ease);
-}
-.onboarding textarea:focus { border-color: var(--text); }
-.onboarding textarea::placeholder { color: var(--subtle); }
-.onboarding .pill { align-self: flex-start; }
-
-/* ---------- theater (ticket 06) — layout lives scoped in Theater.vue ---------- */
-.waiting {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 7;
-  color: var(--subtle);
-  font: 500 12px var(--font-mono);
   margin: 0;
-  animation: pulse 2.2s var(--ease) infinite;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.46;
+  -webkit-font-smoothing: antialiased;
 }
-@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-/* ---------- composed page ----------
-   night sheet (dark soil) — the default ground, kept as-is for the dark
-   worlds (retro, steampunk); all other modes flip to the paper ground in
-   the "composed sheet · paper ground" block below the mode anatomy */
-.zone-north .composed {
-  padding: 26px 22px;
-  border-radius: 22px;
-  background-color: #0b0a09;
-  background-image: var(--bg-tint);
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  /* inherited text (h3, meta) must follow the sheet's own ink token,
-     not the body's light default — dark on paper, light on night */
-  color: var(--text);
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-variation-settings: "opsz" 144;
+  font-weight: 300;
+  letter-spacing: -0.024em;
+  line-height: 1.05;
+  text-wrap: balance;
+  margin: 0;
 }
-.zone-north .composed.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--gap);
-  align-items: start;
-}
-.zone-north .composed.grid .section.wide { grid-column: 1 / -1; }
-.zone-north .composed .again { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 6px; }
 
-.section { opacity: 0; transform: translateY(14px); transition: all 0.7s var(--ease); }
-.section.on { opacity: 1; transform: none; }
-
-/* ---------- card base ---------- */
-.card {
-  background: var(--surface);
-  border: var(--bdw) solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--pad);
+p {
+  margin: 0;
 }
-.card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
-.card p { margin: 0; color: var(--s-dimtext, var(--muted)); font-size: 14px; }
-.k {
-  font: 500 11px var(--font-mono);
-  color: var(--subtle);
+
+.mono {
+  font-family: var(--f-mono);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 10px;
-}
-.child { margin-top: 14px; }
-.child .card { padding: calc(var(--pad) * 0.7); }
-
-/* ---------- SignalCard ---------- */
-.score { height: 4px; border-radius: 2px; background: var(--surface2); margin: 12px 0 8px; overflow: hidden; }
-.score i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--muted);
-  margin: 3px 0;
-}
-.row b { color: var(--text); font-weight: 600; text-align: right; }
-.cta {
-  display: inline-block;
-  margin-top: 14px;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  background: transparent;
-  border-radius: 100px;
-  padding: 7px 16px;
-  font: 600 12px var(--font-ui);
-  cursor: pointer;
-  transition: all 0.3s var(--ease);
-}
-.cta:hover { background: var(--accent); color: var(--bg); }
-
-/* ---------- StudentProfile ---------- */
-.student-profile .role { color: var(--text); font-weight: 600; font-size: 14px; }
-.student-profile .story { margin-top: 6px; }
-
-/* ---------- EnterpriseCard ---------- */
-.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin-top: 10px; }
-.seeks { margin-top: 10px; }
-/* narrow widths: the two-column meta grid dislocates into disconnected
-   label/value pairs — stack it into readable rows instead */
-@media (max-width: 900px) {
-  .meta { grid-template-columns: 1fr; gap: 2px; }
-  /* scoped to composed-page cards: keep the wrap opt-in so other .row
-     uses elsewhere stay single-line */
-  .card .row { flex-wrap: wrap; }
+  letter-spacing: 0.14em;
 }
 
-/* ---------- EventBanner ---------- */
-.banner { border-left: 3px solid var(--accent); }
-.banner .when { color: var(--accent); font: 600 12px var(--font-mono); margin-bottom: 6px; }
-
-/* =====================================================================
-   AXIS GRAMMAR (Phase A) — ported from prototypes/axis-preview.html v3.
-   Axis 1 "spectrum" (mycelium|terra|aurora|neon|void) owns the HUE
-   FAMILY: surfaces, borders, glow pair, ambient aura.
-   Axis 2 "mode" (none|minimal|retro|organic|earth|steampunk) owns
-   MATERIALITY / TYPOGRAPHY / ATMOSPHERE: structure tokens, card anatomy,
-   overlays, reveal motion. Orthogonality is relaxed BY DESIGN: modes may
-   apply controlled color mixing (muting, saturation pushes, border tints
-   derived from --s-accent) — the spectrum still owns the hue family.
-   Mode anatomy is written against the app's semantic classes
-   (.card/.k/.row/.score/.cta/.banner/.meta/.num/.when) under .mode-* scope.
-   ===================================================================== */
-
-/* ---------- AXIS 1 · SPECTRA — color/glow character only ---------- */
-
-/* mycelium — deepest organic · underground network, dark soil */
-.spectrum-mycelium {
-  --s-surface: #0F120C;
-  --s-surface2: #161B11;
-  --s-border: rgba(143, 169, 110, 0.13);
-  --s-accent: #8FA96E;
-  --s-accent2: #B4A26E;
-  --s-glow1: rgba(143, 169, 110, 0.09);
-  --s-glow2: rgba(90, 104, 68, 0.08);
-  --s-dimtext: #9AA18C;
-  --surface: var(--s-surface);
-  --surface2: var(--s-surface2);
-  --border: var(--s-border);
-  --aura: var(--s-glow1);
-  --bg-tint: radial-gradient(900px 380px at 50% -80px, var(--s-glow1), transparent);
-}
-/* terra — warm organic · ochre & amber, the pachamama end */
-.spectrum-terra {
-  --s-surface: #15110B;
-  --s-surface2: #1D170F;
-  --s-border: rgba(216, 162, 76, 0.18);
-  --s-accent: #D8A24C;
-  --s-accent2: #8FA96E;
-  --s-glow1: rgba(216, 162, 76, 0.12);
-  --s-glow2: rgba(143, 169, 110, 0.10);
-  --s-dimtext: #AFA08A;
-  --surface: var(--s-surface);
-  --surface2: var(--s-surface2);
-  --border: var(--s-border);
-  --aura: var(--s-glow1);
-  --bg-tint: radial-gradient(900px 380px at 50% -80px, var(--s-glow1), transparent);
-}
-/* aurora — balanced bioluminescent center · current SIGNAL identity evolved */
-.spectrum-aurora {
-  --s-surface: #101216;
-  --s-surface2: #161B21;
-  --s-border: rgba(95, 217, 203, 0.16);
-  --s-accent: #5FD9CB;
-  --s-accent2: #9A7FC8;
-  --s-glow1: rgba(95, 217, 203, 0.10);
-  --s-glow2: rgba(154, 127, 200, 0.09);
-  --s-dimtext: #A3ABA6;
-  --surface: var(--s-surface);
-  --surface2: var(--s-surface2);
-  --border: var(--s-border);
-  --aura: var(--s-glow1);
-  --bg-tint: radial-gradient(900px 380px at 50% -80px, var(--s-glow1), transparent);
-}
-/* neon — tech-forward · colder surfaces, vivid saturated rims */
-.spectrum-neon {
-  --s-surface: #0A0E14;
-  --s-surface2: #0F141D;
-  --s-border: rgba(111, 199, 242, 0.30);
-  --s-accent: #6FC7F2;
-  --s-accent2: #5B7FE0;
-  --s-glow1: rgba(111, 199, 242, 0.13);
-  --s-glow2: rgba(91, 127, 224, 0.10);
-  --s-dimtext: #93A3B3;
-  --surface: var(--s-surface);
-  --surface2: var(--s-surface2);
-  --border: var(--s-border);
-  --aura: var(--s-glow1);
-  --bg-tint: radial-gradient(900px 380px at 50% -80px, var(--s-glow1), transparent);
-}
-/* void — pure sci-fi minimal · near-empty cold dark, hairline rim light */
-.spectrum-void {
-  --s-surface: #0A0B0E;
-  --s-surface2: #0E1014;
-  --s-border: rgba(214, 228, 240, 0.22);
-  --s-accent: #CFE0EE;
-  --s-accent2: #7E97AD;
-  --s-glow1: rgba(207, 224, 238, 0.05);
-  --s-glow2: rgba(126, 151, 173, 0.04);
-  --s-dimtext: #8B96A0;
-  --surface: var(--s-surface);
-  --surface2: var(--s-surface2);
-  --border: var(--s-border);
-  --aura: var(--s-glow1);
-  --bg-tint: radial-gradient(900px 380px at 50% -80px, var(--s-glow1), transparent);
+em {
+  font-style: normal;
+  color: var(--ferrous);
 }
 
-/* ---------- AXIS 2 · MODES — materiality, typography, atmosphere ---------- */
-
-/* none — "signal prime" baseline; tokens already carry its values, so the
-   block only adds its signature polish: cards lift faintly toward the glow */
-.mode-none .card { transition: background 0.5s var(--ease), border-color 0.5s var(--ease), box-shadow 0.5s var(--ease), transform 0.5s var(--ease); }
-.mode-none .card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--s-accent) 30%, var(--border));
-  box-shadow: 0 16px 44px -20px color-mix(in srgb, var(--s-accent) 40%, transparent);
-}
-.mode-none .num { text-shadow: 0 0 14px color-mix(in srgb, var(--s-accent) 30%, transparent); }
-
-/* minimal · "stillness" — volume turned down: no boxes, hairline dividers,
-   the spectral accent reduced to a whisper (one thin line, one numeral) */
-.mode-minimal {
-  --radius: 24px;
-  --gap: 0px;
-  --pad: 26px;
-  --border: transparent;
-  --bg-tint: transparent;
-  --font-display: var(--font-ui);
-  --m-dim: #8E8B86;
-  --m-ink: color-mix(in srgb, var(--text) 92%, transparent);
-}
-.zone-north .mode-minimal.composed { padding: 26px 8px; max-width: 720px; margin: 0 auto; }
-.zone-north .mode-minimal.composed.grid { grid-template-columns: 1fr; }
-.mode-minimal .card {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: var(--pad) 0;
-  box-shadow: none;
-}
-.mode-minimal .card + .card { border-top: 1px solid color-mix(in srgb, var(--text) 9%, transparent); }
-.mode-minimal .card h3 { font-size: 21px; font-weight: 400; letter-spacing: -0.015em; }
-.mode-minimal .card p { color: var(--m-dim); line-height: 1.75; }
-.mode-minimal .k {
-  font-size: 10px; letter-spacing: 0.24em; color: var(--m-dim);
-  position: relative; padding-bottom: 9px; margin-bottom: 18px;
-}
-/* the whisper: a single 26px accent hairline under each eyebrow */
-.mode-minimal .k::after { content: ""; position: absolute; left: 0; bottom: 0;
-  width: 26px; height: 1px; background: var(--s-accent); opacity: 0.75; }
-.mode-minimal .row { color: var(--m-dim); }
-.mode-minimal .row b { font-weight: 500; color: var(--m-ink); }
-.mode-minimal .score { height: 2px; border-radius: 0; margin: 20px 0 10px;
-  background: color-mix(in srgb, var(--text) 8%, transparent); }
-.mode-minimal .score i { border-radius: 0; background: color-mix(in srgb, var(--s-accent) 65%, transparent); }
-.mode-minimal .num { color: var(--s-accent); font-weight: 400; }   /* the other whisper */
-.mode-minimal .cta { border: 0; border-radius: 0; padding: 2px 0; margin-top: 18px;
-  font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--m-ink); border-bottom: 1px solid var(--s-accent); }
-.mode-minimal .cta:hover { background: transparent; color: var(--s-accent); }
-.mode-minimal .banner { border-left: 1px solid color-mix(in srgb, var(--s-accent) 60%, transparent); }
-.mode-minimal .banner .when { color: var(--m-dim); }
-.mode-minimal .pill { border-color: color-mix(in srgb, var(--text) 13%, transparent); font-weight: 500; }
-
-/* retro · "arcade" — full 1987 CRT terminal world: VT323, title-bar
-   eyebrows, segmented health bars, scanlines + vignette overlays */
-.mode-retro {
-  --radius: 0px;
-  --gap: 18px;
-  --pad: 20px;
-  --bdw: 2px;
-  --shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.65);
-  --font-display: 'VT323', ui-monospace, monospace;
-}
-.zone-north .mode-retro.composed {
-  font-family: 'VT323', ui-monospace, monospace;
-  font-size: 17px;
-  overflow: hidden;
-  /* stepped/dithered glow bands instead of the soft radial wash */
-  background-image: repeating-linear-gradient(to top,
-    color-mix(in srgb, var(--s-accent) 4%, transparent) 0 2px, transparent 2px 6px);
-}
-/* CRT atmosphere — scanlines + vignette, scoped to the retro sheet only:
-   .plaza-world's translate3d would turn fixed positioning world-relative,
-   so the overlays sit absolute inside the (overflow-hidden) sheet */
-.zone-north .mode-retro.composed::before { content: ""; position: absolute; inset: 0; z-index: 2;
-  pointer-events: none; opacity: 0.05;
-  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0 1px, transparent 1px 3px); }
-.zone-north .mode-retro.composed::after { content: ""; position: absolute; inset: 0; z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(120% 95% at 50% 45%, transparent 58%, rgba(0, 0, 0, 0.55) 100%); }
-.mode-retro .card {
-  padding: 0 0 16px;
-  line-height: 1.4;
-  box-shadow: var(--shadow);
-  border-color: color-mix(in srgb, var(--s-accent) 55%, var(--border));
-}
-.mode-retro .k {
-  margin: 0 0 10px; padding: 5px 14px;
-  font-family: 'VT323', monospace; font-size: 15px; letter-spacing: 0.06em;
-  color: var(--s-accent);
-  border-bottom: 2px solid color-mix(in srgb, var(--s-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--s-accent) 8%, transparent);
-}
-.mode-retro .k::before { content: "▓░ "; }
-.mode-retro .k::after { content: " ░▓"; float: right; }
-.mode-retro .card h3 { margin: 4px 14px 2px; font-family: var(--font-display);
-  font-size: 26px; font-weight: 400;
-  text-shadow: 0 0 10px color-mix(in srgb, var(--s-accent) 45%, transparent); }
-.mode-retro .card h3::after { content: "█"; margin-left: 8px; font-size: 0.75em;
-  color: var(--s-accent); animation: blink 1.1s steps(1) infinite; }
-.mode-retro .card p { margin: 0 14px; font-size: 16px; }
-.mode-retro .child { margin: 10px 14px 0; }
-.mode-retro .score { margin: 12px 14px 6px; height: 10px; border-radius: 0;
-  border: 1px solid color-mix(in srgb, var(--s-accent) 40%, transparent);
-  background: var(--surface2); }
-/* segmented pixel health bar */
-.mode-retro .score i { border-radius: 0;
-  background: repeating-linear-gradient(90deg, var(--s-accent) 0 6px, transparent 6px 9px); }
-.mode-retro .row { margin: 2px 14px; font-size: 15px; }
-.mode-retro .num { font: 400 20px 'VT323', monospace; color: var(--s-accent);
-  text-shadow: 0 0 10px color-mix(in srgb, var(--s-accent) 60%, transparent); }
-.mode-retro .num b { font-weight: 400; }
-.mode-retro .cta { margin: 12px 14px 0; border-radius: 0; border-width: 2px;
-  box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.65);
-  font-family: 'VT323', monospace; font-size: 17px; font-weight: 400; padding: 3px 14px; }
-.mode-retro .cta:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.65); }
-.mode-retro .banner { border-left: 4px solid var(--s-accent); }
-.mode-retro .banner .when { font-family: 'VT323', monospace; font-size: 15px; }
-.mode-retro .meta { margin: 8px 14px 0; }
-.mode-retro .again .pill { border-radius: 0; border-width: 2px;
-  font-family: 'VT323', monospace; font-size: 16px; font-weight: 400; padding: 3px 12px; }
-@keyframes blink { 50% { opacity: 0; } }
-
-/* organic · "pachamama" — nature's forms over geometry: asymmetric grown
-   radii, hedera leaf marks, humanist serif, sway reveal */
-.mode-organic {
-  --radius: 26px 10px 24px 12px;
-  --gap: 20px;
-  --pad: 26px;
-  --shadow: 0 14px 34px -22px color-mix(in srgb, var(--s-accent) 35%, transparent);
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-}
-/* greener thickening: mix the spectral wash toward moss regardless of spectrum */
-.zone-north .mode-organic.composed {
-  background-image: radial-gradient(900px 420px at 50% -80px,
-    color-mix(in srgb, var(--s-glow1) 60%, rgba(143, 169, 110, 0.14)), transparent);
-}
-.mode-organic .card {
-  box-shadow: var(--shadow);
-  transition: background 0.5s var(--ease), border-color 0.5s var(--ease),
-    border-radius 0.4s var(--ease), box-shadow 0.5s var(--ease), transform 0.7s var(--ease);
-}
-/* .section and .card are the same element (attr fallthrough), so the
-   grown-radii alternation targets .section directly */
-.mode-organic .section:nth-child(odd) { border-radius: 12px 26px 10px 24px; }
-.mode-organic .card:hover { transform: rotate(-0.4deg) translateY(-2px); }
-.mode-organic .k { letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--s-accent) 55%, var(--subtle)); }
-.mode-organic .k::before { content: "❧ "; color: var(--s-accent); }   /* hedera leaf mark */
-.mode-organic .card h3 { font-family: var(--font-display);
-  font-size: 26px; font-weight: 600; letter-spacing: 0; }
-.mode-organic .card p { line-height: 1.7; }
-/* score bar that feels grown: swelling fill with leaf-vein striations */
-.mode-organic .score { height: 7px; border-radius: 8px; margin: 16px 0 8px;
-  background: color-mix(in srgb, var(--surface2) 70%, var(--s-accent) 6%); }
-.mode-organic .score i { border-radius: 8px;
-  background:
-    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 7px),
-    linear-gradient(90deg, color-mix(in srgb, var(--s-accent) 70%, #4A5C38), var(--s-accent)); }
-.mode-organic .num { font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 19px; font-style: italic; color: var(--s-accent); }
-.mode-organic .cta { border-radius: 18px 8px 18px 8px; font-weight: 500; letter-spacing: 0.02em; }
-.mode-organic .banner .when::before { content: "❧ "; }
-.mode-organic .again .pill { border-radius: 16px 7px 15px 8px; font-weight: 500; }
-
-/* earth · "hand-pressed" — raw materiality & craft: heavy grain, pressed-
-   fiber panels, chunky soil borders mixed from the spectrum accent, plus
-   living detail — vine corner ornaments, root-tip score bar, leaf eyebrows.
-   Reads distinct from the terra SPECTRUM (hues only) under every spectrum. */
-.mode-earth {
-  --radius: 8px;
-  --gap: 18px;
-  --pad: 24px;
-  --bdw: 3px;
-  --shadow: 0 16px 28px -12px rgba(52, 34, 18, 0.6), 0 3px 0 0 rgba(0, 0, 0, 0.28);
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  /* soil tone derived from the spectrum accent, desaturated toward clay */
-  --e-soil: color-mix(in srgb, var(--s-accent) 34%, #57493A);
-  --e-pig: color-mix(in srgb, var(--s-accent) 72%, #7A5A38);
-}
-.zone-north .mode-earth.composed {
-  background-image: radial-gradient(900px 380px at 50% -80px,
-    color-mix(in srgb, var(--s-glow1) 70%, rgba(120, 90, 60, 0.08)), transparent);
-}
-/* pressed-fiber: grain pushed ~3× over the composition */
-.zone-north .mode-earth.composed::before { content: ""; position: absolute; inset: 0; z-index: 0;
-  pointer-events: none; opacity: 0.085; border-radius: inherit;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
-  background-size: 180px 180px; }
-.mode-earth .card { position: relative; border-color: var(--e-soil); box-shadow: var(--shadow);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, #2A2118), var(--surface)); }
-/* vine/root corner ornament — a curled tendril rising from the card base */
-.mode-earth .card::before { content: ""; position: absolute; left: 5px; bottom: 5px;
-  width: 30px; height: 30px; pointer-events: none; opacity: 0.55;
-  border-left: 2px solid color-mix(in srgb, var(--e-soil) 80%, transparent);
-  border-bottom: 2px solid color-mix(in srgb, var(--e-soil) 80%, transparent);
-  border-bottom-left-radius: 22px; }
-.mode-earth .card::after { content: "❧"; position: absolute; left: 18px; bottom: 24px;
-  font-size: 11px; line-height: 1; pointer-events: none;
-  color: color-mix(in srgb, var(--e-pig) 85%, transparent); transform: rotate(14deg); }
-.mode-earth .child .card::before,
-.mode-earth .child .card::after { content: none; }   /* nested cards stay plain */
-.mode-earth .k { color: var(--e-soil); letter-spacing: 0.1em;
-  border-bottom: 2px solid color-mix(in srgb, var(--e-soil) 45%, transparent); padding-bottom: 6px; }
-.mode-earth .k::before { content: "◆ "; }   /* stamped pigment mark */
-.mode-earth .k::after { content: " ❧"; color: color-mix(in srgb, var(--e-pig) 75%, transparent); }
-.mode-earth .card h3 { font-family: var(--font-display);
-  font-size: 24px; font-weight: 700; letter-spacing: 0; }
-/* pigmented bar with a grainy fill and a root-tip leaf at its end */
-.mode-earth .score { height: 8px; border-radius: 4px; margin: 16px 0 8px; overflow: visible;
-  border: 1px solid color-mix(in srgb, var(--e-soil) 50%, transparent);
-  background: color-mix(in srgb, var(--surface2) 80%, #3A2F24); }
-.mode-earth .score i { position: relative; border-radius: 3px;
-  background:
-    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 4px),
-    var(--e-pig); }
-.mode-earth .score i::after { content: ""; position: absolute; right: -1px; top: -3px;
-  width: 6px; height: 12px; border-radius: 60% 40% 55% 45% / 55% 60% 40% 45%;
-  background: color-mix(in srgb, var(--e-pig) 80%, #5F7247); }
-.mode-earth .num { color: var(--e-pig); }
-.mode-earth .cta { border-width: 2px; border-radius: 8px;
-  border-color: var(--e-soil); color: var(--text);
-  background: color-mix(in srgb, var(--e-soil) 30%, transparent); }
-.mode-earth .cta:hover { background: var(--e-soil); color: var(--text); }
-.mode-earth .banner { border-left: 4px solid var(--e-soil); }
-.mode-earth .banner .when { color: var(--e-pig); }
-.mode-earth .again .pill { border-radius: 8px; border-width: 2px;
-  border-color: color-mix(in srgb, var(--e-soil) 70%, transparent); }
-
-/* steampunk · "metro" — Victorian industrial transit: brass & copper over
-   dark iron, riveted frames, conduit hairlines, pressure-gauge score bar */
-.mode-steampunk {
-  --radius: 4px;
-  --gap: 34px;
-  --pad: 26px;
-  --bdw: 2px;
-  --shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
-  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
-  /* brass derived from the spectrum accent toward #C08A3E */
-  --sp-brass: color-mix(in srgb, var(--s-accent) 32%, #C08A3E);
-  --sp-amber: color-mix(in srgb, var(--s-accent) 30%, #E8A33D);
-  --sp-iron: #15130F;
-}
-/* brass glow warms the spectral wash */
-.zone-north .mode-steampunk.composed {
-  background-image: radial-gradient(900px 380px at 50% -70px,
-    color-mix(in srgb, var(--s-glow1) 35%, rgba(192, 138, 62, 0.13)), transparent);
-}
-/* conduit hairlines linking the sections — the pipes of the network */
-.mode-steampunk .section:not(.wide):not(:first-child)::before { content: "";
-  position: absolute; left: 50%; top: -34px; width: 1px; height: 34px;
-  background: linear-gradient(var(--sp-brass), transparent); opacity: 0.45; }
-.mode-steampunk .section:not(.wide):not(:first-child)::after { content: "";
-  position: absolute; left: calc(50% - 3px); top: -38px; width: 5px; height: 5px;
-  border-radius: 50%; opacity: 0.7;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--sp-brass) 70%, white), var(--sp-brass)); }
-.mode-steampunk .card { position: relative; border-color: var(--sp-brass); box-shadow: var(--shadow);
-  /* dark iron panel with four rivet studs baked into the background */
-  background:
-    radial-gradient(circle 3px at 9px 9px, var(--sp-brass) 55%, transparent 62%),
-    radial-gradient(circle 3px at calc(100% - 9px) 9px, var(--sp-brass) 55%, transparent 62%),
-    radial-gradient(circle 3px at 9px calc(100% - 9px), var(--sp-brass) 55%, transparent 62%),
-    radial-gradient(circle 3px at calc(100% - 9px) calc(100% - 9px), var(--sp-brass) 55%, transparent 62%),
-    linear-gradient(180deg, var(--sp-iron), var(--surface)); }
-.mode-steampunk .k { font-family: 'Oswald', sans-serif; font-weight: 500;
-  letter-spacing: 0.22em; color: var(--sp-brass);
-  border-bottom: 1px solid color-mix(in srgb, var(--sp-brass) 40%, transparent); padding-bottom: 7px; }
-.mode-steampunk .card h3 { font-family: var(--font-display); font-size: 20px;
-  font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
-/* pressure-gauge take: riveted brass channel with a needle marker */
-.mode-steampunk .score { height: 9px; border-radius: 5px; overflow: visible;
-  margin: 20px 0 10px; border: 1px solid color-mix(in srgb, var(--sp-brass) 60%, transparent);
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0 1px, transparent 1px 10%),
-    linear-gradient(180deg, #1D1913, var(--surface2));
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55); }
-.mode-steampunk .score i { position: relative; border-radius: 4px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 70%, #F0D9A8), var(--sp-brass));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--sp-brass) 45%, transparent); }
-.mode-steampunk .score i::after { content: ""; position: absolute; right: 0; top: -5px;
-  width: 2px; height: 19px; background: var(--sp-amber);
-  box-shadow: 0 0 6px var(--sp-amber); transform: translateX(50%); }   /* the needle */
-.mode-steampunk .num { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px;
-  color: var(--sp-amber); text-shadow: 0 0 10px color-mix(in srgb, var(--sp-amber) 55%, transparent); }
-.mode-steampunk .num b { font-weight: 600; }
-.mode-steampunk .row { letter-spacing: 0.03em; }
-/* brass button with inset shadows */
-.mode-steampunk .cta { border-radius: 5px; border-width: 1px;
-  font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: #16110A;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 78%, #F2DDAB), var(--sp-brass));
-  border-color: color-mix(in srgb, var(--sp-brass) 60%, #5A4020);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.35), 0 3px 6px -2px rgba(0, 0, 0, 0.55); }
-.mode-steampunk .cta:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sp-brass) 88%, #fff), var(--sp-brass));
-  color: #16110A; transform: translateY(1px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4); }
-.mode-steampunk .banner { border-left: 3px solid var(--sp-brass); }
-.mode-steampunk .banner .when { color: var(--sp-amber);
-  font-family: 'Oswald', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
-.mode-steampunk .again .pill { border-radius: 4px; font-family: 'Oswald', sans-serif;
-  font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; }
-
-/* ---------- composed sheet · paper ground (day) ----------
-   the composed page reads as warm paper with dark ink; every non-dark
-   mode (none, minimal, organic, earth) restyles cards over this light
-   ground. retro (CRT) and steampunk (iron) stay night worlds BY DESIGN
-   — the :not() opt-out lets their spectrum tokens flow through
-   untouched. Sits after the mode blocks so equal-specificity token
-   declarations (mode-minimal's --m-dim) resolve here by source order. */
-.zone-north .composed:not(.mode-retro):not(.mode-steampunk) {
-  background-color: #f6f1e6;
-  --surface: #fdfaf2;
-  --surface2: #ebe3d2;
-  --text: #2b2622;
-  --muted: #57503f;
-  --subtle: #6e675c;
-  --border: rgba(43, 38, 34, 0.13);
-  --border-mid: rgba(43, 38, 34, 0.22);
-  --s-dimtext: #57503f;
-  --m-dim: #6e675c;
-}
-/* hairline rim for the paper sheet (the night rim above is invisible on light) */
-.zone-north .composed:not(.mode-retro):not(.mode-steampunk) {
-  border-color: rgba(43, 38, 34, 0.16);
+.deep {
+  background: var(--deep);
+  color: var(--paper);
 }
 
-/* ---------- reveal choreography — motion character per world ----------
-   the sequential .section.on reveal takes each world's entrance shape */
-.mode-minimal .section { transition: opacity 1.1s ease, transform 1.1s ease; }
-.mode-retro .section { transition: opacity 0.34s steps(4, end), transform 0.34s steps(4, end); }
-@keyframes rv-sway { from { opacity: 0; transform: rotate(-1.4deg) translateY(10px); }
-  to { opacity: 1; transform: none; } }
-.mode-organic .section.on { animation: rv-sway 1.05s cubic-bezier(0.26, 0.8, 0.32, 1) both;
-  transform-origin: 50% 100%; }
-@keyframes rv-settle { from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; } }
-.mode-earth .section.on { animation: rv-settle 0.85s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
-@keyframes rv-clunk { 0% { opacity: 0; transform: translateY(-12px); }
-  62% { opacity: 1; transform: translateY(3px); }
-  82% { transform: translateY(-1px); }
-  100% { opacity: 1; transform: none; } }
-.mode-steampunk .section.on { animation: rv-clunk 0.55s cubic-bezier(0.35, 0, 0.6, 1) both; }
-@media (prefers-reduced-motion: reduce) {
-  .mode-organic .section.on,
-  .mode-earth .section.on,
-  .mode-steampunk .section.on { animation: none; }
-  .mode-retro .card h3::after { animation: none; }
+.deep em {
+  color: var(--signal);
 }
 
-/* ---------- error ---------- */
-.error {
-  border: 1px solid var(--border-mid);
-  border-radius: 18px;
-  padding: 22px;
-  max-width: 640px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.error p { color: var(--muted); margin: 0; }
-.error .pill { align-self: flex-start; }
-
-@media (max-width: 720px) {
-  .zone-north .composed.grid { grid-template-columns: 1fr; }
-  .zone-north .composed { padding: 20px 14px; }
-  .card { padding: calc(var(--pad) * 0.8); }
+.rule {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--rule);
+  opacity: 0.6;
 }
 
-/* ---------- print — the ambient/theater layers never reach paper ---------- */
-@media print {
-  .theater-stage,
-  body::before,
-  body::after { display: none; }
-  .zone-north .mode-retro.composed::before,
-  .zone-north .mode-retro.composed::after { content: none; }
-}
-
-/* ============ Plaza (Town Square) — shared layer ============
-   Clean natural futuristic / flowy organic (spec §1).
-   Bright limestone base. */
-.zone {
-  position: absolute;
-  inset: 0;
-  background-color: #e9e2d4;
-  /* the veil — a flat limestone wash painted as the TOP background layer
-     of the very element that carries the tile artwork: it can therefore
-     only ever soften the background, never the content.
-     Paint order: tile photo (2nd bg layer) < veil (1st bg layer) < content
-     (.zone > * z2). Being part of the
-     element's background it shares the photo's attachment: it stays put
-     while north/south scroll, identical alpha on every tile →
-     no seams at tile borders. Strength is owner-dialed via
-     --veil-strength on .plaza (persisted in 'atha.veil'); the wash is
-     flat, not a gradient effect, so the flat-chalk rule holds. */
-  background-image:
-    linear-gradient(rgba(233, 226, 212, var(--veil-strength, 0.45)), rgba(233, 226, 212, var(--veil-strength, 0.45))),
-    var(--bg);
-  background-size: cover;
-  background-position: center;
-}
-/* stacking: zone bg (photo < veil) < veins overlay (z1) < content (z2) */
-.zone > * { z-index: 2; }
-/* the per-zone limestone radial scrim moved up: one flat per-tile veil
-   (top background layer of .zone above) now softens all tiles uniformly —
-   full-bleed to every viewport corner, no seams at tile borders, and it
-   washes only the artwork: content (.zone > * z2) always paints above it.
-   The wash is flat, not a gradient, so the flat-chalk rule holds. */
-
-.plaza-btn {
-  display: inline-block;
-  text-decoration: none;
-  border: 1px solid rgba(120, 105, 85, 0.35);
-  background: rgba(250, 247, 240, 0.72);
-  backdrop-filter: blur(10px);
-  color: #2b2622;
-  padding: 12px 22px;
-  border-radius: 999px;
+button {
   font: inherit;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
   cursor: pointer;
-  transition: transform 0.35s, box-shadow 0.35s, background 0.35s;
 }
-.plaza-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(30, 40, 45, 0.18);
-  background: rgba(252, 250, 245, 0.9);
-}
-/* solid action material — sage of the plaza's green family (brand
-   --success), dark moss text; it replaces the former orange gradient */
-.plaza-btn.solid {
-  background: linear-gradient(135deg, #cdd9ae, #93ab72);
-  border-color: rgba(90, 110, 62, 0.45);
-  color: #24301c;
-  font-weight: 600;
-  box-shadow: 0 8px 22px rgba(120, 146, 88, 0.35);
-}
-.plaza-btn.solid:hover { box-shadow: 0 12px 28px rgba(120, 146, 88, 0.45); }
 
-/* reduced motion: the plaza keeps snap, drops flow and pans (spec §8) */
-.plaza.reduced .plaza-world { transition-duration: 200ms !important; }
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--navy);
+  color: var(--paper);
+}
+
+/* shared label style — mono, small, muted */
+.label {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 11px;
+  color: var(--ink);
+  opacity: 0.55;
+}
+
+/* Motion primitives (brand §8) — nothing bounces, all easing is --ease.
+   Components pass a stagger with style="--d: 240ms". */
+@keyframes atha-wipe {
+  from { clip-path: inset(-0.2em 100% -0.4em -0.15em); }
+  to   { clip-path: inset(-0.2em -0.15em -0.4em -0.15em); }
+}
+@keyframes atha-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes atha-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.u-wipe { animation: atha-wipe 720ms var(--ease) both; animation-delay: var(--d, 120ms); }
+.u-fade { animation: atha-fade 540ms var(--ease) both; animation-delay: var(--d, 120ms); }
+.u-draw {
+  stroke-dasharray: 1;
+  animation: atha-draw 900ms var(--ease) both;
+  animation-delay: var(--d, 0ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .plaza-world { transition-duration: 200ms !important; }
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

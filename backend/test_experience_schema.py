@@ -1,8 +1,10 @@
 """backend/test_experience_schema.py — offline contract for /api/experience.
 
 Reuses validate_experience from eval_loop.py and pins the schema rules it
-encodes (1..10 sections, hydrated entity_ids, title <= 80, text <= 500) with
-synthetic payloads. Pure function, instant, credential-free — no live backend.
+encodes (1..10 sections, components on the atomic allowlist, hydrated
+entity_ids, title <= 80 non-empty, text <= 500 OR a structured payload —
+facts/stages/layers) with synthetic payloads. Pure function, instant,
+credential-free — no live backend.
 
 Run:  python backend/test_experience_schema.py
 Exit: 0 = contract holds, 1 = any case behaved unexpectedly.
@@ -19,9 +21,9 @@ def _experience(**overrides) -> dict:
         "spectrum": "terra",
         "mode": "none",
         "sections": [
-            {"component": "text_block", "title": "Welcome", "text": "Hello.",
+            {"component": "TextBlock", "title": "Welcome", "text": "Hello.",
              "entity_ids": []},
-            {"component": "signal_card", "title": "People", "text": "Grounded.",
+            {"component": "SignalCard", "title": "People", "text": "Grounded.",
              "entity_ids": ["p1"]},
         ],
         "entities": {"p1": {"type": "person", "name": "Ada"}},
@@ -30,38 +32,73 @@ def _experience(**overrides) -> dict:
     return exp
 
 
+def _text_sections(n: int) -> list[dict]:
+    return [{"component": "TextBlock", "title": f"S{i}", "text": "x",
+             "entity_ids": []} for i in range(n)]
+
+
 # (name, experience, expected_valid)
 CASES = [
     ("valid experience passes", _experience(), True),
     ("default degradation shape passes", _experience(
-        sections=[{"component": "text_block", "title": "Welcome to SIGNAL",
-                   "text": "The network is composing your personal page.",
+        sections=[{"component": "TextBlock", "title": "Welcome to ATHA",
+                   "text": "ATHA is composing your page.",
                    "entity_ids": []}],
         entities={}), True),
-    ("six sections valid", _experience(
-        sections=[{"component": "text_block", "title": f"S{i}",
-                   "text": "x", "entity_ids": []} for i in range(6)]), True),
-    ("seven sections valid", _experience(
-        sections=[{"component": "text_block", "title": f"S{i}",
-                   "text": "x", "entity_ids": []} for i in range(7)]), True),
-    ("ten sections is the ceiling", _experience(
-        sections=[{"component": "text_block", "title": f"S{i}",
-                   "text": "x", "entity_ids": []} for i in range(10)]), True),
-    ("eleven sections rejected", _experience(
-        sections=[{"component": "text_block", "title": f"S{i}",
-                   "text": "x", "entity_ids": []} for i in range(11)]), False),
+    ("six sections valid", _experience(sections=_text_sections(6)), True),
+    ("seven sections valid", _experience(sections=_text_sections(7)), True),
+    ("ten sections is the ceiling", _experience(sections=_text_sections(10)), True),
+    ("eleven sections rejected", _experience(sections=_text_sections(11)), False),
     ("zero sections rejected", _experience(sections=[]), False),
     ("missing sections key rejected", {"entities": {}}, False),
     ("empty payload rejected", {}, False),
     ("unhydrated entity_id rejected", _experience(
-        sections=[{"component": "signal_card", "title": "People",
+        sections=[{"component": "SignalCard", "title": "People",
                    "text": "Grounded.", "entity_ids": ["p1", "ghost"]}]), False),
     ("title over 80 chars rejected", _experience(
-        sections=[{"component": "text_block", "title": "t" * 81,
+        sections=[{"component": "TextBlock", "title": "t" * 81,
                    "text": "x", "entity_ids": []}], entities={}), False),
     ("text over 500 chars rejected", _experience(
-        sections=[{"component": "text_block", "title": "T",
+        sections=[{"component": "TextBlock", "title": "T",
                    "text": "x" * 501, "entity_ids": []}], entities={}), False),
+    # --- ATHA atomic set ------------------------------------------------------
+    ("statement with title and text valid", _experience(
+        sections=[{"component": "Statement", "title": "A laboratory compounds.",
+                   "text": "Real companies bring real decisions."}],
+        entities={}), True),
+    ("fact list carries facts without prose", _experience(
+        sections=[{"component": "FactList", "title": "Edition 001 stands as.",
+                   "facts": [{"label": "Dates",
+                              "value": "Around March 2027",
+                              "status": "proposed"}]}],
+        entities={}), True),
+    ("stage flow carries stages", _experience(
+        sections=[{"component": "StageFlow", "title": "The rhythm.",
+                   "stages": [{"name": "Briefing",
+                               "description": "The company opens the room."}]}],
+        entities={}), True),
+    ("partner layers carry layers", _experience(
+        sections=[{"component": "PartnerLayers", "title": "Who stands behind.",
+                   "layers": [{"name": "WBS", "kind": "co-host",
+                               "description": "The business school."}]}],
+        entities={}), True),
+    ("never-list name in a structured payload rejected", _experience(
+        sections=[{"component": "PartnerLayers", "title": "Who stands behind.",
+                   "layers": [{"name": "Hadora", "kind": "experience-design",
+                               "description": "The human operating system."}]}],
+        entities={}), False),
+    ("section without text or content rejected", _experience(
+        sections=[{"component": "Statement", "title": "Title only."}],
+        entities={}), False),
+    ("fact list with empty facts and no text rejected", _experience(
+        sections=[{"component": "FactList", "title": "Empty.", "facts": []}],
+        entities={}), False),
+    ("section without title rejected", _experience(
+        sections=[{"component": "TextBlock", "title": "", "text": "x"}],
+        entities={}), False),
+    ("unknown component rejected", _experience(
+        sections=[{"component": "Hero", "title": "T.", "text": "x"}],
+        entities={}), False),
 ]
 
 

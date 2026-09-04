@@ -24,6 +24,59 @@ class ComponentType(str, Enum):
     ENTERPRISE_CARD = "EnterpriseCard"
     EVENT_BANNER = "EventBanner"
     TEXT_BLOCK = "TextBlock"
+    # ATHA brand atomic set (registry.js v1) — structured, server-hydrated
+    # from knowledge-graph sources; the LLM only writes title/text copy.
+    STATEMENT = "Statement"
+    FACT_LIST = "FactList"
+    STAGE_FLOW = "StageFlow"
+    PARTNER_LAYERS = "PartnerLayers"
+
+
+FACT_STATUSES = {"confirmed", "proposed", "open"}
+
+
+class Fact(BaseModel):
+    """Label+value pair with an honest status pill (edition facts)."""
+
+    label: str = Field(min_length=1, max_length=40)
+    value: str = Field(min_length=1, max_length=140)
+    status: str | None = None
+
+    @model_validator(mode="after")
+    def _clean(self) -> "Fact":
+        self.label = strip_markup(self.label)[:40]
+        self.value = strip_markup(self.value)[:140]
+        if self.status not in FACT_STATUSES:
+            self.status = None
+        return self
+
+
+class Stage(BaseModel):
+    """One ArcStage of the seven-stage rhythm."""
+
+    name: str = Field(min_length=1, max_length=60)
+    description: str = Field(max_length=240)
+
+    @model_validator(mode="after")
+    def _clean(self) -> "Stage":
+        self.name = strip_markup(self.name)[:60]
+        self.description = strip_markup(self.description)[:240]
+        return self
+
+
+class LayerItem(BaseModel):
+    """One Organization behind ATHA (initiator / co-host / partner)."""
+
+    name: str = Field(min_length=1, max_length=60)
+    kind: str = Field(max_length=30)
+    description: str = Field(max_length=240)
+
+    @model_validator(mode="after")
+    def _clean(self) -> "LayerItem":
+        self.name = strip_markup(self.name)[:60]
+        self.kind = strip_markup(self.kind)[:30]
+        self.description = strip_markup(self.description)[:240]
+        return self
 
 
 class ColorToken(str, Enum):
@@ -101,6 +154,9 @@ class UINode(BaseModel):
     component: ComponentType
     title: str | None = Field(default=None, max_length=80)
     text: str | None = Field(default=None, max_length=500)
+    facts: list[Fact] = Field(default_factory=list, max_length=12)
+    stages: list[Stage] = Field(default_factory=list, max_length=12)
+    layers: list[LayerItem] = Field(default_factory=list, max_length=8)
     button: Button | None = None
     entity_ids: list[str] = Field(default_factory=list, max_length=10)
     children: list["UINode"] = Field(default_factory=list)

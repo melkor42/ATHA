@@ -9,8 +9,9 @@ role, and validates the returned experience schema.
 
 Knowledge pass: the same request plus a gate visitor_state must additionally
 return the catalog questions the page was composed around
-(knowledge_questions) and should answer them via TextBlock sections; a 25 s
-latency ceiling guards the knowledge-augmented compose.
+(knowledge_questions) and should answer them via the atomic sections
+(Statement/FactList/StageFlow/PartnerLayers, all on the component
+allowlist); a 25 s latency ceiling guards the knowledge-augmented compose.
 
 Run:  python eval_loop.py [--url http://127.0.0.1:8000]
 Exit: 0 = all roles valid, 1 = any failure.
@@ -20,6 +21,8 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
+import re
 import time
 
 import httpx
@@ -32,6 +35,22 @@ ROLES = ("student", "warwick", "business")
 KNOWLEDGE_CHECKS = (("student", "discovering"), ("business", "deciding"))
 KNOWLEDGE_LATENCY_CEILING_MS = 25000
 
+# Components the pipeline may emit: the ATHA atomic set plus the legacy
+# entity-card types still in the ui_schema allowlist.
+ALLOWED_COMPONENTS = {
+    "TextBlock", "Statement", "FactList", "StageFlow", "PartnerLayers",
+    "SignalCard", "StudentProfile", "EnterpriseCard", "EventBanner",
+}
+
+# UINode fields that count as structured (non-copy) content
+STRUCTURED_FIELDS = ("facts", "stages", "layers")
+
+# Brand never-list (ATHA-brand-identity.md §2). Structured payloads are hydrated
+# deterministically, so a banned name can reach a page without the model ever
+# writing it — the gate checks the rendered content, not the prompt.
+NEVER_LIST = re.compile(
+    r"\b(hadora|teamwork|whack|monash|cristian)\b", re.IGNORECASE)
+
 
 def validate_experience(exp: dict) -> tuple[bool, list[str]]:
     problems = []
@@ -40,7 +59,14 @@ def validate_experience(exp: dict) -> tuple[bool, list[str]]:
     if not 1 <= len(exp["sections"]) <= 10:
         problems.append(f"section count {len(exp['sections'])}")
     entities = exp.get("entities", {})
+    banned = NEVER_LIST.findall(json.dumps(exp.get("sections", []),
+                                           ensure_ascii=False))
+    if banned:
+        problems.append(f"never-list name on the page: {sorted(set(banned))}")
     for sec in exp["sections"]:
+        comp = sec.get("component")
+        if comp not in ALLOWED_COMPONENTS:
+            problems.append(f"unknown component {comp!r}")
         for eid in sec.get("entity_ids", []):
             if eid not in entities:
                 problems.append(f"entity {eid} referenced but not hydrated")
@@ -48,6 +74,11 @@ def validate_experience(exp: dict) -> tuple[bool, list[str]]:
             problems.append("title > 80")
         if sec.get("text") and len(sec["text"]) > 500:
             problems.append("text > 500")
+        if not (sec.get("title") or "").strip():
+            problems.append("section without title")
+        if not (sec.get("text") or "").strip() and not any(
+                sec.get(k) for k in STRUCTURED_FIELDS):
+            problems.append(f"section {comp!r} without text or content")
     return len(problems) == 0, problems
 
 
@@ -123,16 +154,6 @@ async def run(base_url: str) -> int:
             if len(sections) < 7:
                 valid = False
                 problems.append(f"only {len(sections)} sections (<7)")
-            non_tb = [s.get("component") for s in sections
-                      if s.get("component") != "TextBlock"]
-            if non_tb:
-                valid = False
-                problems.append(f"non-TextBlock sections: {non_tb}")
-            empty = [i for i, s in enumerate(sections)
-                     if not (s.get("title") and s.get("text"))]
-            if empty:
-                valid = False
-                problems.append(f"sections missing title/text: {empty}")
             if not isinstance(body.get("suggestions"), list):
                 valid = False
                 problems.append("suggestions missing or not a list")

@@ -3,9 +3,13 @@
 Builds the ordered slot list of a composed page from the knowledge graph:
 anchor questions (catalog, state-adjusted, intent-boosted) -> facet passages
 -> vector extras -> guaranteed tail (edition facts, rhythm arc, partner
-layers). The LLM only writes copy for these slots (see agents.copywriter_agent);
-structure never comes from the model, so the page is always full and always
-grounded. Free text is a RETRIEVAL KEY ONLY — it never reaches the copywriter.
+layers). The LLM writes copy for these slots AND ranks them for the current
+visitor (agents.copywriter_agent); structure and grounding never come from
+the model, so the page is always full and always grounded. Free text is a
+RETRIEVAL KEY and a RANKING CONTEXT ONLY — it is never a source of facts.
+Tail slots carry a `structured` list (parallel to `sources`, same order)
+which main.py filters by the copywriter's source_i and hydrates into the
+atomic FactList/StageFlow/PartnerLayers nodes.
 """
 
 from __future__ import annotations
@@ -130,18 +134,34 @@ def known_facet_ids() -> set[str]:
 
 
 def _slot(kind: str, title_hint: str, about: str, sources: list[dict],
-          ref_id: str | None) -> dict:
+          ref_id: str | None, structured: list[dict] | None = None) -> dict:
     return {"kind": kind, "title_hint": title_hint, "about": about,
-            "sources": sources, "ref_id": ref_id}
+            "sources": sources, "ref_id": ref_id,
+            "structured": structured or []}
+
+
+# Brand never-list (ATHA-brand-identity.md §2). These names are legitimate
+# graph grounding for the method and must never reach a page. The copywriter
+# prompt bans them in copy, but the tail payloads are hydrated deterministically
+# and the prompt is fed from the same sources — so the filter has to sit here,
+# upstream of both.
+NEVER_LIST = re.compile(
+    r"\b(hadora|teamwork|whack|monash|cristian)\b", re.IGNORECASE)
+
+
+def _banned(*parts: str | None) -> bool:
+    return any(NEVER_LIST.search(p or "") for p in parts)
 
 
 def _degenerate(text: str | None, heading_path: list | None) -> bool:
-    """Heading-only passages (text == last heading) and near-empty texts are
-    useless as visitor-facing copy — they would render as title-only cards."""
+    """A passage no visitor may be shown: heading-only (text == last heading),
+    near-empty, or carrying a name on the brand never-list."""
     t = " ".join((text or "").split())
+    head = (heading_path or [])[-1] if heading_path else ""
+    if _banned(t, head):
+        return True
     if len(t) < 40:
         return True
-    head = (heading_path or [])[-1] if heading_path else ""
     return bool(head) and t == " ".join(head.split())
 
 
@@ -269,16 +289,29 @@ async def build_skeleton(
 
         # --- guaranteed tail -------------------------------------------------
         edition = load_edition_facts()
+        edition_facts = [
+            f for f in edition.get("facts", [])
+            if not _banned(f["id"], f["fact"], f.get("status"))
+        ]
         edition_sources = [
             {"text": f"{f['fact']} [{f['status']}]", "status": f["status"],
              "heading_path": ["Edition 001"], "origin": "edition"}
-            for f in edition.get("facts", [])
+            for f in edition_facts
+        ]
+        edition_structured = [
+            {"label": f["id"].replace("-", " ").capitalize(),
+             "value": f["fact"], "status": f["status"]}
+            for f in edition_facts
         ]
         slots.append(_slot("edition", "Edition 001 — where things stand",
                            "The current state of the first ATHA edition",
-                           edition_sources, "edition"))
+                           edition_sources, "edition",
+                           structured=edition_structured))
 
-        stages = await (await session.run(TAIL_RHYTHM_QUERY)).data()
+        stages = [
+            s for s in await (await session.run(TAIL_RHYTHM_QUERY)).data()
+            if not _banned(s["name"], s["description"])
+        ]
         if stages:
             rhythm_sources = [
                 {"text": f"{i}. {s['name']} — {s['description']}",
@@ -288,9 +321,16 @@ async def build_skeleton(
             ]
             slots.append(_slot("rhythm", "The rhythm — seven stages",
                                "The arc every ATHA edition follows",
-                               rhythm_sources, "arc-stages"))
+                               rhythm_sources, "arc-stages",
+                               structured=[
+                                   {"name": s["name"],
+                                    "description": s["description"]}
+                                   for s in stages]))
 
-        orgs = await (await session.run(TAIL_LAYERS_QUERY)).data()
+        orgs = [
+            o for o in await (await session.run(TAIL_LAYERS_QUERY)).data()
+            if not _banned(o["name"], o["kind"], o["description"])
+        ]
         if orgs:
             layer_sources = [
                 {"text": f"{o['name']}: {o['description']}", "status": None,
@@ -298,8 +338,12 @@ async def build_skeleton(
                 for o in orgs
             ]
             slots.append(_slot("layers", "Who stands behind ATHA",
-                               "The three partners and their roles",
-                               layer_sources, "organizations"))
+                               "The partners and their roles",
+                               layer_sources, "organizations",
+                               structured=[
+                                   {"name": o["name"], "kind": o["kind"],
+                                    "description": o["description"]}
+                                   for o in orgs]))
 
     # --- trim to the cap: extras first, then the last anchor ----------------
     while len(slots) > max_sections:
@@ -316,17 +360,23 @@ async def build_skeleton(
 
 
 def render_slots_for_prompt(slots: list[dict]) -> str:
-    """Compact JSON for the copywriter: index, topic, truncated sources."""
+    """Compact JSON for the copywriter: index, kind, topic, indexed sources.
+
+    Every source carries its `si` index so the model can point back at it via
+    source_i; the tail kinds' structured payloads stay server-side (main.py
+    filters them by the same indices)."""
     out = []
     for i, s in enumerate(slots):
         cap = _SOURCE_CAP.get(s["kind"], 1200)
         sources = []
-        for src in s["sources"]:
+        for j, src in enumerate(s["sources"]):
             text = src["text"]
             if len(text) > cap:
                 text = text[:cap - 3] + "..."
-            sources.append({"status": src.get("status"), "text": text})
-        out.append({"i": i, "about": s["about"], "sources": sources})
+            sources.append({"si": j, "status": src.get("status"),
+                            "text": text})
+        out.append({"i": i, "kind": s["kind"], "about": s["about"],
+                    "sources": sources})
     return json.dumps(out, ensure_ascii=False)
 
 
@@ -361,27 +411,64 @@ def deterministic_fallback(slots: list[dict]) -> list[dict]:
 
 
 def align_copy(slots: list[dict],
-               llm_sections: list | None) -> tuple[list[dict], str]:
-    """Index-align LLM copy to the slots; never trust the model's structure.
+               data: dict | list | None) -> tuple[list[dict], str]:
+    """Validate the copywriter's copy+ranking against the slots; never trust
+    the model's structure.
 
-    Returns (copy list of exactly len(slots), "llm"|"mixed"|"fallback").
-    Missing/empty/malformed entries get the per-slot deterministic fallback.
+    Accepts the full {sections:[{i,title,text,source_i}], order, lead} dict
+    (or a bare legacy sections list). Returns (plan, "llm"|"mixed"|"fallback")
+    where plan is a list of {slot, title, text, si} in display order —
+    malformed indexes are dropped, missing entries get the per-slot
+    deterministic copy, and `lead` (when valid) moves that slot to the front.
     """
     fallback = deterministic_fallback(slots)
-    if not isinstance(llm_sections, list) or not llm_sections:
-        return fallback, "fallback"
-    copy: list[dict] = []
-    used_llm = 0
-    for i, slot in enumerate(slots):
-        entry = llm_sections[i] if i < len(llm_sections) else None
-        if (isinstance(entry, dict)
-                and str(entry.get("title") or "").strip()
-                and str(entry.get("text") or "").strip()):
-            copy.append({"title": str(entry["title"]).strip(),
-                         "text": str(entry["text"]).strip()})
-            used_llm += 1
-        else:
-            copy.append(fallback[i])
+    all_si = [list(range(len(s["sources"]))) for s in slots]
+    if isinstance(data, list):  # legacy shape: sections only
+        data = {"sections": data}
+    if not isinstance(data, dict):
+        data = {}
+
+    by_i: dict[int, dict] = {}
+    sections = data.get("sections")
+    if isinstance(sections, list):
+        for entry in sections:
+            if not isinstance(entry, dict):
+                continue
+            i = entry.get("i")
+            if not isinstance(i, int) or not 0 <= i < len(slots) or i in by_i:
+                continue
+            title = str(entry.get("title") or "").strip()
+            text = str(entry.get("text") or "").strip()
+            if not title or not text:
+                continue
+            raw_si = entry.get("source_i")
+            chosen = ([j for j in raw_si
+                       if isinstance(j, int) and 0 <= j < len(all_si[i])]
+                      if isinstance(raw_si, list) else [])
+            by_i[i] = {"title": title[:80], "text": text[:500],
+                       "si": chosen or all_si[i]}
+
+    plan_by_slot: list[dict] = []
+    for idx, slot in enumerate(slots):
+        entry = by_i.get(idx)
+        if entry is None:
+            entry = {**fallback[idx], "si": all_si[idx]}
+        plan_by_slot.append({"slot": slot, "title": entry["title"],
+                             "text": entry["text"], "si": entry["si"]})
+
+    order = data.get("order")
+    if (not isinstance(order, list)
+            or sorted(v for v in order if isinstance(v, int)
+                      and 0 <= v < len(slots)) != list(range(len(slots)))
+            or any(not isinstance(v, int) or not 0 <= v < len(slots)
+                   for v in order)):
+        order = list(range(len(slots)))
+    lead = data.get("lead")
+    if isinstance(lead, int) and 0 <= lead < len(slots) and order[0] != lead:
+        order = [lead] + [i for i in order if i != lead]
+    plan = [plan_by_slot[i] for i in order]
+
+    used_llm = len(by_i)
     source = ("llm" if used_llm == len(slots)
               else "mixed" if used_llm else "fallback")
-    return copy, source
+    return plan, source
