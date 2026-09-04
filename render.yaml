@@ -4,9 +4,16 @@
 # Secrets (NEO4J_*, LLM/NVIDIA/OPENROUTER keys, model names) are NOT stored
 # here — set them in the Render dashboard under Environment after the first
 # create, or add renderValue entries locally before pushing.
+# NOT blueprint-synced: the live service is named atha-hadora (`atha` was taken),
+# and a blueprint matches services by `name` — so "Apply" here would create a
+# SECOND free web service instead of editing the existing one. Treat this file as
+# documentation and change the branch in the dashboard (Settings → Branches).
 services:
   - type: web
     name: atha
+    # Frozen UI/state branch: Render keeps serving `town-square` and stops
+    # following main. `main` goes to the Oracle VM via .scratch/deploy-vm.sh.
+    branch: town-square
     runtime: docker
     plan: free
     region: frankfurt
