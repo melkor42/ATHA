@@ -16,6 +16,16 @@
   --f-body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
   --ease: cubic-bezier(0.16, 0.72, 0.3, 1);
+  /* Header geometry as truth: the slim bar has a fixed height, so every sticky
+     offset reads one value instead of a guessed pixel. On :root because the fold
+     and the sticky column are not inside the header — a rule on .chrome, where
+     the height is used, would be invisible to them. --claim-h is the height the
+     open band adds (Hero.vue keeps its content inside it); the landing fold
+     subtracts it, so collapsing the band hands the space back instead of
+     shoving the page. */
+  --bar-h: 61px;
+  --claim-h: 160px;
+  --bar-gutter: clamp(22px, 5vw, 64px);
 }
 
 *,
@@ -26,6 +36,17 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-color: var(--rule) var(--paper);
+  /* the bar is sticky and in the flow — jump targets land under it otherwise */
+  scroll-padding-top: calc(var(--bar-h) + 24px);
+  /* the band resizes itself at the top of the page; the browser's own scroll
+     compensation reads that as content moving and fights the state change */
+  overflow-anchor: none;
+}
+
+/* the headline takes a third line once the column gets narrow */
+@media (max-width: 760px) {
+  :root { --claim-h: 188px; }
 }
 
 body {
@@ -111,14 +132,15 @@ a {
   color: var(--paper);
 }
 
-/* shared label style — mono, small, muted */
+/* shared label style — mono, small, muted. Quiet, but still above the
+   small-text contrast floor: these carry fact-list terms and the grounding line */
 .label {
   font-family: var(--f-mono);
   text-transform: uppercase;
   letter-spacing: 0.13em;
   font-size: 11px;
   color: var(--ink);
-  opacity: 0.55;
+  opacity: 0.72;
 }
 
 /* Motion primitives (brand §8) — nothing bounces, all easing is --ease.

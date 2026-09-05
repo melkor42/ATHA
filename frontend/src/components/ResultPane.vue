@@ -30,14 +30,12 @@ const sections = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 44px;
-  scroll-margin-top: 88px;
 }
 .result-label { opacity: 0.4; }
 .section {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 600ms var(--ease), transform 600ms var(--ease);
-  scroll-margin-top: 96px;
 }
 .section.shown { opacity: 1; transform: none; }
 .grounding { margin-top: -12px; opacity: 0.35; }

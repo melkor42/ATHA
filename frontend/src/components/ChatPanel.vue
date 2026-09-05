@@ -64,9 +64,15 @@ function pick(chip) {
     @click="letTheVisitorThrough"
     @focusin="letTheVisitorThrough"
   >
-    <p class="label chat-head">
+    <p v-if="phase === 'landing'" class="brief">
+      Real companies bring real decisions. Executive MBA teams, specialists, mentors
+      and researchers work them for three days. Every recommendation is defended in
+      front of the company, and one owned decision leaves the room.
+    </p>
+
+    <p v-if="turns" class="label chat-head">
       <span>Atha agent</span>
-      <span v-if="turns" class="turns">{{ turns }} {{ turns === 1 ? 'answer' : 'answers' }}</span>
+      <span class="turns">{{ turns }} {{ turns === 1 ? 'answer' : 'answers' }}</span>
     </p>
 
     <div ref="log" class="log" aria-live="polite">
@@ -126,11 +132,27 @@ function pick(chip) {
 </template>
 
 <style scoped>
+/* One frame in both phases: none. The conversation sits directly on the page,
+   so nothing has to disappear when the first answer arrives — the morph is
+   purely where the column lives, not what it is wrapped in. */
 .chat {
   display: flex;
   flex-direction: column;
   gap: 22px;
   min-height: 0;
+}
+/* the teaser is the second voice on the page, between the headline and the
+   agent — so it takes a real type step, not a muted caption */
+.brief {
+  max-width: 46ch;
+  font-family: var(--f-display);
+  font-variation-settings: "opsz" 72;
+  font-weight: 300;
+  font-size: clamp(19px, 1.9vw, 22px);
+  line-height: 1.3;
+  letter-spacing: -0.014em;
+  text-wrap: pretty;
+  color: var(--ink);
 }
 .chat-head {
   display: flex;
@@ -145,11 +167,12 @@ function pick(chip) {
   overflow-y: auto;
   min-height: 0;
   scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
 }
 .msg { display: flex; flex-direction: column; gap: 6px; }
 .you-line {
   font-size: 16px;
-  opacity: 0.55;
+  opacity: 0.7;
   padding-left: 14px;
   border-left: 1px solid var(--rule);
 }
@@ -179,7 +202,7 @@ function pick(chip) {
   letter-spacing: 0.13em;
   font-size: 11px;
   color: var(--ink);
-  opacity: 0.5;
+  opacity: 0.7;
 }
 /* the paragraph itself stays opaque — only the words recede, never the caret */
 .typing { opacity: 1; }
@@ -201,7 +224,7 @@ function pick(chip) {
   letter-spacing: 0.13em;
   font-size: 10px;
   color: var(--ink);
-  opacity: 0.45;
+  opacity: 0.7;
 }
 
 .ask {
@@ -219,8 +242,9 @@ function pick(chip) {
   padding: 18px 16px;
   font-size: 18px;
   background: none;
+  caret-color: var(--ferrous);
 }
-.ask input::placeholder { color: var(--ink); opacity: 0.38; }
+.ask input::placeholder { color: var(--ink); opacity: 0.62; }
 .ask input:disabled { opacity: 0.45; }
 .ask button {
   padding: 0 22px;
@@ -282,25 +306,22 @@ function pick(chip) {
 .contextual:hover { opacity: 1; border-color: var(--ink); }
 .external-mark { font-size: 11px; opacity: 0.6; }
 
-/* landing: the conversation is the centrepiece — a field of its own, on the
-   unused --surface step, filling exactly the rest of the fold */
+/* landing: the centrepiece, unwrapped. The column fills the rest of the fold
+   and packs toward the composer, so the slack falls between the band and the
+   teaser — where a reader expects it — not inside the conversation. */
 .chat.landing {
   flex: 1 1 auto;
   width: 100%;
   max-width: 920px;
   margin: 0 auto;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  padding: clamp(16px, 2.2vh, 24px) clamp(16px, 2.4vw, 26px);
-}
-.chat.landing .log {
-  flex: 1 1 auto;
-  min-height: clamp(88px, 13vh, 180px);
   justify-content: flex-end;
 }
-
-/* reading: docked column, open on paper so the result keeps the stage */
-.chat.reading .log { max-height: none; }
+/* the transcript keeps about the greeting's own two lines while it types, so the
+   teaser neither creeps nor floats above an empty field */
+.chat.landing .log {
+  min-height: clamp(52px, 6.5vh, 80px);
+  justify-content: flex-end;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .caret { animation: none; }
