@@ -26,6 +26,28 @@
   --bar-h: 61px;
   --claim-h: 160px;
   --bar-gutter: clamp(22px, 5vw, 64px);
+  --ground: #F4F2ED;
+  --on-deep: #F4F2ED;
+  /* The brand rule is "nothing round", and the page keeps it: the composed
+     result and the header stay square. The agent environment is the one place
+     that bends — shell, field and pill share a radius so the composer, the role
+     card, the chips and the lead form read as one instrument rather than as
+     four unrelated controls. */
+  --r-shell: 24px;
+  --r-field: 14px;
+  --r-pill: 999px;
+}
+
+:root[data-mode='night'] {
+  --ground: #0B1424;
+  --ink: #F4F2ED;
+  --surface: #16223A;
+  --rule: color-mix(in srgb, #F4F2ED 32%, transparent);
+  --navy: #F4F2ED;
+  --deep: #0B2342;
+  --chrome: #05101F;
+  --ferrous: #D97E4A;
+  --slate: #8FA3BD;
 }
 
 *,
@@ -36,7 +58,7 @@
 
 html {
   scroll-behavior: smooth;
-  scrollbar-color: var(--rule) var(--paper);
+  scrollbar-color: var(--rule) var(--ground);
   /* the bar is sticky and in the flow — jump targets land under it otherwise */
   scroll-padding-top: calc(var(--bar-h) + 24px);
   /* the band resizes itself at the top of the page; the browser's own scroll
@@ -51,7 +73,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--ground);
   color: var(--ink);
   font-family: var(--f-body);
   font-size: 16px;
@@ -86,7 +108,7 @@ em {
 
 .deep {
   background: var(--deep);
-  color: var(--paper);
+  color: var(--on-deep);
 }
 
 .deep em {
@@ -129,7 +151,7 @@ a {
 
 ::selection {
   background: var(--navy);
-  color: var(--paper);
+  color: var(--ground);
 }
 
 /* shared label style — mono, small, muted. Quiet, but still above the

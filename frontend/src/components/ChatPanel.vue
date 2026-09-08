@@ -1,13 +1,18 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useCompose, GREETING, APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
+import { useCompose, GREETING } from '../composables/useCompose.js'
 import { useTypewriter } from '../composables/useTypewriter.js'
+import { useArrival } from '../composables/useArrival.js'
+import { ROLES } from '../interview.js'
 import Theater from './Theater.vue'
 
 const {
-  phase, status, busy, messages, chips, greetingLive, settleGreeting,
-  contextualCta, asking, composingLine, turns
+  phase, status, busy, messages, chips, roleGate, greetingLive, settleGreeting,
+  contextualCta, currentCta, interview, lead, emailDraft, leadBusy,
+  pick, submitTyped, submitLead, composingLine, turns
 } = useCompose()
+
+const { arrived } = useArrival()
 
 const draft = ref('')
 const log = ref(null)
@@ -18,15 +23,21 @@ const STEPS = ['Retrieving', 'Ranking', 'Composing']
 const { typed, done, thinking, run: typeGreeting, skip, reset } = useTypewriter()
 const speaking = computed(() => greetingLive.value && !done.value)
 
+const placeholder = computed(() => {
+  if (roleGate.value) return 'The input opens once you have chosen…'
+  return phase.value === 'landing' ? 'Ask about the three days…' : 'Ask a follow-up…'
+})
+
 function speakGreeting() {
-  if (!greetingLive.value) return
+  if (!arrived.value || !greetingLive.value) return
   reset()
-  typeGreeting(GREETING)
+  typeGreeting(GREETING, { speed: 18, pause: 700 })
   if (done.value) settleGreeting() // reduced motion: nothing was typed
 }
 
-onMounted(speakGreeting)
+onMounted(() => { if (arrived.value) speakGreeting() })
 watch(greetingLive, speakGreeting)
+watch(arrived, (isArrived) => { if (isArrived) speakGreeting() })
 watch(done, (finished) => { if (finished) settleGreeting() })
 
 function letTheVisitorThrough() {
@@ -44,16 +55,14 @@ watch(
   }
 )
 
+const leadOpen = computed(() =>
+  lead.value === 'offered' && interview.value.stage === 'email')
+
 async function submit() {
   const text = draft.value.trim()
-  if (!text || busy.value) return
+  if (!text || busy.value || roleGate.value) return
   draft.value = ''
-  await asking({ label: text })
-}
-
-function pick(chip) {
-  if (busy.value) return
-  asking({ label: chip.label, intent: chip.intent })
+  await submitTyped(text)
 }
 </script>
 
@@ -64,18 +73,12 @@ function pick(chip) {
     @click="letTheVisitorThrough"
     @focusin="letTheVisitorThrough"
   >
-    <p v-if="phase === 'landing'" class="brief">
-      Real companies bring real decisions. Executive MBA teams, specialists, mentors
-      and researchers work them for three days. Every recommendation is defended in
-      front of the company, and one owned decision leaves the room.
-    </p>
-
     <p v-if="turns" class="label chat-head">
       <span>Atha agent</span>
       <span class="turns">{{ turns }} {{ turns === 1 ? 'answer' : 'answers' }}</span>
     </p>
 
-    <div ref="log" class="log" aria-live="polite">
+    <div ref="log" class="log" :class="{ 'u-fade': arrived }" style="--d: 0ms" aria-live="polite">
       <article v-for="(m, i) in messages" :key="i" class="msg" :class="[m.from, { error: m.error }]">
         <p v-if="m.from === 'you'" class="you-line">{{ m.text }}</p>
         <template v-else>
@@ -86,7 +89,35 @@ function pick(chip) {
           <p v-else-if="i === 0 && greetingLive" class="answer-text typing" aria-hidden="true">
             <span class="typing-text">{{ typed }}</span><span v-if="!done" class="caret"></span>
           </p>
-          <p v-else class="answer-text">{{ m.text }}</p>
+          <div v-else-if="m.kind === 'role-ask' && roleGate" class="role-card u-fade">
+            <p class="role-card__q">{{ m.text }}</p>
+            <p class="role-card__why">{{ m.why }}</p>
+            <div class="role-card__options">
+              <button
+                v-for="r in ROLES"
+                :key="r.role"
+                type="button"
+                class="role-option"
+                @click="pick(r)"
+              >
+                <span class="role-option__title">{{ r.title }}</span>
+                <span class="role-option__text">{{ r.text }}</span>
+              </button>
+            </div>
+          </div>
+          <p v-else class="answer-text u-fade">{{ m.text }}</p>
+          <form v-if="m.kind === 'lead-offer' && leadOpen" class="lead-form" @submit.prevent="submitLead(emailDraft)">
+            <input
+              v-model="emailDraft"
+              type="email"
+              required
+              placeholder="you@example.com"
+              aria-label="Email address"
+              autocomplete="email"
+              :disabled="leadBusy"
+            />
+            <button type="submit" :disabled="leadBusy || !emailDraft.trim()">Send me the summary</button>
+          </form>
         </template>
       </article>
 
@@ -96,19 +127,24 @@ function pick(chip) {
       </div>
     </div>
 
-    <form class="ask" @submit.prevent="submit">
-      <input
-        v-model="draft"
-        type="text"
-        :placeholder="phase === 'landing' ? 'Ask about the three days…' : 'Ask a follow-up…'"
-        :aria-label="'Ask the ATHA agent'"
-        :disabled="busy"
-        autocomplete="off"
-      />
-      <button type="submit" :disabled="busy || !draft.trim()">Ask</button>
+    <form class="composer" :class="{ 'u-fade': arrived }" style="--d: 220ms" @submit.prevent="submit">
+      <div class="composer__shell" :class="{ muted: roleGate }">
+        <input
+          v-model="draft"
+          type="text"
+          :placeholder="placeholder"
+          aria-label="Ask the ATHA agent"
+          :disabled="busy || roleGate"
+          autocomplete="off"
+        />
+        <div class="composer__bar">
+          <span class="label composer__status">Atha agent</span>
+          <button type="submit" :disabled="busy || roleGate || !draft.trim()" aria-label="Ask">↑</button>
+        </div>
+      </div>
     </form>
 
-    <div v-if="chips.length && !busy && !speaking" class="chips">
+    <div v-if="chips.length && !busy && !speaking" class="chips" :class="{ 'u-fade': arrived }" style="--d: 440ms">
       <button
         v-for="(c, i) in chips"
         :key="i"
@@ -118,8 +154,8 @@ function pick(chip) {
       >{{ c.label }}</button>
     </div>
 
-    <footer class="cta">
-      <a class="apply" :href="APPLY_HREF">{{ APPLY_LABEL }}</a>
+    <footer class="cta" :class="{ 'u-fade': arrived }" style="--d: 660ms">
+      <a class="apply" :href="currentCta.href">{{ currentCta.label }}</a>
       <a
         v-if="contextualCta"
         class="contextual"
@@ -140,19 +176,6 @@ function pick(chip) {
   flex-direction: column;
   gap: 22px;
   min-height: 0;
-}
-/* the teaser is the second voice on the page, between the headline and the
-   agent — so it takes a real type step, not a muted caption */
-.brief {
-  max-width: 46ch;
-  font-family: var(--f-display);
-  font-variation-settings: "opsz" 72;
-  font-weight: 300;
-  font-size: clamp(19px, 1.9vw, 22px);
-  line-height: 1.3;
-  letter-spacing: -0.014em;
-  text-wrap: pretty;
-  color: var(--ink);
 }
 .chat-head {
   display: flex;
@@ -189,6 +212,58 @@ function pick(chip) {
 /* ferrous means "alive" — the caret and the focused frame, never two at once.
    A failure line speaks in slate: the copy carries the meaning, not a colour. */
 .msg.error .answer-text { color: var(--slate); opacity: 1; }
+
+/* The one loud object in the conversation: while the seat is unnamed nothing
+   else on the page is live, so the card carries the whole ask. */
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-shell);
+  background: var(--surface);
+  box-shadow: 0 24px 60px -34px color-mix(in srgb, var(--signal) 50%, transparent);
+}
+.role-card__q {
+  font-family: var(--f-display);
+  font-variation-settings: "opsz" 72;
+  font-weight: 300;
+  font-size: clamp(19px, 2vw, 23px);
+  line-height: 1.24;
+  letter-spacing: -0.016em;
+  text-wrap: pretty;
+}
+.role-card__why {
+  max-width: 54ch;
+  font-size: 14.5px;
+  line-height: 1.45;
+  opacity: 0.72;
+}
+/* Three seats side by side: stacked, the card alone outgrows the fold and pushes
+   the composer off the first screen. */
+.role-card__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 700px) {
+  .role-card__options { grid-template-columns: minmax(0, 1fr); }
+}
+.role-option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 16px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-field);
+  background: var(--ground);
+  transition: border-color 240ms var(--ease), transform 240ms var(--ease);
+}
+.role-option:hover { border-color: var(--ink); transform: translateY(-1px); }
+.role-option__title { font-size: 15.5px; font-weight: 600; }
+.role-option__text { font-size: 13.5px; line-height: 1.4; opacity: 0.7; }
 
 .typing-label {
   margin: 0;
@@ -227,48 +302,107 @@ function pick(chip) {
   opacity: 0.7;
 }
 
-.ask {
+.composer__shell {
   display: flex;
-  align-items: stretch;
-  border: 1px solid var(--ink);
-  background: var(--paper);
-  transition: border-color 240ms var(--ease);
+  flex-direction: column;
+  gap: 6px;
+  border-radius: var(--r-shell);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 12px 12px 10px 18px;
+  box-shadow: 0 24px 60px -28px color-mix(in srgb, var(--signal) 55%, transparent);
+  transition: box-shadow 240ms var(--ease), border-color 240ms var(--ease), opacity 240ms var(--ease);
 }
 /* the ferrous frame and the ferrous caret never share the surface */
-.ask:focus-within { border-color: var(--ferrous); }
-.ask input {
-  flex: 1;
+.composer__shell:focus-within {
+  box-shadow:
+    0 24px 60px -28px color-mix(in srgb, var(--signal) 55%, transparent),
+    0 0 0 1px var(--signal);
+}
+/* before a seat is named the composer waits: it stays on the page so the shape
+   of the conversation is visible, but it does not glow and does not listen. The
+   hint keeps its own opacity — it is the only line saying what to do first. */
+.composer__shell.muted { opacity: 0.55; box-shadow: none; }
+.composer__shell.muted input:disabled { opacity: 0.85; }
+.composer__shell input {
+  width: 100%;
   min-width: 0;
-  padding: 18px 16px;
-  font-size: 18px;
+  border: none;
   background: none;
+  padding: 6px 2px;
+  font-size: 17.5px;
+  color: var(--ink);
   caret-color: var(--ferrous);
 }
-.ask input::placeholder { color: var(--ink); opacity: 0.62; }
-.ask input:disabled { opacity: 0.45; }
-.ask button {
-  padding: 0 22px;
-  align-self: stretch;
-  font-family: var(--f-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  font-size: 11px;
+.composer__shell input::placeholder { color: var(--ink); opacity: 0.62; }
+.composer__shell input:disabled { opacity: 0.45; }
+.composer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.composer__status { color: var(--ink); opacity: 0.62; }
+.composer__bar button {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   background: var(--navy);
-  color: var(--paper);
+  color: var(--ground);
+  font-size: 17px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background 240ms var(--ease), opacity 240ms var(--ease);
 }
-.ask button:hover:not(:disabled) { background: var(--deep); }
-.ask button:disabled { opacity: 0.32; cursor: default; }
-.ask button:focus-visible { outline: 2px solid var(--paper); outline-offset: -4px; }
+.composer__bar button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--navy) 82%, var(--ground));
+}
+.composer__bar button:disabled { opacity: 0.32; cursor: default; }
+
+.lead-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lead-form input {
+  flex: 1 1 180px;
+  min-width: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-field);
+  background: var(--surface);
+  padding: 10px 14px;
+  font-size: 14.5px;
+  caret-color: var(--ferrous);
+}
+.lead-form input::placeholder { color: var(--ink); opacity: 0.62; }
+.lead-form button {
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  background: var(--navy);
+  color: var(--ground);
+  transition: background 240ms var(--ease), opacity 240ms var(--ease);
+}
+.lead-form button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--navy) 82%, var(--ground));
+}
+.lead-form button:disabled { opacity: 0.45; cursor: default; }
 
 .chips { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
 .chip {
   font-size: 13.5px;
   line-height: 1.3;
   text-align: left;
-  padding: 5px 11px;
+  padding: 7px 15px;
   border: 1px solid var(--rule);
-  background: var(--paper);
+  border-radius: var(--r-pill);
+  background: var(--ground);
   color: var(--ink);
   opacity: 0.78;
   transition: border-color 240ms var(--ease), opacity 240ms var(--ease), transform 240ms var(--ease);
@@ -281,6 +415,7 @@ function pick(chip) {
   text-align: center;
   background: none;
   border: 1px solid var(--ink);
+  border-radius: var(--r-pill);
   color: var(--ink);
   text-decoration: none;
   font-size: 14px;
@@ -289,7 +424,7 @@ function pick(chip) {
   padding: 13px 18px;
   transition: background 240ms var(--ease), color 240ms var(--ease);
 }
-.apply:hover { background: var(--ink); color: var(--paper); }
+.apply:hover { background: var(--ink); color: var(--ground); }
 .contextual {
   display: inline-flex;
   gap: 7px;
@@ -308,16 +443,16 @@ function pick(chip) {
 
 /* landing: the centrepiece, unwrapped. The column fills the rest of the fold
    and packs toward the composer, so the slack falls between the band and the
-   teaser — where a reader expects it — not inside the conversation. */
+   conversation — where a reader expects it — not inside it. */
 .chat.landing {
   flex: 1 1 auto;
   width: 100%;
-  max-width: 920px;
+  max-width: 760px;
   margin: 0 auto;
   justify-content: flex-end;
 }
-/* the transcript keeps about the greeting's own two lines while it types, so the
-   teaser neither creeps nor floats above an empty field */
+/* the transcript holds about the greeting's own two lines while it types, so the
+   composer neither creeps nor floats above an empty field */
 .chat.landing .log {
   min-height: clamp(52px, 6.5vh, 80px);
   justify-content: flex-end;

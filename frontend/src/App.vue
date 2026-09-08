@@ -6,13 +6,17 @@ import ChatPanel from './components/ChatPanel.vue'
 import ResultPane from './components/ResultPane.vue'
 import BrandSections from './components/BrandSections.vue'
 import ClosingBand from './components/ClosingBand.vue'
-import { useCompose, APPLY_HREF, APPLY_LABEL } from './composables/useCompose.js'
+import ModeToggle from './components/ModeToggle.vue'
+import ArrivalOverlay from './components/ArrivalOverlay.vue'
+import { useCompose } from './composables/useCompose.js'
+import { useArrival } from './composables/useArrival.js'
 
 // One header, two heights: it opens tall with the page's claim and snaps to a
 // single row as soon as the visitor scrolls into the work, and scrolling back to
 // the top gives the claim back. Scroll position is the only input — the agent's
 // phase never restyles the band, so navigation and the CTA never move.
-const { phase, hasResult, restart } = useCompose()
+const { phase, hasResult, restart, currentCta } = useCompose()
+const { arrived } = useArrival()
 const menuOpen = ref(false)
 const atTop = ref(true)
 
@@ -61,6 +65,7 @@ function go(href) {
 
 <template>
   <div class="app" :class="[phase, { 'is-open': atTop }]">
+    <ArrivalOverlay v-if="!arrived" />
     <header class="chrome" :class="{ 'is-open': atTop }">
       <span class="chrome-field" aria-hidden="true"><DotField :opacity="0.34" /></span>
 
@@ -78,7 +83,8 @@ function go(href) {
           <span class="wordmark">ATHA</span>
         </div>
         <div class="chrome-actions">
-          <a class="mini-apply" :href="APPLY_HREF">{{ APPLY_LABEL }}</a>
+          <ModeToggle />
+          <a class="mini-apply" :href="currentCta.href">{{ currentCta.label }}</a>
         </div>
       </div>
 
@@ -100,8 +106,8 @@ function go(href) {
     <main class="wrap">
       <div class="fold">
         <section class="stage" :class="phase">
-          <ResultPane v-if="hasResult" />
           <ChatPanel />
+          <ResultPane v-if="hasResult" />
         </section>
       </div>
       <div class="brand-sections">
@@ -122,7 +128,7 @@ function go(href) {
   top: 0;
   z-index: 30;
   background: var(--deep);
-  color: var(--paper);
+  color: var(--on-deep);
 }
 .chrome::after {
   content: '';
@@ -134,7 +140,7 @@ function go(href) {
 }
 /* paper outlines for keyboard focus: the global ring is navy, which on navy is
    no ring at all */
-.chrome :focus-visible { outline-color: var(--paper); }
+.chrome :focus-visible { outline-color: var(--on-deep); }
 
 /* One field, one scale, in both states. The wrapper is the band and crops; the
    SVG keeps the field's own 1000:300 proportion (width-driven, so a narrow
@@ -180,13 +186,14 @@ function go(href) {
   width: 22px;
   padding: 5px 0;
 }
-.menu-toggle .bar { display: block; height: 1px; background: var(--paper); opacity: 0.75; }
+.menu-toggle .bar { display: block; height: 1px; background: var(--on-deep); opacity: 0.75; }
+.chrome-actions { display: flex; align-items: baseline; gap: 18px; }
 .mini-apply {
   font-family: var(--f-mono);
   text-transform: uppercase;
   letter-spacing: 0.13em;
   font-size: 10.5px;
-  color: var(--paper);
+  color: var(--on-deep);
   opacity: 0.62;
   text-decoration: none;
   /* currentColor, not a gray token: the hairline is the foreground faded, so it
@@ -214,7 +221,7 @@ function go(href) {
   right: 0;
   /* above the hairline, which otherwise crosses the open paper */
   z-index: 3;
-  background: var(--paper);
+  background: var(--ground);
   border-bottom: 1px solid var(--ink);
   padding: 8px var(--bar-gutter) 22px;
   display: flex;
@@ -260,7 +267,7 @@ function go(href) {
 }
 .stage.reading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
+  grid-template-columns: 430px minmax(0, 1fr);
   gap: clamp(40px, 6vw, 96px);
   align-items: start;
   padding-bottom: clamp(40px, 7vh, 80px);

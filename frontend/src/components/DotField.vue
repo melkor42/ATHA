@@ -30,7 +30,7 @@ const dots = computed(() => {
         x: (i + 0.5) * cw,
         y: (j + 0.5) * ch,
         r: near ? 1.5 + fall * 1.1 : 0.9 + gx * 1.1,
-        fill: near ? 'var(--signal)' : 'var(--paper)',
+        fill: near ? 'var(--signal)' : 'var(--on-deep)',
         o: near ? 0.55 + fall * 0.4 : 0.06 + gx * 0.16
       })
     }

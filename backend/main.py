@@ -29,16 +29,19 @@ import hashlib
 import json
 import logging
 import os
+import re
 import time
 from collections import OrderedDict
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from neo4j import AsyncDriver
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from agents import (
     FALLBACK_MODEL,
@@ -72,7 +75,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s
 log = logging.getLogger("signal.main")
 
 TRACE_FILE = Path(__file__).resolve().parent / "trace.jsonl"
+LEADS_FILE = Path(__file__).resolve().parent / "leads.jsonl"
 RATE_LIMIT_PER_DAY = 30
+LEAD_RATE_LIMIT_PER_DAY = 10
 CACHE_MAX = 512  # role x state x intent x facet x free_text x style cardinality
 VISITOR_STATES = {"discovering", "deciding", "preparing", "experienced"}
 
@@ -110,6 +115,7 @@ DEFAULT_EXPERIENCE = ExperienceSchema(
 
 _response_cache: "OrderedDict[str, dict]" = OrderedDict()
 _rate_counts: dict[str, tuple[str, int]] = {}
+_lead_rate_counts: dict[str, tuple[str, int]] = {}
 _driver: AsyncDriver | None = None
 
 
@@ -149,6 +155,25 @@ class ExperienceRequest(BaseModel):
     intent: str | None = None
     facet: str | None = None
     free_text: str | None = None
+
+
+LEAD_ROLE_LABELS = {"student": "talent", "warwick": "Warwick",
+                    "business": "enterprise"}
+EMAIL_RE = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+
+
+class LeadRequest(BaseModel):
+    email: str = Field(..., max_length=254, pattern=EMAIL_RE)
+    role: Literal["student", "warwick", "business"]
+    intent: str | None = Field(default=None, max_length=60)
+    facet: str | None = Field(default=None, max_length=60)
+
+    @field_validator("email")
+    @classmethod
+    def _valid_email(cls, value: str) -> str:
+        if not re.fullmatch(EMAIL_RE, value):
+            raise ValueError("invalid email address")
+        return value
 
 
 # --- role selection ---------------------------------------------------------------
@@ -293,6 +318,61 @@ def _append_trace(record: dict) -> None:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     except OSError as exc:  # tracing must never break the request
         log.warning("trace write failed: %s", exc)
+
+
+def _check_lead_rate_limit(ip: str) -> bool:
+    today = date.today().isoformat()
+    day, count = _lead_rate_counts.get(ip, (today, 0))
+    if day != today:
+        count = 0
+    if count >= LEAD_RATE_LIMIT_PER_DAY:
+        return False
+    _lead_rate_counts[ip] = (today, count + 1)
+    return True
+
+
+def _append_lead(record: dict) -> None:
+    try:
+        with LEADS_FILE.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except OSError as exc:  # lead storage must never break the request
+        log.warning("lead write failed: %s", exc)
+
+
+async def _send_lead_email(email: str, role: str, intent: str | None,
+                           facet: str | None) -> bool:
+    key = os.environ.get("MAIL_API_KEY")
+    sender = os.environ.get("MAIL_FROM")
+    if not (key and sender):
+        return False
+    label = LEAD_ROLE_LABELS[role]
+    lines = [f"Perspective: {label}"]
+    if intent:
+        lines.append(f"Intent: {intent}")
+    if facet:
+        lines.append(f"Focus: {facet}")
+    html = (
+        "<p>Here is your ATHA summary.</p>"
+        f"<ul>{''.join(f'<li>{line}</li>' for line in lines)}</ul>"
+        '<p><a href="http://89.168.73.93">ATHA</a></p>'
+    )
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={"api-key": key},
+                json={
+                    "sender": {"email": sender, "name": "ATHA"},
+                    "to": [{"email": email}],
+                    "subject": "Your ATHA summary",
+                    "htmlContent": html,
+                },
+            )
+            resp.raise_for_status()
+        return True
+    except Exception as exc:  # noqa: BLE001 — send failure is saved-only
+        log.warning("lead email send failed: %s", exc)
+        return False
 
 
 # --- endpoints -----------------------------------------------------------------------------------
@@ -484,6 +564,26 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     log.info("composed experience in %d ms (sections=%d, copy=%s)",
              latency_ms, len(experience.get("sections", [])), copy_source)
     return payload
+
+
+@app.post("/api/lead")
+async def capture_lead(body: LeadRequest, request: Request) -> dict:
+    ip = _client_ip(request)
+    if not _check_lead_rate_limit(ip):
+        log.warning("lead rate limit exceeded for %s -> returning 429", ip)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit: {LEAD_RATE_LIMIT_PER_DAY} requests/day.")
+    _append_lead({
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "email": body.email, "role": body.role,
+        "intent": body.intent, "facet": body.facet,
+    })
+    emailed = await _send_lead_email(body.email, body.role,
+                                     body.intent, body.facet)
+    log.info("lead captured: role=%s intent=%s facet=%s emailed=%s",
+             body.role, body.intent, body.facet, emailed)
+    return {"saved": True, "emailed": emailed}
 
 
 # --- single-service packaging ---------------------------------------------------

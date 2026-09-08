@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      try{document.documentElement.dataset.mode=localStorage.getItem('atha-mode')||'night'}catch(e){document.documentElement.dataset.mode='night'}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/atha-star.png" />
     <title>ATHA — A living laboratory for the AI-native era</title>

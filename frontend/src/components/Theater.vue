@@ -18,9 +18,29 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 let raf = 0, running = false
 
 const EDGE = 'rgba(90,107,132,0.22)'      // slate hairline
-const NODE = 'rgba(27,33,41,0.30)'        // ink, quiet
-const LIT = 'rgba(27,33,41,0.85)'
-const ACCENT = '#9B4324'                  // ferrous — the only accent on paper
+
+const cssColor = (name, fallback) => {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return v || fallback
+}
+const toRgb = (css) => {
+  const el = document.createElement('span')
+  el.style.color = css
+  document.body.appendChild(el)
+  const rgb = getComputedStyle(el).color.match(/\d+/g)
+  el.remove()
+  return rgb ? [Number(rgb[0]), Number(rgb[1]), Number(rgb[2])] : [27, 33, 41]
+}
+
+let INK = toRgb(cssColor('--ink', '#1B2129'))
+let FERROUS = toRgb(cssColor('--ferrous', '#9B4324'))
+const withAlpha = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`
+const ACCENT = () => cssColor('--ferrous', '#9B4324')
+
+function syncPalette() {
+  INK = toRgb(cssColor('--ink', '#1B2129'))
+  FERROUS = toRgb(cssColor('--ferrous', '#9B4324'))
+}
 
 let seed = 7
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
@@ -66,7 +86,7 @@ function draw(ctx, w, h) {
     e.heat -= 0.016
     if (e.heat <= 0) { litEdges.delete(key); return }
     const [a, b] = key.split('-').map(Number)
-    ctx.strokeStyle = ACCENT
+    ctx.strokeStyle = ACCENT()
     ctx.globalAlpha = e.heat * 0.7
     ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke()
@@ -76,13 +96,13 @@ function draw(ctx, w, h) {
     n.lit = Math.max(0, n.lit - 0.012)
     if (n.lit > 0.02) {
       const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 5)
-      g.addColorStop(0, ACCENT); g.addColorStop(1, 'rgba(155,67,36,0)')
+      g.addColorStop(0, ACCENT()); g.addColorStop(1, withAlpha(FERROUS, 0))
       ctx.globalAlpha = n.lit * 0.22
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 5, 0, 7); ctx.fill()
       ctx.globalAlpha = 1
     }
     ctx.beginPath(); ctx.arc(n.x, n.y, n.r + n.lit * 1.6, 0, 7)
-    ctx.fillStyle = n.lit > 0.02 ? LIT : NODE
+    ctx.fillStyle = n.lit > 0.02 ? withAlpha(INK, 0.85) : withAlpha(INK, 0.3)
     ctx.fill()
   })
   pulses.forEach((p) => {
@@ -99,7 +119,7 @@ function draw(ctx, w, h) {
     }
     const a = nodes[p.from], b = nodes[p.to]
     const x = a.x + (b.x - a.x) * p.t, y = a.y + (b.y - a.y) * p.t
-    ctx.fillStyle = ACCENT
+    ctx.fillStyle = ACCENT()
     ctx.beginPath(); ctx.arc(x, y, 2.1, 0, 7); ctx.fill()
   })
 }
@@ -151,8 +171,11 @@ function onResize() {
 
 watch(() => props.active, (v) => { if (v) start(); else stop() })
 
+const modeObserver = new MutationObserver(() => syncPalette())
+
 const timers = []
 onMounted(() => {
+  modeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode'] })
   document.addEventListener('visibilitychange', onVisibility)
   window.addEventListener('resize', onResize)
   if (props.steps.length) {
@@ -166,6 +189,7 @@ onMounted(() => {
   if (props.active) start()
 })
 onBeforeUnmount(() => {
+  modeObserver.disconnect()
   document.removeEventListener('visibilitychange', onVisibility)
   window.removeEventListener('resize', onResize)
   clearTimeout(resizeT)

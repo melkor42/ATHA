@@ -1,6 +1,8 @@
 <script setup>
 import DotField from './DotField.vue'
-import { APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
+import { useCompose } from '../composables/useCompose.js'
+
+const { currentCta } = useCompose()
 </script>
 
 <template>
@@ -13,7 +15,7 @@ import { APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
         The temporary experience creates a permanent capability — on all five lenses,
         defended in the room, owned by a person.
       </p>
-      <a class="ask" :href="APPLY_HREF">{{ APPLY_LABEL }}<span class="arrow">→</span></a>
+      <a class="ask" :href="currentCta.href">{{ currentCta.label }}<span class="arrow">→</span></a>
       <p class="label colophon">ATHA · OneMundi × WBS</p>
     </div>
   </footer>
@@ -48,7 +50,7 @@ import { APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
   max-width: 52ch;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--paper);
+  color: var(--on-deep);
   opacity: 0.6;
 }
 .ask {
@@ -56,7 +58,7 @@ import { APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
   display: inline-flex;
   gap: 12px;
   align-items: baseline;
-  color: var(--paper);
+  color: var(--on-deep);
   text-decoration: none;
   font-size: 15px;
   font-weight: 600;
@@ -66,5 +68,5 @@ import { APPLY_HREF, APPLY_LABEL } from '../composables/useCompose.js'
 }
 .ask:hover { gap: 18px; }
 .arrow { font-weight: 400; }
-.colophon { color: var(--paper); opacity: 0.35; margin-top: 56px; }
+.colophon { color: var(--on-deep); opacity: 0.35; margin-top: 56px; }
 </style>

@@ -22,7 +22,7 @@
   min-height: var(--claim-h);
   padding: 6px var(--bar-gutter) 26px;
 }
-.eyebrow { color: var(--paper); opacity: 0.62; }
+.eyebrow { color: var(--on-deep); opacity: 0.62; }
 .seam {
   display: block;
   width: 32px;
