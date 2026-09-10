@@ -1,10 +1,10 @@
-# ATHA — Wow Page MVP
+# ATHA 
 
 The personal front door to ATHA: after a few words about yourself, you receive a page composed only for you — grounded in the network graph, visibly different for every persona. See `IDEA.md` for the vision.
 
 ## Documentation
 
-- `IDEA.md` — vision and promise (the Wow Page)
+- `IDEA.md` — vision and promise
 - `docs/system.html` — architecture sketch with reference code (open in a browser)
 - `.scratch/wow-mvp/map.md` — the wayfinder map: destination, decisions, tickets, frontier
 
