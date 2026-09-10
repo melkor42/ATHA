@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import {
   Q_ROLE, ROLE_WHY, INTENTS, EXPLORE_OPTION, Q_INTENT,
-  FACETS, Q_FREE, FREE_SKIP, LEAD_DECLINE, Q_LEAD
+  FACETS, Q_FREE, FREE_SKIP
 } from '../interview.js'
 
 // Chat-centred compose engine — module singleton so the conversation and the
@@ -27,7 +27,7 @@ export const GREETING =
 // conversation when there is no interview to run: fixture mode, and a first
 // compose that failed before a role was chosen.
 const STARTERS = [
-  { label: 'What actually happens across the three days?', intent: 'talent-happens', kind: 'follow' },
+  { label: 'What actually happens across the experience?', intent: 'talent-happens', kind: 'follow' },
   { label: 'Would I fit a team like this?', intent: 'talent-fit', kind: 'follow' },
   { label: 'What do I take away from it?', intent: 'talent-takeaway', kind: 'follow' }
 ]
@@ -53,10 +53,13 @@ export const MMC_DELTA_HREF = 'http://92.5.120.120/how'
 const TEAM_INTENTS = new Set(['talent-fit'])
 
 const COMPOSING_LINE = 'Retrieving and composing. A few seconds.'
-// Versioned on purpose: a log written before the interview exists has no role
-// stage to restore, and reading one would mute the composer with no card to
-// answer it. The redesign starts every visitor on a clean conversation.
-const LOG_KEY = 'athaChatLog.v2'
+// Versioned on purpose. A v2 log was written while suggestion chips never
+// carried their catalog id to the backend, so the pages it restores were
+// composed from role|state alone and read as identical no matter what was
+// asked. Bumping the key drops those stale logs; the version jump is the
+// mechanism that starts every visitor on a clean, question-specific
+// conversation.
+const LOG_KEY = 'athaChatLog.v3'
 
 function freshInterview() {
   return { stage: fixtureName ? 'done' : 'role', role: null, intent: null, facet: null }
@@ -101,10 +104,10 @@ const revealed = ref(schema.value ? (schema.value.sections?.length ?? 0) : 0)
 // are already-read conversations, and the agent does not repeat itself.
 const greetingLive = ref(saved === null)
 const interview = ref(
-  saved?.interview && ['role', 'intent', 'facet', 'freetext', 'email', 'done'].includes(saved.interview.stage)
+  saved?.interview && ['role', 'intent', 'facet', 'freetext', 'done'].includes(saved.interview.stage)
     ? { ...freshInterview(), ...saved.interview }
     : freshInterview())
-const lead = ref(saved?.lead ?? null) // null | offered | captured | sent
+const lead = ref(saved?.lead ?? null) // null | captured | sent
 
 const hasResult = computed(() => schema.value !== null)
 const phase = computed(() => (hasResult.value ? 'reading' : 'landing'))
@@ -119,12 +122,18 @@ const currentCta = computed(() => {
 })
 
 // Suggestion chips: the interview's current stage before the first answer, the
-// catalog's follow-up questions after it; the email step offers its decline.
+// catalog's follow-up questions after it. Each follow chip keeps its catalog id
+// so a click composes that exact question (D1); suggestions whose text has
+// already been sent are filtered out, so a question is never offered twice.
 const chips = computed(() => {
   const stage = interview.value.stage
   if (stage === 'role') return []
-  if (stage === 'email') return [{ ...LEAD_DECLINE, kind: 'decline' }]
-  if (schema.value) return suggestions.value.map((s) => ({ label: s.text, kind: 'follow' }))
+  if (schema.value) {
+    const sent = new Set(messages.value.filter((m) => m.from === 'you').map((m) => m.text))
+    return suggestions.value
+      .filter((s) => !sent.has(s.text))
+      .map((s) => ({ label: s.text, id: s.id, kind: 'follow' }))
+  }
   if (stage === 'intent') return [...INTENTS[interview.value.role], { ...EXPLORE_OPTION, kind: 'intent' }]
   if (stage === 'facet') return FACETS[interview.value.role].options.map((o) => ({ ...o, kind: 'facet' }))
   if (stage === 'freetext') return [{ ...FREE_SKIP, kind: 'skip' }]
@@ -150,7 +159,7 @@ const contextualCta = computed(() => {
     }
   }
   const kinds = {
-    StageFlow: 'See how the three days run',
+    StageFlow: 'See how the experience runs',
     FactList: 'What is settled, and what is still open',
     PartnerLayers: 'See who stands behind ATHA'
   }
@@ -160,6 +169,12 @@ const contextualCta = computed(() => {
   }
   return null
 })
+
+// The email summary is a personal extra, not a step in the question→answer
+// rhythm: it surfaces beside "Apply as talent" only once the visitor has seen
+// real composed content (two answers), and withdraws once requested (D4).
+const summaryCtaVisible = computed(() =>
+  !fixtureName && lead.value === null && turns.value >= 2)
 
 async function loadFixture() {
   const mods = import.meta.glob('../fixtures/*.json', { eager: true })
@@ -192,9 +207,12 @@ async function revealStagger() {
   }
 }
 
-// An interview chip or typed line asks by intent/facet/free_text anchors; the
-// backend plan is deterministic for the former, vector search for the latter.
-async function ask({ label, intent = null, facet = null, free_text = null }) {
+// An interview chip or typed line asks by intent/facet/free_text anchors; a
+// clicked catalog question travels as anchor_qid, which the skeleton boosts
+// above every other catalog anchor so the page is specific to that question.
+// The backend plan is deterministic for catalog anchors, vector search for free
+// text.
+async function ask({ label, intent = null, facet = null, free_text = null, anchor_qid = null }) {
   if (busy.value || !label) return
   const text = label.trim()
   if (!text) return
@@ -206,6 +224,7 @@ async function ask({ label, intent = null, facet = null, free_text = null }) {
   if (intent) body.intent = intent
   if (facet) body.facet = facet
   if (free_text) body.free_text = free_text
+  if (anchor_qid) body.anchor_qid = anchor_qid
   console.info('[atha:compose] request', body)
   try {
     const payload = fixtureName
@@ -229,11 +248,6 @@ async function ask({ label, intent = null, facet = null, free_text = null }) {
     status.value = 'ready'
     revealed.value = 0
     revealStagger()
-    if (!fixtureName && !payload.degraded && lead.value === null) {
-      interview.value = { ...interview.value, stage: 'email' }
-      lead.value = 'offered'
-      messages.value = [...messages.value, { from: 'atha', kind: 'lead-offer', text: Q_LEAD }]
-    }
   } catch (e) {
     console.error('[atha:compose] failed', e)
     status.value = 'error'
@@ -253,11 +267,7 @@ function pick(chip) {
   if (busy.value) return
   const iv = interview.value
   if (iv.stage === 'done') {
-    ask({ label: chip.label, intent: chip.intent ?? null })
-    return
-  }
-  if (iv.stage === 'email') {
-    declineLead()
+    ask({ label: chip.label, intent: chip.intent ?? null, anchor_qid: chip.id ?? null })
     return
   }
   if (iv.stage === 'freetext') {
@@ -281,18 +291,11 @@ function pick(chip) {
   persist(messages.value, schema.value, suggestions.value, turns.value, interview.value, lead.value)
 }
 
-function declineLead() {
-  interview.value = { ...interview.value, stage: 'done' }
-  lead.value = 'declined'
-  persist(messages.value, schema.value, suggestions.value, turns.value, interview.value, lead.value)
-}
-
 // Typed text during the interview is the free-text answer that ends it; once
 // the conversation is past the interview it is simply a follow-up question.
 function submitTyped(text) {
   const iv = interview.value
-  if (iv.stage === 'email') declineLead()
-  if (!schema.value && iv.stage !== 'done' && iv.stage !== 'email') {
+  if (!schema.value && iv.stage !== 'done') {
     interview.value = { ...iv, stage: 'done' }
     ask({ label: text, intent: iv.intent, facet: iv.facet, free_text: text })
     return
@@ -320,6 +323,11 @@ async function submitLead(email) {
   leadBusy.value = true
   let emailed = false
   let ok = false
+  const sections = (schema.value?.sections ?? []).slice(0, 10).map((s) => ({
+    title: (s.title || '').slice(0, 80),
+    text: (s.text || '').slice(0, 500),
+    component: (s.component || 'Statement').slice(0, 20)
+  }))
   try {
     const res = await fetch(LEAD_URL, {
       method: 'POST',
@@ -328,7 +336,8 @@ async function submitLead(email) {
         email: value,
         role: iv.role || 'student',
         intent: iv.intent,
-        facet: iv.facet
+        facet: iv.facet,
+        sections
       })
     })
     if (res.ok) {
@@ -393,6 +402,7 @@ export function useCompose() {
     greetingLive,
     settleGreeting,
     contextualCta,
+    summaryCtaVisible,
     currentCta,
     interview,
     lead,

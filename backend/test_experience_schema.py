@@ -23,7 +23,7 @@ def _experience(**overrides) -> dict:
         "sections": [
             {"component": "TextBlock", "title": "Welcome", "text": "Hello.",
              "entity_ids": []},
-            {"component": "SignalCard", "title": "People", "text": "Grounded.",
+            {"component": "Statement", "title": "People", "text": "Grounded.",
              "entity_ids": ["p1"]},
         ],
         "entities": {"p1": {"type": "person", "name": "Ada"}},
@@ -53,7 +53,7 @@ CASES = [
     ("missing sections key rejected", {"entities": {}}, False),
     ("empty payload rejected", {}, False),
     ("unhydrated entity_id rejected", _experience(
-        sections=[{"component": "SignalCard", "title": "People",
+        sections=[{"component": "Statement", "title": "People",
                    "text": "Grounded.", "entity_ids": ["p1", "ghost"]}]), False),
     ("title over 80 chars rejected", _experience(
         sections=[{"component": "TextBlock", "title": "t" * 81,

@@ -30,7 +30,7 @@ const LENSES = [
       <h2>Real companies bring real decisions.</h2>
       <p class="lede">
         Executive MBA participants, specialists, mentors and researchers work a live
-        company question for three days. Every recommendation is defended in front of
+        company question across the multi-day experience. Every recommendation is defended in front of
         the company in Discern, and one owned decision leaves the room. A well-supported
         no counts as a result.
       </p>

@@ -78,8 +78,12 @@ PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "z-ai/glm-5.2:free")
 # while nemotron is served by Nvidia's own pool (smoke-tested ~4s).
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL",
                            "nvidia/nemotron-3-super-120b-a12b:free")
-# Tune: response length. Lower = shorter answers. Default ~1 viewport of text.
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "700"))
+# Tune: response length. The copywriter returns ONE json document covering
+# every slot (7-10 sections); below ~1400 output tokens it truncates mid-JSON,
+# parse_json fails and the whole page degrades to deterministic template copy.
+# 1400 is the proven good-state budget; raising further is approved when the
+# compose UX needs more room.
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1400"))
 LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "15"))
 LLM_TOTAL_BUDGET = float(os.getenv("LLM_TOTAL_BUDGET", "20"))
 MAX_ATTEMPTS_PER_MODEL = 2  # initial + one retry
@@ -349,6 +353,9 @@ _COPY_SCHEMA = {
                     "title": {"type": "string"},
                     "text": {"type": "string"},
                     "source_i": {"type": "array", "items": {"type": "integer"}},
+                    "component": {"type": "string",
+                                  "enum": ["Statement", "FactList",
+                                           "StageFlow", "PartnerLayers"]},
                 },
                 "required": ["i", "title", "text"],
                 "additionalProperties": False,
@@ -371,13 +378,15 @@ async def copywriter_agent(
     question: str | None = None,
 ) -> dict:
     """Slots JSON + tone + ranking context -> the full copy object
-    {sections: [{i, title, text, source_i}], order, lead}.
+    {sections: [{i, title, text, source_i, component}], order, lead}.
 
-    Copy AND ranking only: the skeleton fixed structure and grounding, this
-    call decides which sections matter most for THIS visitor (order/lead) and
-    which sources its copy rests on (source_i). The question is ranking
-    context — never a source of facts. Caller aligns and validates every
-    index (skeleton.align_copy)."""
+    Copy, ranking and presentation vote only: the skeleton fixed structure
+    and grounding, this call decides which sections matter most for THIS
+    visitor (order/lead), which sources its copy rests on (source_i) and
+    which atomic component fits each section (component — the server
+    hydrates every structured payload itself and downgrades votes it
+    cannot derive). The question is ranking context — never a source of
+    facts. Caller aligns and validates every index (skeleton.align_copy)."""
     client = client or get_client()
     user = (
         f"Tone: {tone}.\n"
@@ -387,7 +396,8 @@ async def copywriter_agent(
         f"Slots:\n{slots_json}\n\n"
         "Rank the slots for this visitor (order + lead), then write the copy "
         "for every slot (i = slot index, source_i = the source indexes your "
-        "copy rests on). Respond with JSON only."
+        "copy rests on, component = the atomic presentation that fits those "
+        "sources). Respond with JSON only."
     )
     data = await _chat_json(
         client,

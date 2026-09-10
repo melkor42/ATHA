@@ -5,6 +5,7 @@ import DotField from './components/DotField.vue'
 import ChatPanel from './components/ChatPanel.vue'
 import ResultPane from './components/ResultPane.vue'
 import BrandSections from './components/BrandSections.vue'
+import EditionOverview from './components/EditionOverview.vue'
 import ClosingBand from './components/ClosingBand.vue'
 import ModeToggle from './components/ModeToggle.vue'
 import ArrivalOverlay from './components/ArrivalOverlay.vue'
@@ -113,6 +114,7 @@ function switchPage(page) {
       </div>
       <div v-if="currentPage === 'about'" class="about-page">
         <BrandSections />
+        <EditionOverview />
         <ClosingBand />
       </div>
     </main>

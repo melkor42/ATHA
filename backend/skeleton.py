@@ -64,6 +64,17 @@ CLUSTER_FACETS: dict[str, set] = {
     "cluster-institutional": {"q14-wbs-role", "q13-education-research"},
 }
 
+# Structured tail topics. The edition facts, the seven-stage rhythm and the
+# partner layers ride along only when the question's grounding touches them;
+# each set lists the catalog questions (data/knowledge/digest_ontology.json)
+# whose answers cover that topic.
+TAIL_TOPICS: dict[str, set] = {
+    "edition": {"q01-what-is-atha", "q04-teams-formed",
+                "q08-partner-receives", "q10-partner-brings"},
+    "rhythm": {"q06-day-to-day", "q12-after-experience"},
+    "layers": {"q13-education-research", "q14-wbs-role"},
+}
+
 FACET_QUERY = """
 MATCH (t {id: $facet})
 OPTIONAL MATCH (p:Passage)-[:SUPPORTS]->(t)
@@ -178,10 +189,11 @@ async def build_skeleton(
     intent: str | None = None,
     facet: str | None = None,
     free_text: str | None = None,
+    anchor_qid: str | None = None,
     anchor_questions: int = 4,
     max_answers: int = 2,
     facet_passages: int = 2,
-    max_extras: int = 2,
+    max_extras: int = 4,
     max_sections: int = 10,
     extra_threshold: float = 0.82,  # calibrated 2026-08-29, see test gate
 ) -> dict:
@@ -198,11 +210,24 @@ async def build_skeleton(
         boost |= {q["id"] for q in questions if q["rank"] <= spec["top_rank"]}
     if facet in CLUSTER_FACETS:
         boost |= CLUSTER_FACETS[facet]
+    if anchor_qid:
+        # A clicked catalog question is the visitor's own wording of what
+        # matters now: it outranks every catalog ranking and becomes anchor.
+        boost |= {anchor_qid}
     questions.sort(key=lambda q: (q["id"] not in boost,
                                   not q["state_match"], q["rank"]))
     anchors = questions[:anchor_questions]
     suggestions = [{"id": q["id"], "text": q["text"]}
                    for q in questions[anchor_questions:anchor_questions + 3]]
+
+    # The structured tail follows the question, not the page: a tail topic
+    # rides along exactly when the grounding (intent, facet cluster, clicked
+    # question, chosen anchors) touches it.
+    grounding = boost | {q["id"] for q in anchors}
+    planned_tail = [kind for kind in ("edition", "rhythm", "layers")
+                    if TAIL_TOPICS[kind] & grounding]
+    if not anchors:
+        planned_tail = ["edition", "rhythm", "layers"]
 
     used_pids: set[str] = set()
     used_titles: set[str] = set()
@@ -259,11 +284,12 @@ async def build_skeleton(
                                        sources, facet))
 
         # --- vector extras (only when the visitor actually asked) -----------
-        # Without free_text the page is anchors + guaranteed tail only:
-        # filler extras that echo the anchors read as noise, not value.
+        # Without free_text the page is anchors plus whichever structured
+        # tail topics the question touches: filler extras that echo the
+        # anchors read as noise, not value.
         # bge-small's baseline is high, so free_text needs the calibrated
         # ~0.82 threshold to keep junk out.
-        tail_count = 3
+        tail_count = len(planned_tail)
         room = max_sections - (len(slots) + tail_count)
         wanted = min(max_extras, room)
         if wanted > 0 and free_text:
@@ -287,63 +313,67 @@ async def build_skeleton(
                       "origin": "vector"}],
                     r["pid"]))
 
-        # --- guaranteed tail -------------------------------------------------
-        edition = load_edition_facts()
-        edition_facts = [
-            f for f in edition.get("facts", [])
-            if not _banned(f["id"], f["fact"], f.get("status"))
-        ]
-        edition_sources = [
-            {"text": f"{f['fact']} [{f['status']}]", "status": f["status"],
-             "heading_path": ["Edition 001"], "origin": "edition"}
-            for f in edition_facts
-        ]
-        edition_structured = [
-            {"label": f["id"].replace("-", " ").capitalize(),
-             "value": f["fact"], "status": f["status"]}
-            for f in edition_facts
-        ]
-        slots.append(_slot("edition", "Edition 001 — where things stand",
-                           "The current state of the first ATHA edition",
-                           edition_sources, "edition",
-                           structured=edition_structured))
-
-        stages = [
-            s for s in await (await session.run(TAIL_RHYTHM_QUERY)).data()
-            if not _banned(s["name"], s["description"])
-        ]
-        if stages:
-            rhythm_sources = [
-                {"text": f"{i}. {s['name']} — {s['description']}",
-                 "status": None, "heading_path": ["The seven-stage rhythm"],
-                 "origin": "arc"}
-                for i, s in enumerate(stages, 1)
+        # --- topic-conditional structured tail -------------------------------
+        if "edition" in planned_tail:
+            edition = load_edition_facts()
+            edition_facts = [
+                f for f in edition.get("facts", [])
+                if not _banned(f["id"], f["fact"], f.get("status"))
             ]
-            slots.append(_slot("rhythm", "The rhythm — seven stages",
-                               "The arc every ATHA edition follows",
-                               rhythm_sources, "arc-stages",
-                               structured=[
-                                   {"name": s["name"],
-                                    "description": s["description"]}
-                                   for s in stages]))
-
-        orgs = [
-            o for o in await (await session.run(TAIL_LAYERS_QUERY)).data()
-            if not _banned(o["name"], o["kind"], o["description"])
-        ]
-        if orgs:
-            layer_sources = [
-                {"text": f"{o['name']}: {o['description']}", "status": None,
-                 "heading_path": ["Who stands behind ATHA"], "origin": "orgs"}
-                for o in orgs
+            edition_sources = [
+                {"text": f"{f['fact']} [{f['status']}]", "status": f["status"],
+                 "heading_path": ["Edition 001"], "origin": "edition"}
+                for f in edition_facts
             ]
-            slots.append(_slot("layers", "Who stands behind ATHA",
-                               "The partners and their roles",
-                               layer_sources, "organizations",
-                               structured=[
-                                   {"name": o["name"], "kind": o["kind"],
-                                    "description": o["description"]}
-                                   for o in orgs]))
+            edition_structured = [
+                {"label": f["id"].replace("-", " ").capitalize(),
+                 "value": f["fact"], "status": f["status"]}
+                for f in edition_facts
+            ]
+            slots.append(_slot("edition", "Edition 001 — where things stand",
+                               "The current state of the first ATHA edition",
+                               edition_sources, "edition",
+                               structured=edition_structured))
+
+        if "rhythm" in planned_tail:
+            stages = [
+                s for s in await (await session.run(TAIL_RHYTHM_QUERY)).data()
+                if not _banned(s["name"], s["description"])
+            ]
+            if stages:
+                rhythm_sources = [
+                    {"text": f"{i}. {s['name']} — {s['description']}",
+                     "status": None, "heading_path": ["The seven-stage rhythm"],
+                     "origin": "arc"}
+                    for i, s in enumerate(stages, 1)
+                ]
+                slots.append(_slot("rhythm", "The rhythm — seven stages",
+                                   "The arc every ATHA edition follows",
+                                   rhythm_sources, "arc-stages",
+                                   structured=[
+                                       {"name": s["name"],
+                                        "description": s["description"]}
+                                       for s in stages]))
+
+        if "layers" in planned_tail:
+            orgs = [
+                o for o in await (await session.run(TAIL_LAYERS_QUERY)).data()
+                if not _banned(o["name"], o["kind"], o["description"])
+            ]
+            if orgs:
+                layer_sources = [
+                    {"text": f"{o['name']}: {o['description']}", "status": None,
+                     "heading_path": ["Who stands behind ATHA"],
+                     "origin": "orgs"}
+                    for o in orgs
+                ]
+                slots.append(_slot("layers", "Who stands behind ATHA",
+                                   "The partners and their roles",
+                                   layer_sources, "organizations",
+                                   structured=[
+                                       {"name": o["name"], "kind": o["kind"],
+                                        "description": o["description"]}
+                                       for o in orgs]))
 
     # --- trim to the cap: extras first, then the last anchor ----------------
     while len(slots) > max_sections:
@@ -410,16 +440,28 @@ def deterministic_fallback(slots: list[dict]) -> list[dict]:
     return [_fallback_entry(s) for s in slots]
 
 
+# The atomic presentations the copywriter may name for a passage slot; the
+# server hydrates every structured payload itself, so this is a presentation
+# vote, never a source of structure.
+LLM_COMPONENTS = ("Statement", "FactList", "StageFlow", "PartnerLayers")
+
+
+def _llm_component(value: object) -> str | None:
+    return (value if isinstance(value, str) and value in LLM_COMPONENTS
+            else None)
+
+
 def align_copy(slots: list[dict],
                data: dict | list | None) -> tuple[list[dict], str]:
     """Validate the copywriter's copy+ranking against the slots; never trust
     the model's structure.
 
-    Accepts the full {sections:[{i,title,text,source_i}], order, lead} dict
-    (or a bare legacy sections list). Returns (plan, "llm"|"mixed"|"fallback")
-    where plan is a list of {slot, title, text, si} in display order —
-    malformed indexes are dropped, missing entries get the per-slot
-    deterministic copy, and `lead` (when valid) moves that slot to the front.
+    Accepts the full {sections:[{i,title,text,source_i,component}], order,
+    lead} dict (or a bare legacy sections list). Returns (plan,
+    "llm"|"mixed"|"fallback") where plan is a list of {slot, title, text, si,
+    component} in display order — malformed indexes are dropped, missing
+    entries get the per-slot deterministic copy, and `lead` (when valid)
+    moves that slot to the front.
     """
     fallback = deterministic_fallback(slots)
     all_si = [list(range(len(s["sources"]))) for s in slots]
@@ -446,15 +488,17 @@ def align_copy(slots: list[dict],
                        if isinstance(j, int) and 0 <= j < len(all_si[i])]
                       if isinstance(raw_si, list) else [])
             by_i[i] = {"title": title[:80], "text": text[:500],
-                       "si": chosen or all_si[i]}
+                       "si": chosen or all_si[i],
+                       "component": _llm_component(entry.get("component"))}
 
     plan_by_slot: list[dict] = []
     for idx, slot in enumerate(slots):
         entry = by_i.get(idx)
         if entry is None:
-            entry = {**fallback[idx], "si": all_si[idx]}
+            entry = {**fallback[idx], "si": all_si[idx], "component": None}
         plan_by_slot.append({"slot": slot, "title": entry["title"],
-                             "text": entry["text"], "si": entry["si"]})
+                             "text": entry["text"], "si": entry["si"],
+                             "component": entry.get("component")})
 
     order = data.get("order")
     if (not isinstance(order, list)

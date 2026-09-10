@@ -30,16 +30,23 @@ import httpx
 # The three roles main.py's ROLE_PROFILES accepts.
 ROLES = ("student", "warwick", "business")
 
-# knowledge pass: (role, gate visitor_state) pairs exercising the question
-# catalog end to end through the live compose pipeline.
-KNOWLEDGE_CHECKS = (("student", "discovering"), ("business", "deciding"))
+# knowledge pass: (role, gate visitor_state, extra request fields, minimum
+# section count) tuples exercising the question catalog end to end through
+# the live compose pipeline. The structured tail is topic-conditional, so a
+# question-less orientation page floors at its anchors plus whichever tail
+# topics they touch, while a clicked question pins the tail it asks about.
+KNOWLEDGE_CHECKS = (
+    ("student", "deciding", {}, 4),
+    ("business", "deciding", {}, 4),
+    ("student", "preparing", {"anchor_qid": "q06-day-to-day"}, 5),
+    ("warwick", "discovering", {"anchor_qid": "q14-wbs-role"}, 5),
+)
 KNOWLEDGE_LATENCY_CEILING_MS = 25000
 
-# Components the pipeline may emit: the ATHA atomic set plus the legacy
-# entity-card types still in the ui_schema allowlist.
+# Components the pipeline may emit: the ATHA atomic set plus the TextBlock
+# render fallback — exactly what frontend registry.js renders.
 ALLOWED_COMPONENTS = {
     "TextBlock", "Statement", "FactList", "StageFlow", "PartnerLayers",
-    "SignalCard", "StudentProfile", "EnterpriseCard", "EventBanner",
 }
 
 # UINode fields that count as structured (non-copy) content
@@ -125,21 +132,23 @@ async def run(base_url: str) -> int:
 
     knowledge_ok = True
     async with httpx.AsyncClient(timeout=180.0) as client:
-        for role, state in KNOWLEDGE_CHECKS:
+        for role, state, extra, floor in KNOWLEDGE_CHECKS:
+            label = f"{role}+{state}" + (
+                f"+{extra['anchor_qid']}" if extra.get("anchor_qid") else "")
             t0 = time.perf_counter()
             try:
                 resp = await client.post(
                     f"{base_url}/api/experience",
                     json={"role": role, "topics": [], "style": None,
-                          "visitor_state": state},
+                          "visitor_state": state, **extra},
                 )
             except httpx.HTTPError as exc:
-                print(f"[{role}+{state}] REQUEST FAILED: {exc}")
+                print(f"[{label}] REQUEST FAILED: {exc}")
                 knowledge_ok = False
                 continue
             ms = int((time.perf_counter() - t0) * 1000)
             if resp.status_code != 200:
-                print(f"[{role}+{state}] HTTP {resp.status_code}: "
+                print(f"[{label}] HTTP {resp.status_code}: "
                       f"{resp.text[:200]}")
                 knowledge_ok = False
                 continue
@@ -151,9 +160,9 @@ async def run(base_url: str) -> int:
                 problems.append(f"degraded: {body.get('degraded_reason', '?')}")
             qids = body.get("knowledge_questions") or []
             sections = exp.get("sections", [])
-            if len(sections) < 7:
+            if len(sections) < floor:
                 valid = False
-                problems.append(f"only {len(sections)} sections (<7)")
+                problems.append(f"only {len(sections)} sections (<{floor})")
             if not isinstance(body.get("suggestions"), list):
                 valid = False
                 problems.append("suggestions missing or not a list")
@@ -163,11 +172,12 @@ async def run(base_url: str) -> int:
             too_slow = ms > KNOWLEDGE_LATENCY_CEILING_MS
             ok = valid and not too_slow
             knowledge_ok = knowledge_ok and ok
-            print(f"\n=== knowledge {role}+{state} ({ms} ms) "
+            print(f"\n=== knowledge {label} ({ms} ms) "
                   f"{'PASS' if ok else 'FAIL'} ===")
             print(f"  schema: {'valid' if valid else 'INVALID'} "
                   f"{problems if problems else ''}")
-            print(f"  sections: {len(sections)} | answered: {qids}")
+            print(f"  sections: {len(sections)} (floor {floor}) | "
+                  f"answered: {qids}")
             print(f"  spectrum: {exp.get('spectrum')} | mode: {exp.get('mode')}")
             if too_slow:
                 print(f"  FAIL: latency {ms} ms > ceiling "

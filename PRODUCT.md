@@ -29,7 +29,7 @@ ATHA is the first 48-hour AI-native viability environment: real enterprise AI pr
 ## Capabilities and Constraints
 
 - Domain terminology is canon: Person, Mentor, Enterprise, Topic, Signal (the derived match), Perspective, PersonaModel, ExperienceSchema, Wow Page, Spectrum, StyleMode. Do not drift to synonyms (see `CONTEXT.md`).
-- The brand is **Atha**; "Signal" survives only as the domain term and in wire-contract strings (`SignalCard`, `save_signal`, `SIGNAL_CARD`).
+- The brand is **Atha**; "Signal" survives only as the domain term. The legacy wire-contract strings (`SignalCard`, `save_signal`, `SIGNAL_CARD`) were removed with the 2026-09-10 agent-flow restoration; the atomic set (Statement, FactList, StageFlow, PartnerLayers) is the whole wire contract now.
 - ExperienceSchema is the contract between the composing agent and the frontend: allowlist enums, recursive UINode, entity_ids whitelist-checked by verify().
 - **Spectrum** (`mycelium | terra | aurora | neon | void`) owns the hue family; **StyleMode** (`none | minimal | retro | organic | earth | steampunk`) owns materiality, typography, atmosphere. The two axes compose orthogonally (axis grammar).
 - All dataset content beyond ATHA 001 · Q4 2026 · Warwick Business School is fictional synthetic data. Never present fictional people or companies as real.

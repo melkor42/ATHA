@@ -11,11 +11,13 @@ Checks:
   2. internal passage ids never surface in any role/state bundle;
   3. realistic compose-sized bundles (top 5 questions) are non-empty for every
      role × state combination;
-  4. skeleton gate: every role × state yields >=7 slots incl. the guaranteed
-     tail (edition/rhythm/layers) and leaks no internal passage;
+  4. skeleton gate: every role × state emits exactly the topic-conditional
+     tail (a tail kind rides along iff its TAIL_TOPICS intersect the page
+     grounding — here the chosen anchors), carries at least one anchor slot,
+     adds no unexpected slot kind, and leaks no internal passage;
   5. facet probes (value form enriched to the 2-source cap, lens dedicated
-     slot) and the calibrated free-text threshold (relevant surfaces,
-     irrelevant does not).
+     slot) and the calibrated free-text threshold (relevant text surfaces
+     extras, irrelevant text surfaces none).
 
 Run:  python test_knowledge_retrieval.py      (exit 0 = gate passed)
 """
@@ -29,7 +31,7 @@ from pathlib import Path
 
 from graph_queries import get_database, get_driver
 from knowledge import knowledge_for
-from skeleton import build_skeleton
+from skeleton import build_skeleton, TAIL_TOPICS
 
 MAP_PATH = Path(__file__).resolve().parents[1] / "data" / "knowledge" / "knowledge_map.json"
 ROLES = ["student", "warwick", "business"]
@@ -78,25 +80,50 @@ async def main() -> None:
                     errors.append(f"role={role} state={state}: questions "
                                   f"without answers: {unanswered}")
 
-        # 4. skeleton gate — filled page, guaranteed tail, no internal leak
+        # 4. skeleton gate — anchors present, tail topic-conditional, no leak.
+        #    These probes pass no intent/facet/free_text/anchor_qid, so the
+        #    grounding is exactly the chosen anchors and the expected tail is
+        #    {kind : TAIL_TOPICS[kind] & anchors} (all three if no anchors).
+        TAILS = ("edition", "rhythm", "layers")
         for role in ROLES:
             for state in STATES:
                 sk = await build_skeleton(role, state, driver=driver,
                                           database=db)
                 kinds = {s["kind"] for s in sk["slots"]}
-                if len(sk["slots"]) < 7:
+                anchor_ids = set(sk["anchor_qids"])
+                expected = ({t for t in TAILS if TAIL_TOPICS[t] & anchor_ids}
+                            if anchor_ids else set(TAILS))
+                actual = kinds & set(TAILS)
+                if actual != expected:
+                    errors.append(
+                        f"skeleton role={role} state={state}: tail "
+                        f"{sorted(actual)} != expected {sorted(expected)} "
+                        f"(anchors {sorted(anchor_ids)})")
+                if not (kinds & {"anchor"}):
                     errors.append(f"skeleton role={role} state={state}: "
-                                  f"only {len(sk['slots'])} slots (<7)")
-                for tail in ("edition", "rhythm", "layers"):
-                    if tail not in kinds:
-                        errors.append(f"skeleton role={role} state={state}: "
-                                      f"missing tail '{tail}'")
+                                  f"no anchor slot")
+                unexpected = kinds - {"anchor"} - set(TAILS)
+                if unexpected:
+                    errors.append(f"skeleton role={role} state={state}: "
+                                  f"unexpected slot kinds {sorted(unexpected)}")
                 leaked = [src["pid"] for s in sk["slots"]
                           for src in s["sources"]
                           if src.get("pid") in internal_ids]
                 if leaked:
                     errors.append(f"SKELETON INTERNAL LEAK role={role} "
                                   f"state={state}: {leaked}")
+
+        # 4b. anchor_qid probe — a clicked catalog question becomes an anchor
+        #     and pulls its own topic tail (the D1 click path meeting the D3
+        #     conditional tail).
+        sk = await build_skeleton("student", "preparing", driver=driver,
+                                  database=db, anchor_qid="q06-day-to-day")
+        kinds = {s["kind"] for s in sk["slots"]}
+        if "q06-day-to-day" not in sk["anchor_qids"]:
+            errors.append("anchor_qid q06-day-to-day did not become an anchor")
+        if "rhythm" not in kinds:
+            errors.append("anchor_qid q06-day-to-day did not pull the "
+                          "rhythm tail")
 
         # 5a. facet probes
         sk = await build_skeleton("business", "deciding", driver=driver,
@@ -125,8 +152,11 @@ async def main() -> None:
                           f"passages as extras (got {sorted(extra_pids)})")
         sk = await build_skeleton("student", None, driver=driver, database=db,
                                   free_text="banana pancake recipe")
-        if len(sk["slots"]) < 7:
-            errors.append("irrelevant free_text shrank the page below 7 slots")
+        junk = {src["pid"] for s in sk["slots"] if s["kind"] == "extra"
+                for src in s["sources"]}
+        if junk:
+            errors.append(f"irrelevant free_text surfaced junk extras: "
+                          f"{sorted(junk)}")
     finally:
         await driver.close()
 

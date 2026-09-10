@@ -2,7 +2,7 @@ export const ROLES = [
   {
     role: 'student',
     title: 'Talent',
-    text: 'Join an MBA team and work a live case across three days.',
+    text: 'Join an MBA team and work a live company case.',
     label: 'Talent'
   },
   {
@@ -22,7 +22,7 @@ export const ROLES = [
 export const Q_ROLE = 'What role would fit you most?'
 
 export const ROLE_WHY =
-  'Three days look different from each seat. I write for the one that matters to you.'
+  'The experience looks different from each seat. I write for the one that matters to you.'
 
 export const INTENTS = {
   student: [
@@ -84,7 +84,3 @@ export const FACETS = {
 export const Q_FREE = 'Anything else you want to know?'
 
 export const FREE_SKIP = { label: 'Just show me what matters most.' }
-
-export const Q_LEAD = 'Want this summary per email? Leave your address and it follows you home.'
-
-export const LEAD_DECLINE = { label: 'No thanks' }

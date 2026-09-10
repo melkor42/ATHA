@@ -8,7 +8,7 @@ import Theater from './Theater.vue'
 
 const {
   phase, status, busy, messages, chips, roleGate, greetingLive, settleGreeting,
-  contextualCta, currentCta, interview, lead, emailDraft, leadBusy,
+  contextualCta, summaryCtaVisible, currentCta, emailDraft, leadBusy,
   pick, submitTyped, submitLead, composingLine, turns
 } = useCompose()
 
@@ -18,6 +18,12 @@ const draft = ref('')
 const log = ref(null)
 const STEPS = ['Retrieving', 'Ranking', 'Composing']
 
+// The summary CTA opens an inline email field in the footer; when the CTA
+// withdraws (a send went through, or the conversation restarted) the field
+// closes with it rather than lingering open.
+const summaryOpen = ref(false)
+watch(summaryCtaVisible, (visible) => { if (!visible) summaryOpen.value = false })
+
 // The agent opens the conversation, and the visitor watches it do so. Only a
 // fresh session types; a reload reads a conversation that was already spoken.
 const { typed, done, thinking, run: typeGreeting, skip, reset } = useTypewriter()
@@ -25,7 +31,7 @@ const speaking = computed(() => greetingLive.value && !done.value)
 
 const placeholder = computed(() => {
   if (roleGate.value) return 'The input opens once you have chosen…'
-  return phase.value === 'landing' ? 'Ask about the three days…' : 'Ask a follow-up…'
+  return phase.value === 'landing' ? 'Ask about the experience…' : 'Ask a follow-up…'
 })
 
 function speakGreeting() {
@@ -54,9 +60,6 @@ watch(
     if (el) el.scrollTop = el.scrollHeight
   }
 )
-
-const leadOpen = computed(() =>
-  lead.value === 'offered' && interview.value.stage === 'email')
 
 async function submit() {
   const text = draft.value.trim()
@@ -106,18 +109,6 @@ async function submit() {
             </div>
           </div>
           <p v-else class="answer-text u-fade">{{ m.text }}</p>
-          <form v-if="m.kind === 'lead-offer' && leadOpen" class="lead-form" @submit.prevent="submitLead(emailDraft)">
-            <input
-              v-model="emailDraft"
-              type="email"
-              required
-              placeholder="you@example.com"
-              aria-label="Email address"
-              autocomplete="email"
-              :disabled="leadBusy"
-            />
-            <button type="submit" :disabled="leadBusy || !emailDraft.trim()">Send me the summary</button>
-          </form>
         </template>
       </article>
 
@@ -156,6 +147,31 @@ async function submit() {
 
     <footer class="cta" :class="{ 'u-fade': arrived }" style="--d: 660ms">
       <a class="apply" :href="currentCta.href">{{ currentCta.label }}</a>
+
+      <button
+        v-if="summaryCtaVisible && !summaryOpen"
+        type="button"
+        class="summary-cta"
+        @click="summaryOpen = true"
+      >Summary per email</button>
+
+      <form
+        v-if="summaryCtaVisible && summaryOpen"
+        class="lead-form"
+        @submit.prevent="submitLead(emailDraft)"
+      >
+        <input
+          v-model="emailDraft"
+          type="email"
+          required
+          placeholder="you@example.com"
+          aria-label="Email address"
+          autocomplete="email"
+          :disabled="leadBusy"
+        />
+        <button type="submit" :disabled="leadBusy || !emailDraft.trim()">Send me the summary</button>
+      </form>
+
       <a
         v-if="contextualCta"
         class="contextual"
@@ -425,6 +441,23 @@ async function submit() {
   transition: background 240ms var(--ease), color 240ms var(--ease);
 }
 .apply:hover { background: var(--ink); color: var(--ground); }
+/* the summary is a personal extra, not the primary ask: it sits below Apply as
+   a quiet centred line and opens the address field in place, rather than
+   stepping into the conversation as a spoken offer. */
+.summary-cta {
+  align-self: center;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  opacity: 0.72;
+  font-size: 14px;
+  line-height: 1.3;
+  padding: 2px 0;
+  cursor: pointer;
+  transition: opacity 240ms var(--ease), border-color 240ms var(--ease);
+}
+.summary-cta:hover { opacity: 1; border-color: var(--ink); }
 .contextual {
   display: inline-flex;
   gap: 7px;

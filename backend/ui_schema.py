@@ -19,13 +19,10 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class ComponentType(str, Enum):
-    SIGNAL_CARD = "SignalCard"
-    STUDENT_PROFILE = "StudentProfile"
-    ENTERPRISE_CARD = "EnterpriseCard"
-    EVENT_BANNER = "EventBanner"
     TEXT_BLOCK = "TextBlock"
     # ATHA brand atomic set (registry.js v1) — structured, server-hydrated
-    # from knowledge-graph sources; the LLM only writes title/text copy.
+    # from knowledge-graph sources; the LLM writes title/text copy and votes
+    # the presentation, the server hydrates every structured payload.
     STATEMENT = "Statement"
     FACT_LIST = "FactList"
     STAGE_FLOW = "StageFlow"

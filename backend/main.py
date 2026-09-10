@@ -1,24 +1,26 @@
 """backend/main.py — FastAPI orchestrator for the ATHA knowledge page.
 
 Pipeline per POST /api/experience {role, topics?, style?, visitor_state?,
-intent?, facet?, free_text?}:
-  deterministic skeleton plan (skeleton.build_skeleton: anchor questions ->
-  facet -> vector extras -> edition/rhythm/layers tail, all from the
-  knowledge graph) -> copywriter agent writes the title/text copy for the
-  slots AND ranks them for the current visitor (order/lead/source_i; the
-  structure itself never comes from the model) -> main.py hydrates each slot
-  into its atomic node (Statement / FactList / StageFlow / PartnerLayers,
-  structured payloads filtered by source_i) -> the visitor's style overrides
-  the mode -> verify() -> ExperienceSchema JSON (entities empty). Any failure
-  degrades to DEFAULT_EXPERIENCE — the endpoint never crashes.
+intent?, facet?, free_text?, anchor_qid?}:
+  deterministic skeleton plan (skeleton.build_skeleton: a clicked catalog
+  question and the intent boost outrank the catalog; anchors -> facet ->
+  vector extras -> the edition/rhythm/layers tail only when the question's
+  grounding touches that topic) -> copywriter agent writes the title/text
+  copy for the slots, ranks them for the current visitor (order/lead/
+  source_i) and votes each section's atomic component -> main.py hydrates
+  every structured payload server-side from the slot's sources (a vote
+  whose payload cannot be derived downgrades to Statement) -> the visitor's
+  style overrides the mode -> verify() -> ExperienceSchema JSON (entities
+  empty). Any failure degrades to DEFAULT_EXPERIENCE — the endpoint never
+  crashes.
 
 `topics` is accepted for API stability but ignored (the skeleton plans from
-role/state/intent/facet/free_text).
+role/state/intent/facet/free_text/anchor_qid).
 
 Plus: CORS for the Vite dev server, /health, in-memory rate limit
 (30 req/day per IP), per-request tracing to backend/trace.jsonl, and a
-role+state+intent+facet+free_text+style-keyed response cache so repeat runs
-cost zero LLM calls.
+role+state+intent+facet+free_text+anchor+style-keyed response cache so
+repeat runs cost zero LLM calls.
 
 Run:  uvicorn main:app --reload   (from backend/)
 """
@@ -33,6 +35,7 @@ import re
 import time
 from collections import OrderedDict
 from datetime import date, datetime, timezone
+from html import escape as html_escape
 from pathlib import Path
 from typing import Literal
 
@@ -155,6 +158,8 @@ class ExperienceRequest(BaseModel):
     intent: str | None = None
     facet: str | None = None
     free_text: str | None = None
+    # catalog id of a clicked suggestion chip: the visitor's chosen question
+    anchor_qid: str | None = None
 
 
 LEAD_ROLE_LABELS = {"student": "talent", "warwick": "Warwick",
@@ -162,11 +167,21 @@ LEAD_ROLE_LABELS = {"student": "talent", "warwick": "Warwick",
 EMAIL_RE = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
 
 
+class LeadSection(BaseModel):
+    """One composed section the visitor has seen; the mail restates exactly
+    these, so the summary never promises content the page did not show."""
+
+    title: str = Field(..., max_length=80)
+    text: str = Field(default="", max_length=500)
+    component: str = Field(default="Statement", max_length=20)
+
+
 class LeadRequest(BaseModel):
     email: str = Field(..., max_length=254, pattern=EMAIL_RE)
     role: Literal["student", "warwick", "business"]
     intent: str | None = Field(default=None, max_length=60)
     facet: str | None = Field(default=None, max_length=60)
+    sections: list[LeadSection] = Field(default_factory=list, max_length=10)
 
     @field_validator("email")
     @classmethod
@@ -340,20 +355,30 @@ def _append_lead(record: dict) -> None:
 
 
 async def _send_lead_email(email: str, role: str, intent: str | None,
-                           facet: str | None) -> bool:
+                           facet: str | None,
+                           sections: list[dict] | None = None) -> bool:
     key = os.environ.get("MAIL_API_KEY")
     sender = os.environ.get("MAIL_FROM")
     if not (key and sender):
         return False
     label = LEAD_ROLE_LABELS[role]
-    lines = [f"Perspective: {label}"]
+    lines = [f"Perspective: {html_escape(label)}"]
     if intent:
-        lines.append(f"Intent: {intent}")
+        lines.append(f"Intent: {html_escape(intent)}")
     if facet:
-        lines.append(f"Focus: {facet}")
+        lines.append(f"Focus: {html_escape(facet)}")
+    summary = ""
+    if sections:
+        items = "".join(
+            f"<li><strong>{html_escape(s.get('title') or '')}</strong> "
+            f"{html_escape(s.get('text') or '')}</li>"
+            for s in sections)
+        summary = ("<p>What the agent composed for you:</p>"
+                   f"<ol>{items}</ol>")
     html = (
         "<p>Here is your ATHA summary.</p>"
         f"<ul>{''.join(f'<li>{line}</li>' for line in lines)}</ul>"
+        f"{summary}"
         '<p><a href="http://89.168.73.93">ATHA</a></p>'
     )
     try:
@@ -390,6 +415,33 @@ async def health() -> dict:
             "models": {"primary": PRIMARY_MODEL, "fallback": FALLBACK_MODEL}}
 
 
+def _derive_facts(sources: list[dict]) -> list[dict]:
+    """Label/value rows from the slot's sources — the only shape a FactList
+    vote may hydrate from. Lengths and status pills are cleaned by Fact."""
+    facts = []
+    for src in sources:
+        heading = (src.get("heading_path") or ["Fact"])[-1] or "Fact"
+        facts.append({"label": heading, "value": src["text"],
+                      "status": src.get("status")})
+    return facts[:8]
+
+
+_STAGE_LINE = re.compile(r"^\s*\d+[.)]\s+(.+?)(?:\s+—\s+(.*))?$")
+
+
+def _derive_stages(sources: list[dict]) -> list[dict]:
+    """Ordered stages from numbered source lines ("3. Name — description");
+    unnumbered sources contribute nothing, so a weak vote downgrades."""
+    stages = []
+    for src in sources:
+        m = _STAGE_LINE.match(src["text"] or "")
+        if not m:
+            continue
+        stages.append({"name": m.group(1).strip(),
+                       "description": (m.group(2) or "").strip()})
+    return stages
+
+
 @app.post("/api/experience")
 async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     ip = _client_ip(request)
@@ -421,13 +473,16 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
     free_text = ((body.free_text or "").strip() or None)
     if free_text is not None:
         free_text = " ".join(free_text.split())[:400] or None
+    anchor_qid = ((body.anchor_qid or "").strip().lower() or None)
     log.info("experience request: role=%s state=%s intent=%s facet=%s "
-             "free_text=%s style=%s", role, visitor_state, intent, facet,
-             bool(free_text), style.value if style else None)
+             "free_text=%s anchor=%s style=%s", role, visitor_state, intent,
+             facet, bool(free_text), anchor_qid,
+             style.value if style else None)
 
     key = hashlib.sha256(
         f"{role}|{visitor_state or ''}|{intent or ''}|{facet or ''}|"
-        f"{free_text or ''}|{style.value if style else ''}".encode("utf-8")
+        f"{free_text or ''}|{anchor_qid or ''}|"
+        f"{style.value if style else ''}".encode("utf-8")
     ).hexdigest()
     started = time.perf_counter()
     cached = _response_cache.get(key)
@@ -466,7 +521,7 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
         skel = await build_skeleton(
             role, visitor_state, driver=get_app_driver(),
             database=get_database(), intent=intent, facet=facet,
-            free_text=free_text)
+            free_text=free_text, anchor_qid=anchor_qid)
         slots = skel["slots"]
         knowledge_qids = skel["anchor_qids"]
         suggestions = skel["suggestions"]
@@ -517,7 +572,22 @@ async def build_experience(body: ExperienceRequest, request: Request) -> dict:
                 node.update(component=ComponentType.PARTNER_LAYERS,
                             layers=structured)
             else:
-                node["component"] = ComponentType.STATEMENT
+                # Passage slot: the copywriter votes the presentation, the
+                # server hydrates it from the sources — a vote whose payload
+                # cannot be derived downgrades to Statement.
+                vote = entry.get("component")
+                facts = (_derive_facts(slot["sources"])
+                         if vote == "FactList" else [])
+                stages = (_derive_stages(slot["sources"])
+                          if vote == "StageFlow" else [])
+                if vote == "FactList" and len(facts) >= 2:
+                    node.update(component=ComponentType.FACT_LIST,
+                                facts=facts)
+                elif vote == "StageFlow" and len(stages) >= 2:
+                    node.update(component=ComponentType.STAGE_FLOW,
+                                stages=stages)
+                else:
+                    node["component"] = ComponentType.STATEMENT
             sections.append(UINode(**node))
         draft = ExperienceSchema(
             layout=Layout.GRID,
@@ -578,11 +648,14 @@ async def capture_lead(body: LeadRequest, request: Request) -> dict:
         "ts": datetime.now(timezone.utc).isoformat(),
         "email": body.email, "role": body.role,
         "intent": body.intent, "facet": body.facet,
+        "sections": len(body.sections),
     })
     emailed = await _send_lead_email(body.email, body.role,
-                                     body.intent, body.facet)
-    log.info("lead captured: role=%s intent=%s facet=%s emailed=%s",
-             body.role, body.intent, body.facet, emailed)
+                                     body.intent, body.facet,
+                                     [s.model_dump() for s in body.sections])
+    log.info("lead captured: role=%s intent=%s facet=%s sections=%d "
+             "emailed=%s", body.role, body.intent, body.facet,
+             len(body.sections), emailed)
     return {"saved": True, "emailed": emailed}
 
 

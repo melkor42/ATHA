@@ -23,7 +23,7 @@ ATHA is built to recur: every relationship formed in an edition persists into th
 ## Naming discipline
 
 - **Atha** = the brand (the experience itself).
-- **Signal** survives as a *domain term only*: a derived Person↔Enterprise match in the composed-page graph (`SignalCard`, `save_signal`, `SIGNAL_CARD`). Never use it for the brand again.
+- **Signal** survives as a *domain term only*: a derived Person↔Enterprise match in the composed-page graph. Never use it for the brand again. (The old wire strings `SignalCard`, `save_signal`, `SIGNAL_CARD` were removed with the 2026-09-10 agent-flow restoration.)
 
 ## Edition 001 — current working direction
 

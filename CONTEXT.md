@@ -6,8 +6,8 @@ The vocabulary the project uses. Terms are defined as used; don't drift to synon
 - **Mentor** — an alumnus in the object position of `MENTORED_BY`. Not a separate label; a role an alumnus plays in a story.
 - **Enterprise** — an organization partnering with ATHA. Carries sector, size, HQ, description, and a contact person as fields (not a separate node), with complete metadata for filterable lists. Expresses hiring needs via `SEEKS_EXPERTISE`.
 - **Topic** — a shared vocabulary node (~20) joining interests to needs. The join key that makes a Signal.
-- **Signal** — a *derived* match between a Person and an Enterprise via a shared Topic. Never stored as a node; computed by the hybrid query and rendered by SignalCard.
-- Note: the brand is **Atha**; **Signal** survives only as this domain term (the derived match) and in its wire-contract strings (`SignalCard`, `save_signal`, `SIGNAL_CARD`).
+- **Signal** — a *derived* match between a Person and an Enterprise via a shared Topic. Never stored as a node; computed by the hybrid query.
+- Note: the brand is **Atha**; **Signal** survives only as this domain term (the derived match). The legacy wire-contract strings (`SignalCard`, `save_signal`, `SIGNAL_CARD`) were removed with the 2026-09-10 agent-flow restoration; the atomic set (Statement, FactList, StageFlow, PartnerLayers) is the whole wire contract now.
 - **Event** — a gathering on the ATHA timeline. Past events carry `highlights` (the "best moments"); upcoming events carry date and location. **ATHA 001 · Q4 2026 · Warwick Business School is the single real entity in the synthetic dataset**; everything else is fictional.
 - **Profile** — the embedding-bearing text of a Person; the vector surface of retrieval. Same embedding model in ingest and query (fastembed bge-small-en-v1.5, 384 dims).
 - **Perspective** — the visitor's stance: `enterprise` | `talent` | `infrastructure` | `education`. Agent 1's primary branching axis; inherited from the page the Wow Page replaces.
