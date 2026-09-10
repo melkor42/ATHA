@@ -19,6 +19,7 @@ const { phase, hasResult, restart, currentCta } = useCompose()
 const { arrived } = useArrival()
 const menuOpen = ref(false)
 const atTop = ref(true)
+const currentPage = ref('home')
 
 function trackTop() {
   // Growing the band lengthens the document, so it may only happen where
@@ -52,19 +53,19 @@ onUnmounted(() => {
 })
 
 const NAV = [
-  { label: 'The programme', href: '#programme' },
-  { label: 'The five lenses', href: '#lenses' },
-  { label: 'Who stands behind ATHA', href: '#who' }
+  { label: 'Ask ATHA \u2014 Your Composer', page: 'home' },
+  { label: 'The ATHA concept', page: 'about' }
 ]
 
-function go(href) {
+function switchPage(page) {
+  currentPage.value = page
   menuOpen.value = false
-  document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  window.scrollTo({ top: 0, behavior: 'auto' })
 }
 </script>
 
 <template>
-  <div class="app" :class="[phase, { 'is-open': atTop }]">
+  <div class="app" :class="[phase, currentPage, { 'is-open': atTop }]">
     <ArrivalOverlay v-if="!arrived" />
     <header class="chrome" :class="{ 'is-open': atTop }">
       <span class="chrome-field" aria-hidden="true"><DotField :opacity="0.34" /></span>
@@ -88,12 +89,12 @@ function go(href) {
         </div>
       </div>
 
-      <div class="chrome-open">
+      <div v-if="currentPage === 'home'" class="chrome-open">
         <Hero />
       </div>
 
       <nav v-if="menuOpen" class="menu">
-        <button v-for="n in NAV" :key="n.href" type="button" class="menu-link" @click="go(n.href)">
+        <button v-for="n in NAV" :key="n.page" type="button" class="menu-link" @click="switchPage(n.page)">
           {{ n.label }}
         </button>
         <span class="rule"></span>
@@ -104,39 +105,30 @@ function go(href) {
     </header>
 
     <main class="wrap">
-      <div class="fold">
+      <div v-if="currentPage === 'home'" class="fold">
         <section class="stage" :class="phase">
           <ChatPanel />
           <ResultPane v-if="hasResult" />
         </section>
       </div>
-      <div class="brand-sections">
+      <div v-if="currentPage === 'about'" class="about-page">
         <BrandSections />
+        <ClosingBand />
       </div>
     </main>
-
-    <ClosingBand />
   </div>
 </template>
 
 <style scoped>
 /* The band is the page's one dark surface at the top: deep ground, paper type,
-   the dot field as texture, a signal hairline underneath. Its slim height is
-   fixed (--bar-h); the open state only adds the claim below the row. */
+   the dot field as texture. Its slim height is fixed (--bar-h); the open state
+   only adds the claim below the row. */
 .chrome {
   position: sticky;
   top: 0;
   z-index: 30;
   background: var(--deep);
   color: var(--on-deep);
-}
-.chrome::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 1px;
-  background: var(--signal);
-  opacity: 0.5;
 }
 /* paper outlines for keyboard focus: the global ring is navy, which on navy is
    no ring at all */
@@ -278,7 +270,12 @@ function go(href) {
   max-height: calc(100vh - var(--bar-h) - 35px);
   max-height: calc(100svh - var(--bar-h) - 35px);
 }
-.brand-sections { padding: 0 var(--bar-gutter); margin-top: clamp(48px, 9vh, 104px); }
+/* About page: single-column, pure content. No chat, no split — just the
+   brand sections and closing band with comfortable vertical rhythm. */
+.about-page {
+  padding: clamp(48px, 9vh, 104px) var(--bar-gutter) clamp(40px, 7vh, 80px);
+}
+.about-page :deep(.closing) { margin-top: clamp(48px, 9vh, 104px); }
 
 @media (max-width: 980px) {
   .stage.reading { grid-template-columns: 1fr; }

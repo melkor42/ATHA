@@ -78,7 +78,8 @@ PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "z-ai/glm-5.2:free")
 # while nemotron is served by Nvidia's own pool (smoke-tested ~4s).
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL",
                            "nvidia/nemotron-3-super-120b-a12b:free")
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1400"))
+# Tune: response length. Lower = shorter answers. Default ~1 viewport of text.
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "700"))
 LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "15"))
 LLM_TOTAL_BUDGET = float(os.getenv("LLM_TOTAL_BUDGET", "20"))
 MAX_ATTEMPTS_PER_MODEL = 2  # initial + one retry

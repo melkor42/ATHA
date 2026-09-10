@@ -1,0 +1,542 @@
+[
+  {
+    "id": "atha-emerging-experience",
+    "target": "q01-what-is-atha",
+    "question": "What is ATHA, really?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding"
+    ],
+    "perspective": "joint",
+    "status": "confirmed",
+    "answer": "ATHA is an emerging AI-native business-innovation experience and continuing ecosystem created by OneMundi in partnership with Warwick Business School. It brings Warwick-centred learners, alumni, researchers, founders, creatives and enterprise partners together around consequential AI questions. Multidisciplinary teams investigate whether an opportunity should proceed, wait, change direction or stop, while considering commercial value, technical reality, people and responsibility together. ATHA is not designed as a conventional conference, prototype contest or exhaustion-driven hackathon. The experience itself is part of the method: people do ambitious work in conditions shaped around attention, nourishment, rest, connection and sound judgement. Edition 001 is still in formation, so its exact dates, facilities and full programme are not yet confirmed.",
+    "grounding": "The founder's comprehensive ATHA definition, category boundaries and honest present-state positioning support this answer.",
+    "confidence": "supported"
+  },
+  {
+    "id": "atha-purpose-and-difference",
+    "target": "q02-why-different",
+    "question": "Why does ATHA exist, and what makes it different?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "ATHA exists because the AI-native era needs better judgement, not only more technology. Organisations often approach AI through isolated tools, speed or cost reduction, while education, research, human consequences and business reality remain separated. ATHA brings those perspectives into one place and begins with a harder question: should this be built, and under what conditions? A prototype may help as evidence, but it is not the goal. A better question, an unexpected opportunity, a responsible redirection or a well-supported decision not to proceed can be more valuable. ATHA is also designed to test a second idea: that serious commercial work can happen in a healthy, joyful and deeply human culture. That combination of consequential decisions and lived working conditions is its intended difference.",
+    "grounding": "The expanded purpose thesis and decision-quality principles define ATHA's reason for existing and its intended distinction.",
+    "confidence": "supported"
+  },
+  {
+    "id": "role-fit-by-contribution",
+    "target": "q03-role-fits-me",
+    "question": "Which role in a team would fit me?",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Your best fit depends on how you can help a team make a sound decision. You might understand the problem and the people affected by it, test the AI approach and technical assumptions, examine ethics and risk, build the business case and keep the work coordinated, or turn complex evidence into a clear final recommendation. ATHA plans to ask about primary and secondary skills, practical evidence, interests and preferred contribution rather than relying on degree title or job label alone. The matching process should suggest a role, then give each team time to discuss and adjust responsibilities while keeping every essential function covered. You do not need to fit a narrow professional identity. Adjacent strengths can become an explicit support contribution when they genuinely help the challenge.",
+    "grounding": "The five-function team model and skills-over-degree matching principle support this role guidance.",
+    "confidence": "supported"
+  },
+  {
+    "id": "balanced-team-matching",
+    "target": "q04-teams-formed",
+    "question": "How are teams formed?",
+    "roles": [
+      "student",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Teams are intended to be formed by ATHA after registration, not brought in as friendship groups or assembled at random. Matching starts with the capabilities needed for a credible decision: domain understanding, AI workflow, responsible AI and risk, business viability and coordination, and pitch and design. The current Edition 001 model is nine teams of five, with three teams independently investigating each of three enterprise challenges. Registration information would be used to place scarce AI capability first, cover every function and consider complementary perspectives. Human review would then check the proposed matches. At the start of the experience, teams should have a structured conversation to clarify or adjust responsibilities without losing essential coverage. The intake questions, evidence rules and final matching process are still being designed.",
+    "grounding": "The founder's 45-person model and the Stream Two coverage-first matching design support this answer.",
+    "confidence": "supported"
+  },
+  {
+    "id": "judging-current-direction",
+    "target": "q05-how-judged",
+    "question": "How is the teams' work judged?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "open",
+    "answer": "Teams are expected to be judged on the quality of their evidence and decision, not on technical spectacle or presentation confidence alone. The current framework asks whether the opportunity is desirable, feasible, viable, scalable and responsible. Judges should test assumptions, weigh commercial and human consequences, and consider whether the recommendation is clear enough for a real organisation to act on. Relevant perspectives are expected to include enterprise, business, technology, responsible AI and education. However, the final scorecard, weights, panel membership and recognition model have not been approved. Earlier work contains several competing scoring structures, and ATHA does not yet assume a single overall winner. These details need calibration before Edition 001 so every team and partner knows how conclusions will be assessed.",
+    "grounding": "The five-lens framework is stable working context, while the scorecard and recognition model remain explicitly unresolved.",
+    "confidence": "partial"
+  },
+  {
+    "id": "day-to-day-human-rhythm",
+    "target": "q06-day-to-day",
+    "question": "What does the experience feel like day to day?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "hadora",
+    "status": "proposed",
+    "answer": "The intended rhythm moves from arriving and settling, through understanding and connection, into creation, careful decision-making, celebration and integration. A working period might include challenge conversations, research, AI-assisted investigation, mentor check-ins and quiet synthesis, but it should also include nourishing shared meals, movement, fresh air, informal conversation, reflection and protected rest. The aim is focused ambition without the familiar all-night rush. Quiet space and accessible ways to pause are treated as working infrastructure, not rewards after the work is done. Optional practices such as meditation, breathwork, yoga or restorative sound may be offered only with genuine choice and accessible alternatives. The exact duration, timetable, locations and activities are still being designed, so this describes the intended character rather than a confirmed schedule.",
+    "grounding": "The experience arc, wellbeing principles and consent boundary support this proposed day-to-day rhythm.",
+    "confidence": "supported"
+  },
+  {
+    "id": "participant-personal-takeaway",
+    "target": "q07-takeaway",
+    "question": "What do I personally take away from it?",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "You should leave with more than a line on your CV. ATHA is intended to give you direct experience of a consequential enterprise question, a clear team responsibility and evidence of how you think, collaborate and exercise judgement. You can practise using AI to organise context and test assumptions while learning where human responsibility must remain. You should also gain an embodied reference point for healthier ambitious work: serious focus combined with rest, nourishment, honest connection and reflection. The relationships may connect you with peers, researchers, enterprise decision-makers and future opportunities. The deeper takeaway is agency: greater confidence that you can contribute across professional boundaries and carry useful working practices back into study, employment, research or a venture. Specific credentials and post-experience benefits have not yet been defined.",
+    "grounding": "The participant-value, talent-development and integration aims support these intended personal outcomes.",
+    "confidence": "supported"
+  },
+  {
+    "id": "partner-comparative-direction",
+    "target": "q08-partner-receives",
+    "question": "What exactly do we receive as a challenge partner?",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "The current Edition 001 model gives each challenge partner three independent multidisciplinary teams, so you receive comparison rather than one untested opinion. Their work is intended to produce evidence-supported directions covering the opportunity, key assumptions, value, feasibility, risks, responsibilities, scalability, organisational consequences and possible next steps. A useful verdict may be to proceed, wait, materially redirect, stop, or recognise that the better opportunity lies elsewhere. You also participate in the working experience, meet emerging talent and academic contributors, and enter relationships that may continue beyond the physical programme. The goal is a defensible decision, not a decorative prototype or generic pitch deck. The exact deliverable package, presentation format, number of partner places, fee and continuing access are still being defined.",
+    "grounding": "The three-teams-per-challenge model, verdict set and five forms of enterprise value support this answer.",
+    "confidence": "supported"
+  },
+  {
+    "id": "challenge-evaluation-path",
+    "target": "q09-challenge-evaluated",
+    "question": "How is our challenge evaluated?",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "open",
+    "answer": "Your challenge is intended to be framed around the organisational decision that matters, then investigated independently by several multidisciplinary teams. The current five-lens framework tests whether people want the proposed direction, whether it can realistically be built, whether it makes business sense, whether it can grow beyond one use case, and whether it is safe and fair. Teams should also examine organisational readiness, human consequences, hidden assumptions and the boundary of human judgement. Evidence may include research, interviews, technical tests, financial reasoning or a prototype where useful, but no single artifact defines success. The final scoring weights and assessment rubric are still open. Before Edition 001, ATHA needs one transparent method that partners, teams, mentors and judges can use consistently.",
+    "grounding": "The challenge-and-verdict model and current five lenses support the process, while judging details remain unresolved.",
+    "confidence": "partial"
+  },
+  {
+    "id": "partner-contribution-requirements",
+    "target": "q10-partner-brings",
+    "question": "What do we need to bring as a partner?",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "A challenge partner should bring a consequential AI question tied to a real organisational decision, not a polished brief designed to produce a predetermined answer. You should be ready to explain the context, the people affected, the decision at stake, current assumptions, known constraints and what evidence would be useful. Teams will need timely access to an empowered senior sponsor and relevant domain expertise so they can test their understanding rather than guess. Any data or confidential material must stay within boundaries agreed before work begins. The intended model also asks challenge partners to pay a participation fee and to take part in the experience rather than simply wait for a report. The exact fee, attendance requirement, delegate model, data needs and preparation process are not yet confirmed.",
+    "grounding": "The enterprise journey, executive value test and challenge-partner funding model support these proposed contributions.",
+    "confidence": "supported"
+  },
+  {
+    "id": "confidentiality-and-ip-boundaries",
+    "target": "q11-confidentiality-ip",
+    "question": "How is confidentiality and IP handled?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "operational",
+    "status": "open",
+    "answer": "The legal framework is not final, so confidential information should not be shared until written terms are agreed. The current intention is that a challenge partner owns its challenge-specific results, concepts and newly created challenge-specific intellectual property. Participants, researchers, Warwick, OneMundi, the experience design behind ATHA and technology providers would keep their pre-existing methods, tools and other background rights. A partner's ownership of its result would not transfer the underlying ATHA methodology or third-party licences. Any reuse of general learning for research or future improvement would need agreed rules for confidentiality, consent, publication, anonymisation and data governance. Participant agreements must also cover permitted AI and data use. The unresolved methodology-ownership structure requires a formal multi-party decision before contracts are issued.",
+    "grounding": "The provisional foreground and background IP principles support this answer, but no final contractual structure exists.",
+    "confidence": "partial"
+  },
+  {
+    "id": "continuity-after-atha",
+    "target": "q12-after-experience",
+    "question": "What happens after the experience?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "ATHA is intended to begin relationships rather than end them at the closing session. Participants and partners may continue through future communication, later experiences, research, new challenges, talent connections and a digital platform if it is built. Teams should have time to integrate what they learned and carry useful practices into ordinary work or study. A challenge partner remains free to use its agreed outputs without hiring OneMundi. If the verdict reveals a genuine next step and both sides see a fit, a separate OneMundi engagement could support a first implementation or wider transformation. That is optional and outside the ATHA participation fee. The platform, access period, membership expectations, follow-up programme, future pricing and longitudinal research process are still under development and must not yet be treated as guaranteed benefits.",
+    "grounding": "The activation-point model, ecosystem ambition and no-pressure commercial boundary support this proposed continuity.",
+    "confidence": "partial"
+  },
+  {
+    "id": "education-research-living-laboratory",
+    "target": "q13-education-research",
+    "question": "How does ATHA serve education and research?",
+    "roles": [
+      "warwick",
+      "student",
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "ATHA can connect education and research with the real context, constraints and consequences held by industry. Learners and researchers work on live organisational questions, while partners gain academic challenge, emerging talent and perspectives they may not encounter internally. The educational aim is to develop AI-native changemakers who can combine technical understanding with commercial judgement, ethics, creativity, collaboration and responsibility. ATHA is also intended as a living laboratory for an evolving methodology: each edition can test assumptions, collect feedback and improve the approach. Candidate research questions include how rest, belonging and healthier working conditions relate to collaboration, originality and decision quality. Edition 001 cannot prove those causal claims. Credible research will require consent, privacy protection, baselines, defined measures, independent evaluation where appropriate and follow-up over time; that research design is not yet final.",
+    "grounding": "The education-industry bridge and living-methodology evidence programme support this proposed role.",
+    "confidence": "supported"
+  },
+  {
+    "id": "wbs-institutional-role",
+    "target": "q14-wbs-role",
+    "question": "What is Warwick Business School's role in ATHA?",
+    "roles": [
+      "warwick",
+      "student",
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "preparing"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "Warwick Business School is ATHA's intended institutional and educational partner. Richard reports that WBS has agreed to do ATHA, and the current model expects it to contribute an academic setting, learners, alumni, researchers, centres, networks, educational capability, credibility and agreed facilities. Its deeper opportunity is to help investigate how AI-native changemakers should be educated and how industry and research can learn from one another through real challenges. OneMundi remains the principal builder and operator of ATHA. The exact WBS role is not yet documented as a complete operational agreement: dates, Coventry and London facilities, staffing, funding or in-kind support, brand rights, research governance, network access, approvals and methodology ownership still need written confirmation. Public wording should therefore distinguish the reported commitment from these unresolved details.",
+    "grounding": "Founder-reported WBS agreement and the principal-partner responsibility model support this answer.",
+    "confidence": "partial"
+  },
+  {
+    "id": "domain-expert-function",
+    "target": "func-domain-expert",
+    "question": "Domain Expert: understanding the problem and the people it affects",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "The Domain Expert helps the team understand the organisation's real problem before anyone rushes toward a solution. You interpret the challenge, identify who is affected, clarify the business pain point and test what success would mean in practice. You may research users, workflows, sector conditions and existing alternatives, then bring that evidence back to the team. Your job is not to defend the partner's first description of the problem. It is to notice missing voices, challenge assumptions and keep the work relevant to people and operating reality. Useful backgrounds may include industry experience, business, psychology, research, consulting or another field connected to the challenge. Curiosity and careful listening matter as much as prior subject knowledge.",
+    "grounding": "The Stream Two function model assigns challenge interpretation, affected people and real-world relevance to this role.",
+    "confidence": "supported"
+  },
+  {
+    "id": "ai-workflow-lead-function",
+    "target": "func-ai-workflow-lead",
+    "question": "AI Workflow Lead: the AI approach and technical feasibility",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "The AI Workflow Lead turns the challenge into testable technical questions. You select and use appropriate AI tools, design prompts or workflows, examine data and integration assumptions, and help the team distinguish a plausible capability from an attractive claim. You document how AI contributed so the reasoning can be reviewed rather than hidden behind an output. A prototype may be useful when it tests an important uncertainty, but building one is not the role's automatic goal. You also explain technical limits in language the rest of the team and partner can use. In a larger team, the work may split between prompt and workflow design and data or integration engineering. The final six-person support model is not yet settled for Edition 001.",
+    "grounding": "The AI Workflow function and prototype-as-evidence boundary support this description.",
+    "confidence": "supported"
+  },
+  {
+    "id": "responsible-ai-risk-function",
+    "target": "func-responsible-ai-risk",
+    "question": "Responsible AI and Risk Lead: governance, risk and ethics",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "The Responsible AI and Risk Lead asks what could go wrong, who might be harmed and what responsible use would require. You examine privacy, bias, safety, fairness, legal and governance questions, as well as environmental or social consequences where relevant. The role is practical rather than ceremonial: identify risks early, test them against the proposed direction and suggest mitigations, decision boundaries or reasons not to proceed. You help the team decide what must remain under human judgement and what evidence is still missing. Useful experience may come from ethics, law, policy, psychology, sustainability, data governance, safety or risk work. You are not there simply to approve the idea at the end; you shape the investigation throughout.",
+    "grounding": "The responsible-AI function and ATHA's human-judgement boundary support this description.",
+    "confidence": "supported"
+  },
+  {
+    "id": "business-viability-coordinator-function",
+    "target": "func-business-viability-coordinator",
+    "question": "Business Viability and Coordinator: the business case and coordination",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "The Business Viability and Coordinator tests whether the proposed direction can create durable organisational value. You examine costs, benefits, adoption, operating changes, implementation needs, scalability and the assumptions behind any return. You also help the team turn many strands of work into one decision by coordinating time, responsibilities, evidence and mentor conversations. This is not a project-manager-only role and it is not a licence to reduce every question to short-term profit. You hold the commercial logic alongside people, readiness, responsibility and long-term consequences. Useful strengths include business analysis, finance, strategy, entrepreneurship, consulting, operations and calm coordination. In a four-person team this function may be combined with pitch and design, but Edition 001 currently prefers teams of five.",
+    "grounding": "The team model combines commercial reasoning, adoption, scalability and coordination in this function.",
+    "confidence": "supported"
+  },
+  {
+    "id": "pitch-design-lead-function",
+    "target": "func-pitch-design-lead",
+    "question": "Pitch and Design Lead: communicating the decision",
+    "roles": [
+      "student"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "The Pitch and Design Lead makes the team's reasoning understandable without turning it into theatre. You shape the narrative, visual material and final presentation so an enterprise decision-maker can see the question, evidence, tensions, verdict and conditions for action. You work throughout the investigation, helping the team notice gaps and organise complex material, rather than decorating conclusions at the end. Clear communication should reveal uncertainty and disagreement where they matter; confidence must not replace evidence. Useful strengths include writing, storytelling, information design, facilitation, visual or service design and presentation. The exact final deliverables are still open, so this role may support a written recommendation, live presentation, visual evidence and an AI work record rather than one fixed slide format.",
+    "grounding": "The Pitch and Design function and unresolved deliverable model support this description.",
+    "confidence": "supported"
+  },
+  {
+    "id": "value-experience-lived-work",
+    "target": "value-experience",
+    "question": "Experience: living a different way of working",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "hadora",
+    "status": "proposed",
+    "answer": "As a challenge partner, you are invited to experience the work rather than send a brief and wait for a report. You can observe ambitious teams combining human judgement with AI, meeting across professional boundaries and taking responsibility for a real decision. The environment is intended to support attention through thoughtful rhythm, nourishing food, movement, rest, informal conversation and moments of reflection. These are not hospitality extras; they are part of the conditions for clearer thinking and better collaboration. The intended value is personal as well as organisational: an embodied reference point for how serious innovation can feel without unnecessary pressure or depletion. Exactly how often an executive or delegate must attend, and which practices and spaces Edition 001 will include, are still being designed.",
+    "grounding": "The enterprise experience value, executive value test and human-conditions thesis support this answer.",
+    "confidence": "supported"
+  },
+  {
+    "id": "value-perspective-contextual-ai",
+    "target": "value-perspective",
+    "question": "Perspective: seeing AI more fully",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "ATHA is intended to widen the way your organisation sees AI. Instead of asking only what a tool can automate, teams consider the full context: who wants the change, what data and infrastructure make it possible, whether the organisation is ready, how value will be created, what can scale, who may be harmed and where human judgement must remain. Three independent teams can reveal convergence, contradiction and assumptions that an internal project may miss. You may discover that the original use case is sound, that it needs different conditions, or that a more valuable opportunity sits elsewhere. The perspective also comes from working with learners, researchers, founders, creatives and specialists who do not share the same incentives or departmental habits as your existing team.",
+    "grounding": "The contextual-intelligence model and three-independent-teams design support this form of value.",
+    "confidence": "supported"
+  },
+  {
+    "id": "value-decision-defensible-verdict",
+    "target": "value-decision",
+    "question": "Decision: receiving a clear, defensible verdict",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "You are intended to receive a clear, evidence-supported direction on your challenge, not a promise that every idea should be built. Teams examine desirability, feasibility, viability, scalability and responsibility, then explain the assumptions, risks, organisational implications and conditions behind their recommendation. Possible outcomes include proceed, wait, materially redirect, stop, or recognise that the real opportunity lies elsewhere. A strong no or not yet is treated as useful because it can prevent wasted investment or irresponsible implementation. With three teams investigating independently, you can compare where their evidence agrees and where it conflicts before reaching a final view. The exact report, presentation, synthesis process and decision language are still being designed, but the verdict-first purpose is central to ATHA.",
+    "grounding": "The verdict-first model, five lenses and expanded verdict set support this partner value.",
+    "confidence": "supported"
+  },
+  {
+    "id": "value-belonging-credible-community",
+    "target": "value-belonging",
+    "question": "Belonging: joining a community",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "discovering",
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "hadora",
+    "status": "proposed",
+    "answer": "Belonging means becoming part of a working community that connects enterprise, education, research, emerging talent, experience design and transformation. It is intended to grow through shared work, meals, honest conversation, contribution and responsibility, not through passive networking or access to a logo list. A challenge partner meets people while they are thinking, testing and collaborating on something that matters, which can reveal character and capability more clearly than a formal introduction. The value may include trusted relationships with participants, researchers, other partners and future collaborators, as well as a sense of contributing to a more human AI-native future. ATHA's wider membership model, number of partner places, active contribution expectations and transferability of access are not yet defined, so belonging should not be read as a guaranteed package of privileges.",
+    "grounding": "The temporary-culture principles and five forms of enterprise value support this intended belonging.",
+    "confidence": "supported"
+  },
+  {
+    "id": "value-continuity-beyond-activation",
+    "target": "value-continuity",
+    "question": "Continuity: the relationship after ATHA",
+    "roles": [
+      "business"
+    ],
+    "visitor_states": [
+      "deciding",
+      "experienced"
+    ],
+    "perspective": "joint",
+    "status": "proposed",
+    "answer": "The physical ATHA experience is intended as an activation point, not the end of the relationship. A partner may remain connected through follow-up conversations, research, talent relationships, future challenges, later ATHA experiences and a digital platform if it is implemented. The challenge verdict can also identify a focused next step. You may act on that independently, or, where there is genuine fit and consent, explore a separate engagement with OneMundi for implementation or broader transformation. ATHA must provide useful standalone value first; there is no obligation to buy follow-on services. The current intention is that some continuing ecosystem access is included in the original partner fee, but its duration, capacity, access tiers, transferability, activity expectations and future-experience economics remain undefined. Those details should not be promised until the model is confirmed.",
+    "grounding": "The activation-point concept, enterprise journey and commercial integrity guardrail support this continuity.",
+    "confidence": "partial"
+  },
+  {
+    "id": "lens-desirability-demand",
+    "target": "lens-desirability",
+    "question": "Desirability: does anyone actually want this?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Desirability asks whether the proposed AI direction solves a meaningful problem for the people who would use, experience or be affected by it. Teams look beyond an internal sponsor's enthusiasm to understand real needs, existing behaviour, trust, access and likely adoption. They should identify whose voice is missing and whether the problem has been framed around a technology rather than a human or organisational need. Evidence might come from interviews, observation, existing research, service data or comparison with current alternatives. A solution can be technically impressive and still fail this lens if people do not need it, cannot use it or reasonably choose not to. The detailed assessment method for Edition 001 is still being developed.",
+    "grounding": "The current five-lens framework defines desirability as real demand and relevance to affected people.",
+    "confidence": "supported"
+  },
+  {
+    "id": "lens-feasibility-reality",
+    "target": "lens-feasibility",
+    "question": "Feasibility: can it realistically be built now?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Feasibility tests whether the idea can work with the technology, data, infrastructure, skills, time and organisational conditions that actually exist. Teams examine what the AI can reliably do, how it would connect with current systems, where data quality or access may fail, and what human oversight is needed. A small technical experiment or prototype may help test a critical uncertainty, but it is evidence rather than the final objective. The team should separate what is possible in principle from what the partner can responsibly implement now. A useful result may identify missing foundations, a narrower starting point or a reason to wait. The exact evidence standard and scoring method for this lens are not yet confirmed.",
+    "grounding": "The five-lens model and AI Workflow responsibilities support this feasibility definition.",
+    "confidence": "supported"
+  },
+  {
+    "id": "lens-viability-business-sense",
+    "target": "lens-viability",
+    "question": "Viability: does it make business sense?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Viability asks whether the direction can create durable value for the organisation and the people it serves. Teams examine benefits, costs, adoption, operating changes, incentives, implementation effort and the assumptions behind any financial return. They should consider who must own the change, what capabilities are missing and whether the organisation is ready to sustain it after an initial launch. The lens is broader than short-term profit: a proposal that saves money but damages trust, creates unmanageable risk or depends on unrealistic behaviour is not truly viable. Evidence should make the trade-offs visible and show what would need to be true for the case to hold. Final metrics and scoring weights remain to be calibrated.",
+    "grounding": "The current framework and Business Viability function define viability through value, adoption and organisational reality.",
+    "confidence": "supported"
+  },
+  {
+    "id": "lens-scalability-beyond-pilot",
+    "target": "lens-scalability",
+    "question": "Scalability: can it grow beyond one use case?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Scalability asks whether value can extend beyond one controlled demonstration without costs, risks or complexity growing faster than the benefit. Teams consider data availability, infrastructure, governance, repeatability, operating ownership, user adoption and the differences between departments, markets or populations. They should test whether the idea depends on exceptional people, manual work or unusually clean conditions that will not survive expansion. Scaling may mean a larger deployment, reuse across related problems or a repeatable capability inside the organisation; it does not automatically mean rapid growth. A sound verdict can recommend a limited scope when wider use is not justified. The precise scalability measures for Edition 001 are still under development.",
+    "grounding": "The five-lens framework and readiness mappings support this whole-system view of scalability.",
+    "confidence": "supported"
+  },
+  {
+    "id": "lens-responsibility-safe-fair",
+    "target": "lens-responsibility",
+    "question": "Responsibility: is it safe and fair?",
+    "roles": [
+      "student",
+      "business",
+      "warwick"
+    ],
+    "visitor_states": [
+      "deciding",
+      "preparing",
+      "experienced"
+    ],
+    "perspective": "operational",
+    "status": "proposed",
+    "answer": "Responsibility asks whether the AI direction is safe, fair and governed well enough to justify action. Teams examine privacy, bias, security, legal duties, transparency, accountability, environmental or social consequences, and the people who may carry risk without receiving the benefit. They should identify what decisions must remain with humans, how harm would be detected, who can challenge an outcome and what safeguards or limits are required. Responsibility is not a final compliance check after the business case is complete; it shapes whether the opportunity is desirable, feasible and viable from the beginning. A team may recommend redesign, tighter boundaries, further evidence or no deployment. The final rubric and domain-specific standards will need calibration for each challenge.",
+    "grounding": "The responsibility lens and Responsible AI and Risk function support this definition.",
+    "confidence": "supported"
+  }
+]

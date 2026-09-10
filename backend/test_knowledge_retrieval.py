@@ -13,8 +13,9 @@ Checks:
      role × state combination;
   4. skeleton gate: every role × state yields >=7 slots incl. the guaranteed
      tail (edition/rhythm/layers) and leaks no internal passage;
-  5. facet probes (value form honest ceiling, lens dedicated slot) and the
-     calibrated free-text threshold (relevant surfaces, irrelevant does not).
+  5. facet probes (value form enriched to the 2-source cap, lens dedicated
+     slot) and the calibrated free-text threshold (relevant surfaces,
+     irrelevant does not).
 
 Run:  python test_knowledge_retrieval.py      (exit 0 = gate passed)
 """
@@ -103,9 +104,10 @@ async def main() -> None:
         facets = [s for s in sk["slots"] if s["kind"] == "facet"]
         if not facets:
             errors.append("value-decision facet produced no facet slot")
-        elif len(facets[0]["sources"]) != 1:
-            errors.append("value-decision facet: expected exactly 1 source "
-                          f"(honest ceiling), got {len(facets[0]['sources'])}")
+        elif len(facets[0]["sources"]) != 2:
+            errors.append("value-decision facet: expected 2 sources "
+                          f"(value forms enriched by cluster 3), got "
+                          f"{len(facets[0]['sources'])}")
         sk = await build_skeleton("student", None, driver=driver, database=db,
                                   facet="lens-responsibility")
         if not any(s["kind"] == "facet" for s in sk["slots"]):

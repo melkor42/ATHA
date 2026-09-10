@@ -33,6 +33,33 @@ TITLE_MAX_LEN = 80
 VALID_PERSPECTIVES = {"om", "hadora", "joint", "operational"}
 VALID_STATUSES = {"confirmed", "proposed", "open"}
 
+# Cluster 3: visitor-facing answers delivered as already-structured JSON, one
+# entry per catalog target. They map 1:1 onto passages, so they bypass the
+# markdown/rules pipeline (see load_structured_answers).
+STRUCTURED_ANSWERS_FILE = "visitor_answers_cluster3.json"
+
+# A facet entry (func/value/lens) SUPPORTS its facet, but the frontend no longer
+# requests facets, so a SUPPORTS-only passage would reach visitors only by luck
+# of the vector path. Each facet therefore also ANSWERs its natural parent
+# question, putting it on the anchor path. Justifiable, tunable judgment call.
+FACET_PARENT_QUESTIONS = {
+    "func-domain-expert": ["q03-role-fits-me"],
+    "func-ai-workflow-lead": ["q03-role-fits-me"],
+    "func-responsible-ai-risk": ["q03-role-fits-me"],
+    "func-business-viability-coordinator": ["q03-role-fits-me"],
+    "func-pitch-design-lead": ["q03-role-fits-me"],
+    "value-experience": ["q08-partner-receives"],
+    "value-perspective": ["q08-partner-receives"],
+    "value-decision": ["q08-partner-receives"],
+    "value-belonging": ["q08-partner-receives"],
+    "value-continuity": ["q08-partner-receives", "q12-after-experience"],
+    "lens-desirability": ["q05-how-judged", "q09-challenge-evaluated"],
+    "lens-feasibility": ["q05-how-judged", "q09-challenge-evaluated"],
+    "lens-viability": ["q05-how-judged", "q09-challenge-evaluated"],
+    "lens-scalability": ["q05-how-judged", "q09-challenge-evaluated"],
+    "lens-responsibility": ["q05-how-judged", "q09-challenge-evaluated"],
+}
+
 
 def slugify(name: str) -> str:
     s = name.replace(".md", "").lower()
@@ -133,6 +160,77 @@ def split_long(pid: str, text: str) -> list[tuple[str, str]]:
     if current:
         pieces.append("\n".join(current))
     return [(f"{pid}-{chr(97 + i)}", p) for i, p in enumerate(pieces)]
+
+
+def load_structured_answers(
+    onto_ids: set, role_ids: set, state_ids: set, question_ids: set, errors: list
+) -> list[dict]:
+    """Convert the cluster-3 structured delivery into passage records.
+
+    Each entry already carries exactly the tags the markdown pipeline would have
+    to derive by keyword matching, so the mapping is 1:1 and lossless. A `q*`
+    target becomes an ANSWERED_BY edge; a facet target becomes a SUPPORTS edge
+    plus ANSWERED_BY edges to its parent question(s) (FACET_PARENT_QUESTIONS).
+    `grounding`/`confidence` stay in the source file as review provenance and are
+    deliberately not part of the passage schema. Curated answers are never auto-
+    split: an over-length one is an error to fix at the source, not to chop here.
+    """
+    path = KNOWLEDGE_DIR / STRUCTURED_ANSWERS_FILE
+    if not path.exists():
+        return []
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    out: list[dict] = []
+    for e in entries:
+        eid = e.get("id", "?")
+        tag = f"{STRUCTURED_ANSWERS_FILE}:{eid}"
+        target = e["target"]
+        text = e["answer"]
+        perspective = e["perspective"]
+        status = e["status"]
+        roles = list(e["roles"])
+        states = list(e["visitor_states"])
+
+        if perspective not in VALID_PERSPECTIVES:
+            errors.append(f"{tag}: bad perspective '{perspective}'")
+        if status not in VALID_STATUSES:
+            errors.append(f"{tag}: bad status '{status}'")
+        if not text or len(text) > MAX_CHARS:
+            errors.append(f"{tag}: answer empty or > {MAX_CHARS} chars")
+        if not roles:
+            errors.append(f"{tag}: visitor-facing answer needs >=1 role")
+        for r in roles:
+            if r not in role_ids:
+                errors.append(f"{tag}: unknown role '{r}'")
+        for s in states:
+            if s not in state_ids:
+                errors.append(f"{tag}: unknown state '{s}'")
+
+        if target in question_ids:
+            answers, supports = [target], []
+        elif target in onto_ids:
+            supports = [target]
+            answers = list(FACET_PARENT_QUESTIONS.get(target, []))
+            for q in answers:
+                if q not in question_ids:
+                    errors.append(f"{tag}: cross-link to unknown question '{q}'")
+        else:
+            errors.append(f"{tag}: target '{target}' is neither a question nor an ontology id")
+            answers, supports = [], []
+
+        out.append({
+            "id": eid,
+            "source_file": STRUCTURED_ANSWERS_FILE,
+            "heading_path": ["Visitor Answers (cluster 3)", e.get("question", target)],
+            "text": text,
+            "perspective": perspective,
+            "status": status,
+            "roles": roles,
+            "visitor_states": states,
+            "supports": supports,
+            "answers": answers,
+            "internal": False,
+        })
+    return out
 
 
 def main() -> None:
@@ -279,6 +377,16 @@ def main() -> None:
         report_rows.append((fname, sum(1 for p in passages if p["source_file"] == fname),
                             unreachable, matched_any_override))
 
+    # cluster 3: structured visitor answers, converted 1:1 into passages.
+    structured = load_structured_answers(onto_ids, role_ids, state_ids, question_ids, errors)
+    if structured:
+        seen = {p["id"] for p in passages}
+        for sp in structured:
+            if sp["id"] in seen:
+                errors.append(f"{STRUCTURED_ANSWERS_FILE}: id collides with existing passage '{sp['id']}'")
+            seen.add(sp["id"])
+        passages.extend(structured)
+
     if errors:
         print(f"\nERRORS ({len(errors)}):")
         for e in errors:
@@ -303,6 +411,8 @@ def main() -> None:
     print(f"\n{'document':45s} {'passages':>8s} {'unreachable':>12s} {'overrides hit':>14s}")
     for fname, n, unreach, hits in report_rows:
         print(f"{fname:45s} {n:8d} {unreach:12d} {'yes' if hits else 'NO':>14s}")
+    if structured:
+        print(f"{STRUCTURED_ANSWERS_FILE:45s} {len(structured):8d} {0:12d} {'structured':>14}")
     print(f"\ntotal passages: {len(passages)} "
           f"(internal: {sum(1 for p in passages if p['internal'])})")
     print(f"wrote {MAP_PATH}")
